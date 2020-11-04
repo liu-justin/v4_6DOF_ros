@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import tkinter as tk
 import debouncer as d
 
@@ -44,14 +42,14 @@ class SingleMotor(tk.Frame):
         self.up_debouncer = d.Debouncer(self.increase, self.decrease)
         master.bind('<KeyPress-' + increaseKey + '>', self.up_debouncer.pressed)
         master.bind('<KeyRelease-' + increaseKey + '>', self.up_debouncer.released)
-        self.down_debouncer = Debouncer(self.decrease, self.increase)
+        self.down_debouncer = d.Debouncer(self.decrease, self.increase)
         master.bind('<KeyPress-' + decreaseKey + '>', self.down_debouncer.pressed)
         master.bind('<KeyRelease-' + decreaseKey + '>', self.down_debouncer.released)
 
         self.frame.pack()
 
         # establish publisher
-        self.pub = rospy.Publisher('chatter_'+self.name,msg.int8,queue_size=1)
+        self.pub = rospy.Publisher('chatter_'+self.name,msg.Int8,queue_size=1)
 
     def keyPress(self, e):
         print(f"keypressed: {e}")
@@ -65,7 +63,15 @@ class SingleMotor(tk.Frame):
 
     def decrease(self, e=None):
         value = int(self.label["text"])
-        new_value = value+int(self.getSpeed())
+        new_value = value-int(self.getSpeed())
         self.label["text"] = f"{new_value}"
         self.pub.publish(new_value)
         rospy.loginfo(f"{self.name} is moving at {new_value} rad/s")
+
+SPEEDS = [1,2,4,6,8,10,20]
+
+def updateSpeed():
+    speedLabel["text"]=f"speed is {speedVariable.get()} rad/s"
+
+def getSpeed():
+    return speedVariable.get()

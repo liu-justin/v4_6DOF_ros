@@ -106,7 +106,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES v4_6dof
-  CATKIN_DEPENDS roscpp rospy std_msgs
+  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -157,13 +157,14 @@ include_directories(
 
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
-
+ 
 # Mark executable scripts (Python etc.) for installation
 # in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
-  scripts/debouncer.py 
-  scripts/main_UI.py 
-  scripts/singleMotorControl.py 
+#  scripts/debouncer.py 
+#  scripts/main_UI.py 
+#  scripts/singleMotorControl.py 
+   scripts/combined.py
 #   tkinter_test.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

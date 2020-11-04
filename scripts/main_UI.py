@@ -7,26 +7,13 @@ import numpy as np
 import time
 
 import tkinter as tk
-import singleMotorControl as s
+import singleMotorControl
 import debouncer as d
 
 SPEEDS = [1,2,4,6,8,10,20]
 
-# send msg with only int8; have 6 different topics for 6 motors
-def updateSpeed():
-    speedLabel["text"]=f"speed is {speedVariable.get()} rad/s"
-
-def getSpeed():
-    return speedVariable.get()
-
 def talker():
-    
-    # pub0 = rospy.Publisher('chatter_motor0',int8,queue_size=1)
-    # pub1 = rospy.Publisher('chatter_motor1',int8,queue_size=1)
-    # pub2 = rospy.Publisher('chatter_motor2',int8,queue_size=1)
-    # pub3 = rospy.Publisher('chatter_motor3',int8,queue_size=1)
-    # pub4 = rospy.Publisher('chatter_motor4',int8,queue_size=1)
-    # pub5 = rospy.Publisher('chatter_motor5',int8,queue_size=1)
+    # send msg with only int8; have 6 different topics for 6 motors
 
     window = tk.Tk()
 
@@ -42,20 +29,26 @@ def talker():
     speedDropdown = tk.OptionMenu(speedFrame, speedVariable, *SPEEDS)
     speedDropdown.grid(row=0, column=1)
 
+    def updateSpeed():
+        speedLabel["text"]=f"speed is {speedVariable.get()} rad/s"
+
     speedConfirm = tk.Button(master=speedFrame, text="ok", command=updateSpeed)
     speedConfirm.grid(row=0,column=2)
 
     speedFrame.pack()
 
-    # setting up all the motor button controls
-    motorR1 = s.SingleMotor(window, getSpeed, "motorR1", 'q', 'a')
-    motorT1 = s.SingleMotor(window, getSpeed, "motorT1", 'w', 's')
-    motorT2 = s.SingleMotor(window, getSpeed, "motorT2", 'e', 'd')
-    motorR2 = s.SingleMotor(window, getSpeed, "motorR2", 'r', 'f')
-    motorT3 = s.SingleMotor(window, getSpeed, "motorT3", 't', 'g')
-    motorR3 = s.SingleMotor(window, getSpeed, "motorT2", 'y', 'h')
+    def getSpeed():
+        return speedVariable.get()
 
-    rospy.init_node('talker', anonmous=True)
+    #setting up all the motor button controls
+    motorR1 = singleMotorControl.singleMotor(window, getSpeed, "motorR1", 'q', 'a')
+    # motorT1 = s.SingleMotor(window, getSpeed, "motorT1", 'w', 's')
+    # motorT2 = s.SingleMotor(window, getSpeed, "motorT2", 'e', 'd')
+    # motorR2 = s.SingleMotor(window, getSpeed, "motorR2", 'r', 'f')
+    # motorT3 = s.SingleMotor(window, getSpeed, "motorT3", 't', 'g')
+    # motorR3 = s.SingleMotor(window, getSpeed, "motorT2", 'y', 'h')
+
+    rospy.init_node('talker', anonymous=True)
     
     while not rospy.is_shutdown():
         window.mainloop()
