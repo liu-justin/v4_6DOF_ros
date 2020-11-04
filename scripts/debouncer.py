@@ -1,9 +1,10 @@
-from threading import Timer
+#!/usr/bin/env python
 
+from threading import Timer
+import rospy
 
 # How long a single key press lasts (as opposed to a press-and-hold).
 SINGLE_PRESS_MAX_SECONDS = 0.05
-
 
 class Debouncer(object):
     ''' Debounces key events for Tkinter apps, so that press-and-hold works. '''
