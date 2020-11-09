@@ -165,6 +165,7 @@ catkin_install_python(PROGRAMS
 #  scripts/main_UI.py 
 #  scripts/singleMotorControl.py 
    scripts/combined.py
+   scripts/listener_test.py
 #   tkinter_test.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
