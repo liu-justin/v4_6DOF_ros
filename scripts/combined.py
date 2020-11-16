@@ -152,7 +152,7 @@ def talker():
     motorT2 = SingleMotor(window, getSpeed, "motorT2", 'e', 'd')
     motorR2 = SingleMotor(window, getSpeed, "motorR2", 'r', 'f')
     motorT3 = SingleMotor(window, getSpeed, "motorT3", 't', 'g')
-    motorR3 = SingleMotor(window, getSpeed, "motorT2", 'y', 'h')
+    motorR3 = SingleMotor(window, getSpeed, "motorR3", 'y', 'h')
 
     rospy.init_node('talker', anonymous=True)
     

@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import rospy
 
 import math
 import numpy as np
 import time
-
+ 
 import tkinter as tk
 import singleMotorControl
 import debouncer as d
@@ -41,7 +41,7 @@ def talker():
         return speedVariable.get()
 
     #setting up all the motor button controls
-    motorR1 = singleMotorControl.singleMotor(window, getSpeed, "motorR1", 'q', 'a')
+    motorR1 = singleMotorControl.SingleMotor(window, getSpeed, "motorR1", 'q', 'a')
     # motorT1 = s.SingleMotor(window, getSpeed, "motorT1", 'w', 's')
     # motorT2 = s.SingleMotor(window, getSpeed, "motorT2", 'e', 'd')
     # motorR2 = s.SingleMotor(window, getSpeed, "motorR2", 'r', 'f')

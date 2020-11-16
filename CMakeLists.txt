@@ -161,9 +161,9 @@ include_directories(
 # Mark executable scripts (Python etc.) for installation
 # in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
-#  scripts/debouncer.py 
-#  scripts/main_UI.py 
-#  scripts/singleMotorControl.py 
+   scripts/debouncer.py 
+   scripts/main_UI.py 
+   scripts/singleMotorControl.py 
    scripts/combined.py
    scripts/listener_test.py
 #   tkinter_test.py
