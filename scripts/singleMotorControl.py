@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import tkinter as tk
-import debouncer as d
+from debouncer import Debouncer
 
 import rospy
 import std_msgs.msg as msg
@@ -41,10 +41,10 @@ class SingleMotor(tk.Frame):
         # master.bind('<KeyRelease-' + decreaseKey + '>', self.stop)
 
         # keyboard command setup (currently fails when user mousepress on button, and mouserelease off button)
-        self.up_debouncer = d.Debouncer(self.increase, self.decrease)
+        self.up_debouncer = Debouncer(self.increase, self.decrease)
         master.bind('<KeyPress-' + increaseKey + '>', self.up_debouncer.pressed)
         master.bind('<KeyRelease-' + increaseKey + '>', self.up_debouncer.released)
-        self.down_debouncer = d.Debouncer(self.decrease, self.increase)
+        self.down_debouncer = Debouncer(self.decrease, self.increase)
         master.bind('<KeyPress-' + decreaseKey + '>', self.down_debouncer.pressed)
         master.bind('<KeyRelease-' + decreaseKey + '>', self.down_debouncer.released)
 

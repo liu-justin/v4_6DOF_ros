@@ -7,10 +7,9 @@ import numpy as np
 import time
  
 import tkinter as tk
-import singleMotorControl
-import debouncer as d
+from singleMotorControl import SingleMotor
 
-SPEEDS = [1,2,4,6,8,10,20]
+SPEEDS = [1,2,5,10,20]
 
 def talker():
     # send msg with only int8; have 6 different topics for 6 motors
@@ -41,12 +40,12 @@ def talker():
         return speedVariable.get()
 
     #setting up all the motor button controls
-    motorR1 = singleMotorControl.SingleMotor(window, getSpeed, "motorR1", 'q', 'a')
-    # motorT1 = s.SingleMotor(window, getSpeed, "motorT1", 'w', 's')
-    # motorT2 = s.SingleMotor(window, getSpeed, "motorT2", 'e', 'd')
-    # motorR2 = s.SingleMotor(window, getSpeed, "motorR2", 'r', 'f')
-    # motorT3 = s.SingleMotor(window, getSpeed, "motorT3", 't', 'g')
-    # motorR3 = s.SingleMotor(window, getSpeed, "motorT2", 'y', 'h')
+    motorR1 = SingleMotor(window, getSpeed, "motorR1", 'q', 'a')
+    motorT1 = SingleMotor(window, getSpeed, "motorT1", 'w', 's')
+    motorT2 = SingleMotor(window, getSpeed, "motorT2", 'e', 'd')
+    motorR2 = SingleMotor(window, getSpeed, "motorR2", 'r', 'f')
+    motorT3 = SingleMotor(window, getSpeed, "motorT3", 't', 'g')
+    motorR3 = SingleMotor(window, getSpeed, "motorR3", 'y', 'h')
 
     rospy.init_node('talker', anonymous=True)
     
