@@ -7,7 +7,7 @@
 
 ros::NodeHandle  nh;
 
-int minorStepsPerRev = 800; // written on the motor driver
+int minorStepsPerRev = 1600; // written on the motor driver
 int minorStepsPerMajorStep = minorStepsPerRev/200; // how many minor steps are in between the 200 major steps of a standard stepper motor
 
 double radPerMajorStep = PI/100.0; // 2PI rads/200 steps
@@ -43,7 +43,6 @@ void setup() {
   nh.subscribe(sub2);
   nh.subscribe(sub3);
   nh.subscribe(sub4);
-
   
 }
 

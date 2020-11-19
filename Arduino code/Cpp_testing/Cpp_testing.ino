@@ -15,6 +15,8 @@ void setup() {
   Serial.println(radPerMajorStep,10);
   Serial.println(radPerMinorStep,10);
   Serial.println(radPerMinorStep/float(vel),10);
+
+  Serial.println(4/float(20));
 }
 
 void loop() {
