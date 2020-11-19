@@ -12,33 +12,19 @@
 
 class Motor {
 	public:
-		
+		Motor(int pulse, int direct, int lower, int upper,float stepSize, String chatter);
 		int getPos();
 		int getVel();
 		void setVel(int incomingVel);
 		void pulse();
-		void step(int angle);
+		void step();
 
 		unsigned long previousTime;
 
 		void messageCb( const std_msgs::Int8& vel);
 		
-		
-
 		// Motor(int pulse, int direct, int lower, int upper, String chatter):sub("chatter", &Motor::messageCb);
-		Motor(int pulse, int direct, int lower, int upper, String chatter){
-			pulsePin = pulse;
-			directionPin = direct;
-			pinMode(pulsePin, OUTPUT);
-			pinMode(directionPin, OUTPUT);
-
-			lowerLimit = lower;
-			upperLimit = upper;
-
-			pos = 0;
-			vel = 0;
-			ros::Subscriber<std_msgs::Int8> sub(chatter, &Motor::messageCb, this);
-		}
+		
 		
 	private:
 		
@@ -50,6 +36,8 @@ class Motor {
 
 		int pos;
 		int vel;
+
+		float radiansPerMinorStep;
 
 
 };
