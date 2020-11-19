@@ -116,7 +116,7 @@ class SingleMotor(tk.Frame):
         self.pub.publish(new_value)
         rospy.loginfo(f"{self.name} is moving at {new_value} rad/s")
 
-SPEEDS = [1,2,4,6,8,10,20]
+SPEEDS = [1,2,5,10,20]
 
 def talker():
     # send msg with only int8; have 6 different topics for 6 motors
