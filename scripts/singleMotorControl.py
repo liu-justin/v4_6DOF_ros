@@ -14,6 +14,8 @@ class SingleMotor(tk.Frame):
 
         self.getSpeed = getSpeed
 
+        self._velocity = 0
+
         # setting up main UI
         self.frame.rowconfigure(0, minsize=100, weight=1)
         self.frame.columnconfigure([0, 1, 2, 3], minsize=100, weight=1)
@@ -53,15 +55,25 @@ class SingleMotor(tk.Frame):
         # establish publisher
         self.pub = rospy.Publisher('chatter_'+self.name,msg.Int8,queue_size=1)
 
+    @property
+    def velocity(self):
+        return self._velocity
+
+    @velocity.setter
+    def velocity(self, new_velocity):
+        
+        # if it is an equal velocity, dont bother with this stuff and clog the system
+        if (self._velocity != new_velocity):
+            self._velocity = new_velocity          
+            self.pub.publish(self._velocity)            # publish the new velocity to this motors chatter_topic
+            self.label["text"] = f"{self._velocity}"            # change the label to reflect this new velocity
+            rospy.loginfo(f"{self.name} is moving at {self._velocity} rad/s")           
+
     def keyPress(self, e):
         print(f"keypressed: {e}")
 
     def increase(self, e=None):
-        value = int(self.label["text"])
-        new_value = value+int(self.getSpeed())
-        self.label["text"] = f"{new_value}"
-        self.pub.publish(new_value)
-        rospy.loginfo(f"{self.name} is moving at {new_value} rad/s")
+        self.velocity = self.velocity + int(self.getSpeed())
 
     def decrease(self, e=None):
         value = int(self.label["text"])
@@ -69,11 +81,3 @@ class SingleMotor(tk.Frame):
         self.label["text"] = f"{new_value}"
         self.pub.publish(new_value)
         rospy.loginfo(f"{self.name} is moving at {new_value} rad/s")
-
-SPEEDS = [1,2,4,6,8,10,20]
-
-def updateSpeed():
-    speedLabel["text"]=f"speed is {speedVariable.get()} rad/s"
-
-def getSpeed():
-    return speedVariable.get()
