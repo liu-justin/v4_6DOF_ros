@@ -5,6 +5,7 @@ from debouncer import Debouncer
 
 import rospy
 import std_msgs.msg as msg
+import modern_robotics as mr
 
 class SingleMotor(tk.Frame):
     def __init__(self, master, getSpeed, name, increaseKey, decreaseKey):
@@ -13,7 +14,7 @@ class SingleMotor(tk.Frame):
 
         self.getSpeed = getSpeed
 
-        self._velocity = 0
+        self._velocity = 0.0
 
         # setting up main UI
         self.rowconfigure(0, minsize=100, weight=1)
@@ -28,7 +29,7 @@ class SingleMotor(tk.Frame):
         self.btn_decrease.bind('<Button-1>', self.decrease)
         self.btn_decrease.grid(row=0, column=1, sticky="nsew")
 
-        self.label = tk.Label(master=self, text="0")
+        self.label = tk.Label(master=self, text=f"{self._velocity}")
         self.label.grid(row=0, column=2)
 
         self.btn_increase = tk.Button(master=self, text="+", command=self.decrease) # command=self.stop for debouncer fail
@@ -52,7 +53,7 @@ class SingleMotor(tk.Frame):
         self.pack()
 
         # establish publisher
-        self.pub = rospy.Publisher('chatter_'+self.name,msg.Int8,queue_size=1)
+        self.pub = rospy.Publisher('chatter_'+self.name,msg.Float32,queue_size=1)
 
     @property
     def velocity(self):
@@ -62,7 +63,7 @@ class SingleMotor(tk.Frame):
     def velocity(self, new_velocity):
         
         # if it is an equal velocity, dont bother with this stuff and clog the system
-        if (self._velocity != new_velocity):
+        if not mr.NearZero(self._velocity-new_velocity):
             self._velocity = new_velocity          
             self.pub.publish(self._velocity)            # publish the new velocity to this motors chatter_topic
             self.label["text"] = f"{self._velocity}"            # change the label to reflect this new velocity
@@ -72,8 +73,8 @@ class SingleMotor(tk.Frame):
         print(f"keypressed: {e}")
 
     def increase(self, e=None):
-        self.velocity = self.velocity + int(self.getSpeed())
+        self.velocity = self.velocity + float(self.getSpeed())
 
     def decrease(self, e=None):
-        self.velocity = self.velocity - int(self.getSpeed())
+        self.velocity = self.velocity - float(self.getSpeed())
 

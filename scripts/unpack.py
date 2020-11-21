@@ -1,6 +1,8 @@
 import modern_robotics as mr
 import untangle
 import numpy as np
+import tkinter as tk
+import time
 
 # first untagnle the xml file, then create the inputs for ch4 forward kinematics
 
@@ -114,10 +116,7 @@ def unpack_XML(xml):
 
     return T_ee, T_list, body_list, G_list
 
-# use a joint trajectory to get from rest to home (not cartesian)
 def rest_to_home_angle_list():
-
-    # initialize the theta arrays
     theta_rest = np.array([0,0,0,0,0,0])
     theta_home = np.array([0,-1*np.pi/2, np.pi/2, 0,0,0])
 
@@ -128,8 +127,6 @@ def rest_to_home_angle_list():
 
     # create the trajectory, N x n matrix where each row is  n-vector of joint variables at an instant in time
     trajectory = mr.JointTrajectory(theta_rest, theta_home, T_final, N, method)
-
-    return trajectory
 
 # use a cartesian trajectory to get other places
 def movement_to_angleList(M_start, theta_start, M_end, T_final, N, body_list, T_ee):
@@ -151,7 +148,7 @@ def movement_to_angleList(M_start, theta_start, M_end, T_final, N, body_list, T_
 
     return angle_list
 
-def angleList_push(master, angle_list, total_time, motors):
+def angle_list_push(master, angle_list, total_time, motors):
 
     # get number of divisions to get from first angles to last angles
     divisions = len(angle_list)
@@ -160,21 +157,19 @@ def angleList_push(master, angle_list, total_time, motors):
     # get number of motors
     num_motors = len(angle_list[0])
 
-    current_angular_velocities = np.zeros(num_motors)
-
     # run thru angleList without first one
     for i in range(1, divisions):
-        # for each motor in the angleList
         for j in range(num_motors):
             # get the angular velocity from the previous_angles
             angular_velocity = (angle_list[i][j] - angle_list[i-1][j])/division_time
             
-            if not mr.NearZero(current_angular_velocities[j]-angular_velocity):
-                # send the crap
-                motors[i].pub.publish(angular_velocity)
-
-            # reset the current angular velocities
-            current_angular_velocities[j] = angular_velocity
+            # send the crap
+            motors[j].velocity = angular_velocity
 
         # wait for the divisionTime (in ms)
-        master.after(division_time*1000)
+        # master.after(division_time*1000)
+        time.sleep(division_time)
+
+    # after running thru this entire angle_list, send a zero velocity to stop the machine
+    for motor in motors:
+        motor.pub.publish(0)

@@ -9,46 +9,38 @@ import time
 import tkinter as tk
 from singleMotorControl import SingleMotor
 from speed_selector import SpeedSelector
+from home_button import HomeButton
+import unpack as unp
+
+def test():
+    print("testing")
 
 def talker():
     # send msg with only int8; have 6 different topics for 6 motors
 
     window = tk.Tk()
-
-    # establishing frame for setting the speed
-    # speedFrame = tk.Frame()
-    # speedFrame.rowconfigure(0, minsize=100, weight=1)
-    # speedFrame.columnconfigure([0, 1, 2], minsize=100, weight=1)
-    # speedLabel = tk.Label(master=speedFrame, text="speed (rad/s)")
-    # speedLabel.grid(row=0, column=0)
-
-    # speedVariable = tk.StringVar(speedFrame)
-    # speedVariable.set(SPEEDS[0])
-    # speedDropdown = tk.OptionMenu(speedFrame, speedVariable, *SPEEDS)
-    # speedDropdown.grid(row=0, column=1)
-    
-
-    # def updateSpeed():
-    #     speedLabel["text"]=f"speed is {speedVariable.get()} rad/s"
-
-    # speedConfirm = tk.Button(master=speedFrame, text="ok", command=updateSpeed)
-    # speedConfirm.grid(row=0,column=2)
-
-    # speedFrame.pack()
-
-    # def getSpeed():
-    #     return speedVariable.get()
-    ss = SpeedSelector(window)
-
-    #setting up all the motor button controls
-    motorR1 = SingleMotor(window, ss.getSpeed, "motorR1", 'q', 'a')
-    motorT1 = SingleMotor(window, ss.getSpeed, "motorT1", 'w', 's')
-    motorT2 = SingleMotor(window, ss.getSpeed, "motorT2", 'e', 'd')
-    motorR2 = SingleMotor(window, ss.getSpeed, "motorR2", 'r', 'f')
-    motorT3 = SingleMotor(window, ss.getSpeed, "motorT3", 't', 'g')
-    motorR3 = SingleMotor(window, ss.getSpeed, "motorR3", 'y', 'h')
-
     rospy.init_node('talker', anonymous=True)
+
+    ss = SpeedSelector(window)
+    
+    #setting up all the motor button controls
+    motors = []
+    motors.append(SingleMotor(window, ss.getSpeed, "motorR1", 'q', 'a'))
+    motors.append(SingleMotor(window, ss.getSpeed, "motorT1", 'w', 's'))
+    motors.append(SingleMotor(window, ss.getSpeed, "motorT2", 'e', 'd'))
+    motors.append(SingleMotor(window, ss.getSpeed, "motorR2", 'r', 'f'))
+    motors.append(SingleMotor(window, ss.getSpeed, "motorT3", 't', 'g'))
+    motors.append(SingleMotor(window, ss.getSpeed, "motorR3", 'y', 'h'))
+
+    homeButton = HomeButton(window, motors)
+    # homeButton = tk.Frame()
+    # homeButton.rowconfigure(0, minsize=100, weight=1)
+    # homeButton.columnconfigure([0], minsize=100, weight=1)
+    # homeButtonbutton = tk.Button(master=homeButton, text="home", command=test)
+    # # homeButtonbutton = tk.Button(master=homeButton, text="home", command=unp.home(window, 5, motors))
+    # homeButtonbutton.grid(row=0,column=1)
+    # homeButton.pack()
+    
     
     while not rospy.is_shutdown():
         window.mainloop()
