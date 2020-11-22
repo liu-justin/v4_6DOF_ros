@@ -8,12 +8,12 @@ def callback(data):
 
 def listener():
     rospy.init_node('listener', anonymous=True)
-    rospy.Subscriber("chatter_motorR1", m.Int8, callback)
-    rospy.Subscriber("chatter_motorT1", m.Int8, callback)
-    rospy.Subscriber("chatter_motorT2", m.Int8, callback)
-    rospy.Subscriber("chatter_motorR2", m.Int8, callback)
-    rospy.Subscriber("chatter_motorT3", m.Int8, callback)
-    rospy.Subscriber("chatter_motorR3", m.Int8, callback)
+    rospy.Subscriber("chatter_motorR1", m.Float32, callback)
+    rospy.Subscriber("chatter_motorT1", m.Float32, callback)
+    rospy.Subscriber("chatter_motorT2", m.Float32, callback)
+    rospy.Subscriber("chatter_motorR2", m.Float32, callback)
+    rospy.Subscriber("chatter_motorT3", m.Float32, callback)
+    rospy.Subscriber("chatter_motorR3", m.Float32, callback)
     rospy.spin()
 
 if __name__ == '__main__':
