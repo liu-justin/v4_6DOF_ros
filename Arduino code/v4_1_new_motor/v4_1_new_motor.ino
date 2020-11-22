@@ -3,7 +3,7 @@
 #include <ros.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Empty.h>
-#include <std_msgs/Int8.h>
+#include <std_msgs/Float32.h>
 
 ros::NodeHandle  nh;
 
@@ -13,28 +13,28 @@ int minorStepsPerMajorStep = minorStepsPerRev/200; // how many minor steps are i
 double radPerMajorStep = PI/100.0; // 2PI rads/200 steps
 double radPerMinorStep = radPerMajorStep/minorStepsPerMajorStep;
 
-Motor R1(7,8,-45, 45, radPerMinorStep, "chatter_motorR1");
-Motor T1(11,12,-180, 180, radPerMinorStep, "chatter_motorT1");
-Motor T2(9,10,-180, 180, radPerMinorStep, "chatter_motorT2");
-Motor R2(5,6, -180, 180, radPerMinorStep, "chatter_motorR2");
+Motor R1(7,8,-45, 45, radPerMinorStep, 4.0, "chatter_motorR1");
+Motor T1(11,12,-180, 180, radPerMinorStep, 4.0, "chatter_motorT1");
+Motor T2(9,10,-180, 180, radPerMinorStep, 4.0,  "chatter_motorT2");
+Motor R2(5,6, -180, 180, radPerMinorStep, 4.0,  "chatter_motorR2");
 
-void messageCb_R1( const std_msgs::Int8& vel){
+void messageCb_R1( const std_msgs::Float32& vel){
   R1.setVel(vel.data);
 }
-void messageCb_T1( const std_msgs::Int8& vel){
+void messageCb_T1( const std_msgs::Float32& vel){
   T1.setVel(vel.data);
 }
-void messageCb_T2( const std_msgs::Int8& vel){
+void messageCb_T2( const std_msgs::Float32& vel){
   T2.setVel(vel.data);
 }
-void messageCb_R2( const std_msgs::Int8& vel){
+void messageCb_R2( const std_msgs::Float32& vel){
   R2.setVel(vel.data);
 }
 
-ros::Subscriber<std_msgs::Int8> sub1("chatter_motorR1", messageCb_R1 );
-ros::Subscriber<std_msgs::Int8> sub2("chatter_motorT1", messageCb_T1 );
-ros::Subscriber<std_msgs::Int8> sub3("chatter_motorT2", messageCb_T2 );
-ros::Subscriber<std_msgs::Int8> sub4("chatter_motorR2", messageCb_R2 );
+ros::Subscriber<std_msgs::Float32> sub1("chatter_motorR1", messageCb_R1 );
+ros::Subscriber<std_msgs::Float32> sub2("chatter_motorT1", messageCb_T1 );
+ros::Subscriber<std_msgs::Float32> sub3("chatter_motorT2", messageCb_T2 );
+ros::Subscriber<std_msgs::Float32> sub4("chatter_motorR2", messageCb_R2 );
 
 void setup() {
   // put your setup code here, to run once:
