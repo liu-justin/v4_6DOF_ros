@@ -14,6 +14,10 @@ class DifferentialGearUnpack():
     #   updateMotorVel sets motor(A,B) vels
     #   setter for motor(A,B) velocity calls the odrv to set its velocity
 
+    # need to change it to pos_control, vel_control doesn't work in this application (speed too low) (and doesn't hold pos)
+    # need to find the smallest increment of turns to go
+    # or take in the time between velocity sendings and find the position from that
+
     def __init__(self):
         self._vel_A = 0.0
         self._vel_B = 0.0
@@ -22,7 +26,7 @@ class DifferentialGearUnpack():
         self._vel_T3 = 0.0
 
         self.speed_ratio = 3.95 # 20 to 89 teeth
-        self.rad_to_rev = 2*math.pi
+        self.rad_to_rev = 1 /(2*math.pi)
         self.final_multipler = self.speed_ratio*self.rad_to_rev
 
     @property
