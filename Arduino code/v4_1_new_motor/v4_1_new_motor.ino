@@ -13,10 +13,10 @@ int minorStepsPerMajorStep = minorStepsPerRev/200; // how many minor steps are i
 double radPerMajorStep = PI/100.0; // 2PI rads/200 steps
 double radPerMinorStep = radPerMajorStep/minorStepsPerMajorStep;
 
-Motor R1(7,8,-45, 45, radPerMinorStep, 4.0, "chatter_motorR1");
+Motor R1( 7, 8, -45,  45, radPerMinorStep, 4.0, "chatter_motorR1");
 Motor T1(11,12,-180, 180, radPerMinorStep, 4.0, "chatter_motorT1");
-Motor T2(9,10,-180, 180, radPerMinorStep, 4.0,  "chatter_motorT2");
-Motor R2(5,6, -180, 180, radPerMinorStep, 4.0,  "chatter_motorR2");
+Motor T2( 9,10,-180, 180, radPerMinorStep, 4.0, "chatter_motorT2");
+Motor R2( 5, 6,-180, 180, radPerMinorStep, 4.0, "chatter_motorR2");
 
 void messageCb_R1( const std_msgs::Float32& vel){
   R1.setVel(vel.data);
