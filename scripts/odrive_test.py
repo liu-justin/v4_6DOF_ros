@@ -33,7 +33,8 @@ class DifferentialGearUnpack():
         self.previous_time_A = 0
         self.previous_time_B = 0
 
-        self.minorSteps = np.pi/100
+        # self.minorSteps = np.pi/100
+        self.minorSteps = 0.005
 
     @property
     def vel_R3(self):
@@ -62,7 +63,7 @@ class DifferentialGearUnpack():
     @vel_A.setter
     def vel_A(self, new_vel):
         if not mr.NearZero(self._vel_A - new_vel):
-            self._vel_A = self.final_multipler*new_vel
+            self._vel_A = new_vel
             self.previous_time_A = time.perf_counter()
 
     @property
@@ -72,12 +73,15 @@ class DifferentialGearUnpack():
     @vel_B.setter
     def vel_B(self, new_vel):
         if not mr.NearZero(self._vel_B - new_vel):
-            self._vel_B = self.final_multipler*new_vel
+            self._vel_B = new_vel
             self.previous_time_B = time.perf_counter()
 
     def updateMotorVel(self):
-        self.vel_A = -1*self._vel_R3 + self._vel_T3
-        self.vel_B = -1*self._vel_R3 + -1*self._vel_T3
+        self.vel_A = self.final_multipler*(-1*self._vel_R3 + self._vel_T3)
+        a = self.vel_A
+        self.vel_B = self.final_multipler*(-1*self._vel_R3 + -1*self._vel_T3)
+        b = self.vel_B
+        rospy.loginfo(f"vel_A: {a} - vel_B: {b}")
 
     def callbackR3(self, data):
         self.vel_R3 = data.data
@@ -88,13 +92,13 @@ class DifferentialGearUnpack():
     def step(self):
         if (self.vel_A != 0):
             current_time = time.perf_counter()
-            if (current_time - self.previous_time_A) > (self.minorSteps/(self.vel_A+0.000001)):
+            if (current_time - self.previous_time_A) > (self.minorSteps/abs(self.vel_A+0.000001)):
                 odrv0.axis0.controller.input_pos += np.sign(self.vel_A)*self.minorSteps
                 self.previous_time_A = current_time
 
         if (self.vel_B != 0):
             current_time = time.perf_counter()
-            if (current_time - self.previous_time_B) > (self.minorSteps/(self.vel_B+0.000001)):
+            if (current_time - self.previous_time_B) > (self.minorSteps/abs(self.vel_B+0.000001)):
                 odrv0.axis1.controller.input_pos += np.sign(self.vel_B)*self.minorSteps
                 self.previous_time_B = current_time
 

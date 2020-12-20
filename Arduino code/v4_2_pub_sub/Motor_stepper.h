@@ -10,7 +10,7 @@
 
 class Motor_stepper {
 	public:
-		Motor_stepper(int pulse, int direct, int lower, int upper,float stepSize, float multipler, char velChatter[]);
+		Motor_stepper(int pulse, int direct, int lower, int upper,float stepSize, float multipler, char velChatter[11], char posChatter[11]);
 		int getPos();
 		int getVel();
 		void setVel(float incomingVel);
@@ -21,8 +21,10 @@ class Motor_stepper {
 
 		void messageCb( const std_msgs::Float32& vel);
 		
-//    ros::Subscriber<std_msgs::Float32, Motor_stepper> sub;
-//    ros::Publisher pub;
+    ros::Subscriber<std_msgs::Float32, Motor_stepper> sub;
+    ros::Publisher pub;
+
+    void initpubsub(ros::NodeHandle nh);
 		
 	private:
 		

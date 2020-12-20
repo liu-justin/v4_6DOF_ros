@@ -5,11 +5,12 @@
 #include <std_msgs/String.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/Float32.h>
-#include <stdio.h>
-#include <string.h>
-std_msgs::Float32 float32;
+std_msgs::Float32 posPub;
 
-Motor_stepper::Motor_stepper(int pulse, int direct, int lower, int upper, float stepSize, float multi, char velChatter[])
+
+Motor_stepper::Motor_stepper(int pulse, int direct, int lower, int upper, float stepSize, float multi, char velChatter[11], char posChatter[11])
+:sub(velChatter, &Motor_stepper::messageCb, this)
+,pub(posChatter, &posPub)
 {// initialization lists https://www.tutorialspoint.com/cplusplus/cpp_constructor_destructor.htm
 	pulsePin = pulse;
 	directionPin = direct;
@@ -67,9 +68,17 @@ void Motor_stepper::step(){
 			pulse();         
 
 			// reset previousTime for nextTime period                 
-			previousTime = millis();          
+			previousTime = millis();
+
+      posPub.data = pos;
+      pub.publish( &posPub);
 		}
 	}
+}
+
+void Motor_stepper::initpubsub(ros::NodeHandle nh){
+  nh.subscribe(sub);
+  nh.advertise(pub);
 }
 
 // put aside for now, was for when the subscriber was in the class

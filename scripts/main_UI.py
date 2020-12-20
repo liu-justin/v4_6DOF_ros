@@ -33,14 +33,6 @@ def talker():
     motors.append(SingleMotor(window, ss.getSpeed, "motorR3", 'y', 'h'))
 
     homeButton = HomeButton(window, motors)
-    # homeButton = tk.Frame()
-    # homeButton.rowconfigure(0, minsize=100, weight=1)
-    # homeButton.columnconfigure([0], minsize=100, weight=1)
-    # homeButtonbutton = tk.Button(master=homeButton, text="home", command=test)
-    # # homeButtonbutton = tk.Button(master=homeButton, text="home", command=unp.home(window, 5, motors))
-    # homeButtonbutton.grid(row=0,column=1)
-    # homeButton.pack()
-    
     
     while not rospy.is_shutdown():
         window.mainloop()

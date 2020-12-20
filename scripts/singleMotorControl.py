@@ -16,9 +16,11 @@ class SingleMotor(tk.Frame):
 
         self._velocity = 0.0
 
+        self._pos = 0.0 
+
         # setting up main UI
         self.rowconfigure(0, minsize=100, weight=1)
-        self.columnconfigure([0, 1, 2, 3], minsize=100, weight=1)
+        self.columnconfigure([0, 1, 2, 3, 4], minsize=100, weight=1)
 
         # name of motor label
         self.name_label = tk.Label(master=self, text=f"{self.name}")
@@ -29,12 +31,15 @@ class SingleMotor(tk.Frame):
         self.btn_decrease.bind('<Button-1>', self.decrease)
         self.btn_decrease.grid(row=0, column=1, sticky="nsew")
 
-        self.label = tk.Label(master=self, text=f"{self._velocity}")
-        self.label.grid(row=0, column=2)
+        self.vel_label = tk.Label(master=self, text=f"{self._velocity}")
+        self.vel_label.grid(row=0, column=2)
 
         self.btn_increase = tk.Button(master=self, text="+", command=self.decrease) # command=self.stop for debouncer fail
         self.btn_increase.bind('<Button-1>', self.increase)
         self.btn_increase.grid(row=0, column=3, sticky="nsew")
+
+        self.pos_label = tk.Label(master=self, text=f"{self._pos}")
+        self.pos_label.grid(row=0, column=4)
 
         # failsafe for when debouncer fails
         # master.bind('<KeyPress-' + increaseKey + '>', self.increase)
@@ -53,7 +58,8 @@ class SingleMotor(tk.Frame):
         self.pack()
 
         # establish publisher
-        self.pub = rospy.Publisher('chatter_'+self.name,msg.Float32,queue_size=1)
+        self.pub = rospy.Publisher('vel_'+self.name,msg.Float32,queue_size=1)
+        self.sub = rospy.Subscriber('pos_'+self.name, msg.Float32,self.updatePos)
 
     @property
     def velocity(self):
@@ -66,7 +72,7 @@ class SingleMotor(tk.Frame):
         if not mr.NearZero(self._velocity-new_velocity):
             self._velocity = new_velocity          
             self.pub.publish(self._velocity)            # publish the new velocity to this motors chatter_topic
-            self.label["text"] = f"{self._velocity}"            # change the label to reflect this new velocity
+            self.vel_label["text"] = f"{self._velocity}"            # change the label to reflect this new velocity
             rospy.loginfo(f"{self.name} is moving at {self._velocity} rad/s")           
 
     def keyPress(self, e):
@@ -78,3 +84,5 @@ class SingleMotor(tk.Frame):
     def decrease(self, e=None):
         self.velocity = self.velocity - float(self.getSpeed())
 
+    def updatePos(self, data):
+        self.pos_label["text"] = data

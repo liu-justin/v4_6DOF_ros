@@ -13,14 +13,10 @@ int minorStepsPerMajorStep = minorStepsPerRev/200; // how many minor steps are i
 double radPerMajorStep = PI/100.0; // 2PI rads/200 steps
 double radPerMinorStep = radPerMajorStep/minorStepsPerMajorStep;
 
-Motor_stepper R1( 7, 8, -45,  45, radPerMinorStep, 4.0, "chatter_motorR1");
-Motor_stepper T1(11,12,-180, 180, radPerMinorStep, 4.0, "chatter_motorT1");
-Motor_stepper T2( 9,10,-180, 180, radPerMinorStep, 4.0, "chatter_motorT2");
-Motor_stepper R2( 5, 6,-180, 180, radPerMinorStep, 4.0, "chatter_motorR2");
-//Motor_stepper R1(33,35, -45,  45, radPerMinorStep, 4.0, "chatter_motorR1");
-//Motor_stepper T1(32,31,-180, 180, radPerMinorStep, 4.0, "chatter_motorT1");
-//Motor_stepper T2(30,29,-180, 180, radPerMinorStep, 4.0, "chatter_motorT2");
-//Motor_stepper R2(28,27,-180, 180, radPerMinorStep, 4.0, "chatter_motorR2");
+Motor_stepper R1( 7, 8, -45,  45, radPerMinorStep, 4.0, 'vel_motorR1');
+Motor_stepper T1(11,12,-180, 180, radPerMinorStep, 4.0, 'vel_motorT1');
+Motor_stepper T2( 9,10,-180, 180, radPerMinorStep, 4.0, 'vel_motorT2');
+Motor_stepper R2( 5, 6,-180, 180, radPerMinorStep, 4.0, 'vel_motorR2');
 
 void messageCb_R1( const std_msgs::Float32& vel){
   R1.setVel(vel.data);
@@ -35,10 +31,10 @@ void messageCb_R2( const std_msgs::Float32& vel){
   R2.setVel(vel.data);
 }
 
-ros::Subscriber<std_msgs::Float32> sub1("chatter_motorR1", messageCb_R1 );
-ros::Subscriber<std_msgs::Float32> sub2("chatter_motorT1", messageCb_T1 );
-ros::Subscriber<std_msgs::Float32> sub3("chatter_motorT2", messageCb_T2 );
-ros::Subscriber<std_msgs::Float32> sub4("chatter_motorR2", messageCb_R2 );
+ros::Subscriber<std_msgs::Float32> sub1("vel_motorR1", messageCb_R1 );
+ros::Subscriber<std_msgs::Float32> sub2("vel_motorT1", messageCb_T1 );
+ros::Subscriber<std_msgs::Float32> sub3("vel_motorT2", messageCb_T2 );
+ros::Subscriber<std_msgs::Float32> sub4("vel_motorR2", messageCb_R2 );
 
 void setup() {
   // put your setup code here, to run once:
@@ -46,7 +42,7 @@ void setup() {
   nh.subscribe(sub1);
   nh.subscribe(sub2);
   nh.subscribe(sub3);
-  nh.subscribe(sub4);
+  nh.subscribe(sub4); 
   
 }
 
