@@ -76,9 +76,9 @@ void Motor_stepper::step(){
 	}
 }
 
-void Motor_stepper::initpubsub(ros::NodeHandle nh){
-  nh.subscribe(sub);
-  nh.advertise(pub);
+void Motor_stepper::initpubsub(ros::NodeHandle handle){
+  handle.subscribe(sub);
+  handle.advertise(pub);
 }
 
 // put aside for now, was for when the subscriber was in the class

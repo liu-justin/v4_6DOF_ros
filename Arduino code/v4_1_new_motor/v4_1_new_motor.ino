@@ -31,10 +31,17 @@ void messageCb_R2( const std_msgs::Float32& vel){
   R2.setVel(vel.data);
 }
 
+//std_msgs::Float32 float32;
+
 ros::Subscriber<std_msgs::Float32> sub1("vel_motorR1", messageCb_R1 );
 ros::Subscriber<std_msgs::Float32> sub2("vel_motorT1", messageCb_T1 );
 ros::Subscriber<std_msgs::Float32> sub3("vel_motorT2", messageCb_T2 );
 ros::Subscriber<std_msgs::Float32> sub4("vel_motorR2", messageCb_R2 );
+//ros::Publisher pubR1("pos_motorR1", &float32);
+//ros::Publisher pubT1("pos_motorT1", &float32);
+//ros::Publisher pubR2("pos_motorR2", &float32);
+//ros::Publisher pubT2("pos_motorT2", &float32);
+
 
 void setup() {
   // put your setup code here, to run once:

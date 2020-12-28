@@ -25,10 +25,10 @@ void setup() {
   nh.subscribe(T1.sub);
   nh.subscribe(T2.sub);
   nh.subscribe(R2.sub);
-//  R1.initpubsub(nh);
-//  T1.initpubsub(nh);
-//  T2.initpubsub(nh);
-//  R2.initpubsub(nh);
+//  nh.advertise(R1.pub);
+//  nh.advertise(T1.pub);
+//  nh.advertise(T2.pub);
+//  nh.advertise(R2.pub);
 }
 
 void loop() {

@@ -111,8 +111,8 @@ print(str(odrv0.vbus_voltage))
 def listener():
     a = DifferentialGearUnpack()
     rospy.init_node('listener', anonymous=True)
-    rospy.Subscriber("chatter_motorT3", m.Float32, a.callbackT3)
-    rospy.Subscriber("chatter_motorR3", m.Float32, a.callbackR3)
+    rospy.Subscriber("vel_motorT3", m.Float32, a.callbackT3)
+    rospy.Subscriber("vel_motorR3", m.Float32, a.callbackR3)
     rospy.loginfo("ready to read from chatter_motorT3/R3")
     while True:
         a.step()
