@@ -85,4 +85,4 @@ class SingleMotor(tk.Frame):
         self.velocity = self.velocity - float(self.getSpeed())
 
     def updatePos(self, data):
-        self.pos_label["text"] = data
+        self.pos_label["text"] = data.data

@@ -5,12 +5,13 @@
 #include <std_msgs/String.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/Float32.h>
-std_msgs::Float32 posPub;
 
+// this value is being shared across all the instances of the class, need to fix
+//std_msgs::Float32 posMsg;
 
 Motor_stepper::Motor_stepper(int pulse, int direct, int lower, int upper, float stepSize, float multi, char velChatter[11], char posChatter[11])
 :sub(velChatter, &Motor_stepper::messageCb, this)
-,pub(posChatter, &posPub)
+,pub(posChatter, &posMsg)
 {// initialization lists https://www.tutorialspoint.com/cplusplus/cpp_constructor_destructor.htm
 	pulsePin = pulse;
 	directionPin = direct;
@@ -52,6 +53,9 @@ void Motor_stepper::pulse(){
 	digitalWrite(pulsePin, LOW);
 	// track the pos
 	pos += (vel > 0) - (vel < 0);
+
+  posMsg.data = pos;
+  pub.publish( &posMsg);
 }
 
 // automatically finds correct time to pulse, based on inputed velocity
@@ -70,8 +74,6 @@ void Motor_stepper::step(){
 			// reset previousTime for nextTime period                 
 			previousTime = millis();
 
-      posPub.data = pos;
-      pub.publish( &posPub);
 		}
 	}
 }

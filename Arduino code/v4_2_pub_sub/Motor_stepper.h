@@ -20,7 +20,7 @@ class Motor_stepper {
 		unsigned long previousTime;
 
 		void messageCb( const std_msgs::Float32& vel);
-		
+		std_msgs::Float32 posMsg;
     ros::Subscriber<std_msgs::Float32, Motor_stepper> sub;
     ros::Publisher pub;
 
