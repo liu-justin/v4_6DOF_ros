@@ -6,12 +6,12 @@
 #include <ros.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Empty.h>
-#include <std_msgs/Int8.h>
+#include <std_msgs/Float32.h>
 
 ros::NodeHandle  nh;
 
 
-void messageCb_R1( const std_msgs::Int8& vel){
+void messageCb_R1( const std_msgs::Float32& vel){
   if (vel.data == 0) {
     digitalWrite(2, LOW);
   }
@@ -20,7 +20,7 @@ void messageCb_R1( const std_msgs::Int8& vel){
   }
 }
 
-void messageCb_T1( const std_msgs::Int8& vel){
+void messageCb_T1( const std_msgs::Float32& vel){
   if (vel.data == 0) {
     digitalWrite(4, LOW);
   }
@@ -29,7 +29,7 @@ void messageCb_T1( const std_msgs::Int8& vel){
   }
 }
 
-void messageCb_T2( const std_msgs::Int8& vel){
+void messageCb_T2( const std_msgs::Float32& vel){
   if (vel.data == 0) {
     digitalWrite(6, LOW);
   }
@@ -38,7 +38,7 @@ void messageCb_T2( const std_msgs::Int8& vel){
   }
 }
 
-void messageCb_R2( const std_msgs::Int8& vel){
+void messageCb_R2( const std_msgs::Float32& vel){
   if (vel.data == 0) {
     digitalWrite(8, LOW);
   }
@@ -47,7 +47,7 @@ void messageCb_R2( const std_msgs::Int8& vel){
   }
 }
 
-void messageCb_T3( const std_msgs::Int8& vel){
+void messageCb_T3( const std_msgs::Float32& vel){
   if (vel.data == 0) {
     digitalWrite(10, LOW);
   }
@@ -56,7 +56,7 @@ void messageCb_T3( const std_msgs::Int8& vel){
   }
 }
 
-void messageCb_R3( const std_msgs::Int8& vel){
+void messageCb_R3( const std_msgs::Float32& vel){
   if (vel.data == 0) {
     digitalWrite(12, LOW);
   }

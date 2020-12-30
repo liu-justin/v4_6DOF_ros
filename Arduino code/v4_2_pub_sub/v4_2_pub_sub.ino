@@ -13,10 +13,14 @@ int minorStepsPerMajorStep = minorStepsPerRev/200; // how many minor steps are i
 double radPerMajorStep = PI/100.0; // 2PI rads/200 steps
 double radPerMinorStep = radPerMajorStep/minorStepsPerMajorStep;
 
-Motor_stepper R1( 7, 8, -45,  45, radPerMinorStep, 4.0, "vel_motorR1", "pos_motorR1");
-Motor_stepper T1(11,12,-180, 180, radPerMinorStep, 4.0, "vel_motorT1", "pos_motorT1");
-Motor_stepper T2( 9,10,-180, 180, radPerMinorStep, 4.0, "vel_motorT2", "pos_motorT2");
-Motor_stepper R2( 5, 6,-180, 180, radPerMinorStep, 4.0, "vel_motorR2", "pos_motorR2");
+//Motor_stepper R1( 7, 8, -45,  45, radPerMinorStep, 4.0, "vel_motorR1", "pos_motorR1");
+//Motor_stepper T1(11,12,-180, 180, radPerMinorStep, 4.0, "vel_motorT1", "pos_motorT1");
+//Motor_stepper T2( 9,10,-180, 180, radPerMinorStep, 4.0, "vel_motorT2", "pos_motorT2");
+//Motor_stepper R2( 5, 6,-180, 180, radPerMinorStep, 4.0, "vel_motorR2", "pos_motorR2");
+Motor_stepper R1(29,30, -45,  45, radPerMinorStep, 4.0, "vel_motorR1", "pos_motorR1");
+Motor_stepper T1(25,26,-180, 180, radPerMinorStep, 4.0, "vel_motorT1", "pos_motorT1");
+Motor_stepper T2(27,28,-180, 180, radPerMinorStep, 4.0, "vel_motorT2", "pos_motorT2");
+Motor_stepper R2(31,32,-180, 180, radPerMinorStep, 4.0, "vel_motorR2", "pos_motorR2");
 
 void setup() {
   // put your setup code here, to run once:
