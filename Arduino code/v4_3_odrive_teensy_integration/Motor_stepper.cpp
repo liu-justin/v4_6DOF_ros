@@ -78,6 +78,7 @@ void Motor_stepper::step(){
 	}
 }
 
+
 // put aside for now, was for when the subscriber was in the class
 // but i couldn't figure out how to put sub in class
 void Motor_stepper::messageCb( const std_msgs::Float32& vel){
