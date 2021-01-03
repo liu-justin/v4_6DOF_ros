@@ -23,26 +23,28 @@ Motor_stepper T1(25,26,-180, 180, radPerMinorStep, 4.0, "vel_motorT1", "pos_moto
 Motor_stepper T2(27,28,-180, 180, radPerMinorStep, 4.0, "vel_motorT2", "pos_motorT2");
 Motor_stepper R2(31,32,-180, 180, radPerMinorStep, 4.0, "vel_motorR2", "pos_motorR2");
 
-Motor_odrive_differential R3T3();
-//float x = R3T3.final_multipler;
+// Teensy 4.1 RX/TX is 7/8 for Serial2, didnt work for Serial1
+HardwareSerial& odrive_serial = Serial2;
+
+Motor_odrive_differential R3T3(odrive_serial);
 
 void setup() {
   // put your setup code here, to run once:
-  odrive_serial.begin(115200);
+  
   
   nh.initNode();
   nh.subscribe(R1.sub);
   nh.subscribe(T1.sub);
   nh.subscribe(T2.sub);
   nh.subscribe(R2.sub);
-//  nh.subscribe(R3T3.sub_R3);
-//  nh.subscribe(R3T3.sub_T3);
+  nh.subscribe(R3T3.sub_R3);
+  nh.subscribe(R3T3.sub_T3);
   nh.advertise(R1.pub);
   nh.advertise(T1.pub);
   nh.advertise(T2.pub);
   nh.advertise(R2.pub);
-//  nh.advertise(R3T3.pub_R3);
-//  nh.advertise(R3T3.pub_T3);
+  nh.advertise(R3T3.pub_R3);
+  nh.advertise(R3T3.pub_T3);
   
 }
 

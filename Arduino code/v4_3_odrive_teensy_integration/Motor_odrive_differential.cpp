@@ -13,15 +13,12 @@ template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
 }
 
-HardwareSerial& odrive_serial = Serial2;
-// ODrive object
-ODriveArduino odrive(odrive_serial);
-
-Motor_odrive_differential::Motor_odrive_differential()
+Motor_odrive_differential::Motor_odrive_differential(HardwareSerial& odrive_serial)
 :sub_R3("vel_motorR3", &Motor_odrive_differential::message_R3_callback, this)
 ,sub_T3("vel_motorT3", &Motor_odrive_differential::message_T3_callback, this)
 ,pub_R3("pos_motorR3", &pos_R3_msg)
 ,pub_T3("pos_motorT3", &pos_T3_msg)
+,odrive(odrive_serial)
 {  
   vel_A = 0.0;
   vel_B = 0.0;
@@ -36,6 +33,11 @@ Motor_odrive_differential::Motor_odrive_differential()
   rad_to_rev = 1/(2*PI);
   final_multipler = speed_ratio*rad_to_rev;
   minor_steps = 0.005;
+
+  
+  // ODrive object
+//  ODriveArduino odrive(odrive_serial);
+  odrive_serial.begin(115200);
 }
 
 void Motor_odrive_differential::update_motor_vel(){
@@ -78,6 +80,7 @@ void Motor_odrive_differential::step(){
 
 void Motor_odrive_differential::message_R3_callback( const std_msgs::Float32& vel) {
   vel_R3 = vel.data;
+  publish_motor_pos();
   update_motor_vel();
 }
 

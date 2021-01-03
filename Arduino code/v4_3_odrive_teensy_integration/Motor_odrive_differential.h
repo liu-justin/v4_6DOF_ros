@@ -6,9 +6,13 @@
 #include <std_msgs/Empty.h>
 #include <std_msgs/Float32.h>
 
+#include <HardwareSerial.h>
+#include <SoftwareSerial.h>
+#include <ODriveArduino.h>
+
 class Motor_odrive_differential {
   public:
-    Motor_odrive_differential();
+    Motor_odrive_differential(HardwareSerial& odrive_serial);
     float vel_A;
     float vel_B;
     float pos_A;
@@ -34,6 +38,8 @@ class Motor_odrive_differential {
 
     void message_R3_callback(const std_msgs::Float32& vel);
     void message_T3_callback(const std_msgs::Float32& vel);
+
+    ODriveArduino odrive;
     
   private:
     float speed_ratio;
@@ -42,9 +48,5 @@ class Motor_odrive_differential {
 
     float minor_steps;
 };
-
-
-
-
 
 #endif
