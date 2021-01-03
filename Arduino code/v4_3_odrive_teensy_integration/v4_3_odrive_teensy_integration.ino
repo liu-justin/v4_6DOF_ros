@@ -7,6 +7,8 @@
 #include <std_msgs/Float32.h>
 
 ros::NodeHandle  nh;
+// trying to set baud rate maybe?
+nh.getHardware()->setBaud(115200);
 
 int minorStepsPerRev = 1600; // written on the motor driver
 int minorStepsPerMajorStep = minorStepsPerRev/200; // how many minor steps are in between the 200 major steps of a standard stepper motor
