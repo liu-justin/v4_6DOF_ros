@@ -8,7 +8,7 @@
 
 ros::NodeHandle  nh;
 // trying to set baud rate maybe?
-nh.getHardware()->setBaud(115200);
+
 
 int minorStepsPerRev = 1600; // written on the motor driver
 int minorStepsPerMajorStep = minorStepsPerRev/200; // how many minor steps are in between the 200 major steps of a standard stepper motor
@@ -31,8 +31,8 @@ HardwareSerial& odrive_serial = Serial2;
 Motor_odrive_differential R3T3(odrive_serial);
 
 void setup() {
-  // put your setup code here, to run once:
-  
+  // this line doesn't work above the setup, dunno why
+  nh.getHardware()->setBaud(115200);
   
   nh.initNode();
   nh.subscribe(R1.sub);
