@@ -10,7 +10,7 @@
 
 class Motor_stepper {
 	public:
-		Motor_stepper(int pulse, int direct, int lower, int upper,float stepSize, float multipler, char velChatter[11], char posChatter[11]);
+		Motor_stepper(int pulse, int direct, int lower, int upper,float smallest_step_rad, float multipler, const char velChatter[11], const char posChatter[11]);
 		int getPos();
 		int getVel();
 		void setVel(float incomingVel);

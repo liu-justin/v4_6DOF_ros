@@ -6,10 +6,14 @@
 #include <std_msgs/Empty.h>
 #include <std_msgs/Float32.h>
 
-// this value is being shared across all the instances of the class, need to fix
-//std_msgs::Float32 posMsg;
-
-Motor_stepper::Motor_stepper(int pulse, int direct, int lower, int upper, float stepSize, float multi, char velChatter[11], char posChatter[11])
+// pulse       -> pulse pin
+// direct      -> direction pin
+// lower/upper -> lower and upper bounds on angle for final output (radians)
+// smallest_step_rad -> how many rads are in the smallest step
+// multi       -> multipler from input motor torque to output axis torque
+// velChatter  -> topic for listening for velocity (in the output axis)
+// posChatter  -> topic for publishing position (in the output axis)
+Motor_stepper::Motor_stepper(int pulse, int direct, int lower, int upper, float smallest_step_rad, float multi, const char velChatter[11], const char posChatter[11])
 :sub(velChatter, &Motor_stepper::messageCb, this)
 ,pub(posChatter, &posMsg)
 {// initialization lists https://www.tutorialspoint.com/cplusplus/cpp_constructor_destructor.htm
@@ -26,7 +30,7 @@ Motor_stepper::Motor_stepper(int pulse, int direct, int lower, int upper, float 
 	pos = 0.0;
 	vel = 0.0;
 
-	radiansPerMinorStep = stepSize;
+	radiansPerMinorStep = smallest_step_rad;
 
  }
 

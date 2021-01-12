@@ -20,13 +20,13 @@ double radPerMinorStep = radPerMajorStep/minorStepsPerMajorStep;
 //Motor_stepper T1(11,12,-180, 180, radPerMinorStep, 4.0, "vel_motorT1", "pos_motorT1");
 //Motor_stepper T2( 9,10,-180, 180, radPerMinorStep, 4.0, "vel_motorT2", "pos_motorT2");
 //Motor_stepper R2( 5, 6,-180, 180, radPerMinorStep, 4.0, "vel_motorR2", "pos_motorR2");
-Motor_stepper R1(29,30, -45,  45, radPerMinorStep, 4.0, "vel_motorR1", "pos_motorR1");
-Motor_stepper T1(25,26,-180, 180, radPerMinorStep, 4.0, "vel_motorT1", "pos_motorT1");
-Motor_stepper T2(27,28,-180, 180, radPerMinorStep, 4.0, "vel_motorT2", "pos_motorT2");
-Motor_stepper R2(31,32,-180, 180, radPerMinorStep, 4.0, "vel_motorR2", "pos_motorR2");
+Motor_stepper R1(19,18, -45,  45, radPerMinorStep, 4.0, "vel_motorR1", "pos_motorR1");
+Motor_stepper T1(23,22,-180, 180, radPerMinorStep, 4.0, "vel_motorT1", "pos_motorT1");
+Motor_stepper T2(21,20,-180, 180, radPerMinorStep, 4.0, "vel_motorT2", "pos_motorT2");
+Motor_stepper R2(17,16,-180, 180, radPerMinorStep, 4.0, "vel_motorR2", "pos_motorR2");
 
 // Teensy 4.1 RX/TX is 7/8 for Serial2, didnt work for Serial1
-HardwareSerial& odrive_serial = Serial2;
+HardwareSerial& odrive_serial = Serial3;
 
 Motor_odrive_differential R3T3(odrive_serial);
 
@@ -56,5 +56,6 @@ void loop() {
   T1.step();
   T2.step();
   R2.step();
+  R3T3.step();
   nh.spinOnce();
 }

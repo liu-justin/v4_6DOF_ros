@@ -80,7 +80,6 @@ void Motor_odrive_differential::step(){
 
 void Motor_odrive_differential::message_R3_callback( const std_msgs::Float32& vel) {
   vel_R3 = vel.data;
-  publish_motor_pos();
   update_motor_vel();
 }
 
