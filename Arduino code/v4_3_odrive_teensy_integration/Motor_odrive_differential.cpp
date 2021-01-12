@@ -13,7 +13,7 @@ template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
 }
 
-Motor_odrive_differential::Motor_odrive_differential(HardwareSerial& odrive_serial)
+Motor_odrive_differential::Motor_odrive_differential(SoftwareSerial& odrive_serial)
 :sub_R3("vel_motorR3", &Motor_odrive_differential::message_R3_callback, this)
 ,sub_T3("vel_motorT3", &Motor_odrive_differential::message_T3_callback, this)
 ,pub_R3("pos_motorR3", &pos_R3_msg)

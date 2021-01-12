@@ -12,7 +12,7 @@
 
 class Motor_odrive_differential {
   public:
-    Motor_odrive_differential(HardwareSerial& odrive_serial);
+    Motor_odrive_differential(SoftwareSerial& odrive_serial);
     float vel_A;
     float vel_B;
     float pos_A;
