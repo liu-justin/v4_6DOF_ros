@@ -51,3 +51,4 @@ class HomeButton(tk.Frame):
         # after running thru this entire angle_list, send a zero velocity to stop the machine
         for motor in self.motors:
             motor.velocity = 0
+            motor.pos = 0
