@@ -22,6 +22,8 @@ class DifferentialGearUnpack():
     def __init__(self):
         self._vel_A = 0.0
         self._vel_B = 0.0
+        self._pos_A = 0.0
+        self._pos_B = 0.0
 
         self._vel_R3 = 0.0
         self._vel_T3 = 0.0
@@ -35,6 +37,9 @@ class DifferentialGearUnpack():
 
         # self.minorSteps = np.pi/100
         self.minorSteps = 0.005
+
+        self.pubR3 = rospy.Publisher('pos_motorR3',msg.Float32,queue_size=1)
+        self.pubT3 = rospy.Publisher('pos_motorT3',msg.Float32,queue_size=1)
 
     @property
     def vel_R3(self):
@@ -83,6 +88,14 @@ class DifferentialGearUnpack():
         b = self.vel_B
         rospy.loginfo(f"vel_A: {a} - vel_B: {b}")
 
+    def updateMotorPos(self):
+        pos_A = odrv0.axis0.controller.input_pos
+        pos_B = odrv0.axis1.controller.input_pos
+        pos_R3 = (-0.5*pos_A - 0.5*pos_B)/self.final_multipler
+        self.pubR3.publish(pos_R3)
+        pos_T3 = ( 0.5*pos_A - 0.5*pos_B)/self.final_multipler
+        self.pubT3.publish(pos_T3)
+
     def callbackR3(self, data):
         self.vel_R3 = data.data
     
@@ -94,12 +107,14 @@ class DifferentialGearUnpack():
             current_time = time.perf_counter()
             if (current_time - self.previous_time_A) > (self.minorSteps/abs(self.vel_A+0.000001)):
                 odrv0.axis0.controller.input_pos += np.sign(self.vel_A)*self.minorSteps
+                updateMotorPos()
                 self.previous_time_A = current_time
 
         if (self.vel_B != 0):
             current_time = time.perf_counter()
             if (current_time - self.previous_time_B) > (self.minorSteps/abs(self.vel_B+0.000001)):
                 odrv0.axis1.controller.input_pos += np.sign(self.vel_B)*self.minorSteps
+                updateMotorPos()
                 self.previous_time_B = current_time
 
 # need to add another topic in main_UI for home, and a subscriber in this file to catch it and home
