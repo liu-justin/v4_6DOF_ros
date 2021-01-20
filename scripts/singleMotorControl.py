@@ -74,7 +74,16 @@ class SingleMotor(tk.Frame):
             self._velocity = new_velocity          
             self.pub.publish(self._velocity)            # publish the new velocity to this motors chatter_topic
             self.vel_label["text"] = f"{self._velocity}"            # change the label to reflect this new velocity
-            rospy.loginfo(f"{self.name} is moving at {self._velocity} rad/s")           
+            rospy.loginfo(f"{self.name} is moving at {self._velocity} rad/s")
+
+    @property
+    def position(self):
+        return self._pos 
+    
+    @position.setter
+    def position(self, new_pos):
+        self._pos = new_pos
+        self.pos_label["text"] = f"{round(self._pos*180/math.pi,2)}"
 
     def keyPress(self, e):
         print(f"keypressed: {e}")
@@ -86,4 +95,4 @@ class SingleMotor(tk.Frame):
         self.velocity = self.velocity - float(self.getSpeed())
 
     def updatePos(self, data):
-        self.pos_label["text"] = data.data
+        self.position = data.data
