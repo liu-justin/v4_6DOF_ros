@@ -52,7 +52,7 @@ void Motor_stepper::pulse(){
 	digitalWrite(pulsePin, HIGH);
 	digitalWrite(pulsePin, LOW);
 	// track the pos
-	pos += (vel > 0) - (vel < 0);
+	pos += ((vel > 0) - (vel < 0))*radiansPerMinorStep/multipler;
 
   posMsg.data = pos;
   pub.publish( &posMsg);

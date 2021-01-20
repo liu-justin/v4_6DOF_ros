@@ -54,12 +54,15 @@ void Motor_stepper::setVel(float incomingVel) {
 
 void Motor_stepper::pulse(){
 	digitalWrite(pulsePin, HIGH);
-	digitalWrite(pulsePin, LOW);
-	// track the pos
-	pos += (vel > 0) - (vel < 0);
 
+	
+	// track the pos
+	pos += ((vel > 0) - (vel < 0))*radiansPerMinorStep/multipler;
+  
   posMsg.data = pos;
   pub.publish( &posMsg);
+  delayMicroseconds(3);
+  digitalWrite(pulsePin, LOW);
 }
 
 // automatically finds correct time to pulse, based on inputed velocity
