@@ -6,6 +6,7 @@ from debouncer import Debouncer
 import rospy
 import std_msgs.msg as msg
 import modern_robotics as mr
+import math
 
 class SingleMotor(tk.Frame):
     def __init__(self, master, getSpeed, name, increaseKey, decreaseKey):
@@ -38,7 +39,7 @@ class SingleMotor(tk.Frame):
         self.btn_increase.bind('<Button-1>', self.increase)
         self.btn_increase.grid(row=0, column=3, sticky="nsew")
 
-        self.pos_label = tk.Label(master=self, text=f"{self._pos}")
+        self.pos_label = tk.Label(master=self, text=f"{round(self._pos*180/math.pi,2)}")
         self.pos_label.grid(row=0, column=4)
 
         # failsafe for when debouncer fails
