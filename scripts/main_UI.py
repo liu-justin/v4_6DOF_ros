@@ -35,6 +35,8 @@ if __name__ == "__main__":
         motors.append(SingleMotor(window, ss.getSpeed, "motorT3", 't', 'g'))
         motors.append(SingleMotor(window, ss.getSpeed, "motorR3", 'y', 'h'))
 
+        import graph
+
         homeButton = HomeButton(window, motors)
         
         while not rospy.is_shutdown():
