@@ -27,8 +27,8 @@ if __name__ == "__main__":
         window.columnconfigure([0,1,2,3,4,5,6,7], minsize=100, weight=1)
         rospy.init_node('talker', anonymous=True)
 
+        # creating all main containers
         ss = SpeedSelector(window)
-                #setting up all the motor button controls
         motors = []
         motors.append(SingleMotor(window, ss.getSpeed, "motorR1", 'q', 'a'))
         motors.append(SingleMotor(window, ss.getSpeed, "motorT1", 'w', 's'))
@@ -40,6 +40,7 @@ if __name__ == "__main__":
         home = HomeButton(window, motors)
         transf_graph = TransfGraph(window, motors)
 
+        # aligning all main containers
         ss.grid(row=0, column=0, columnspan=3)
         home.grid(row=0, column=3)
         transf_graph.grid(row=0, column=4, columnspan=4, rowspan=4)
@@ -47,7 +48,7 @@ if __name__ == "__main__":
             motors[i].grid(row=i+1, column=0, columnspan=4)
 
         
-        
+        # creating widgets for speed selector frame and aligning widgets inside the frame, same for home and transf_graph
         ss.createWidgets()
         ss.layout()
 
@@ -55,17 +56,11 @@ if __name__ == "__main__":
         home.layout()
 
         transf_graph.createWidgets()
-        # transf_graph.layout()
 
         for m in motors:
             m.createWidgets()
             m.layout()
-        
 
-
-        
-        
-        
         while not rospy.is_shutdown():
             window.mainloop()
 
