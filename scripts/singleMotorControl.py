@@ -19,29 +19,6 @@ class SingleMotor(tk.Frame):
 
         self._pos = 0.0 
 
-        # setting up main UI
-        self.rowconfigure(0, minsize=100, weight=1)
-        self.columnconfigure([0, 1, 2, 3, 4], minsize=100, weight=1)
-
-        # name of motor label
-        self.name_label = tk.Label(master=self, text=f"{self.name}")
-        self.name_label.grid(row=0, column=0)
-
-        # buttons and changing the velocity
-        self.btn_decrease = tk.Button(master=self, text="-", command=self.increase)
-        self.btn_decrease.bind('<Button-1>', self.decrease)
-        self.btn_decrease.grid(row=0, column=1, sticky="nsew")
-
-        self.vel_label = tk.Label(master=self, text=f"{self._velocity}")
-        self.vel_label.grid(row=0, column=2)
-
-        self.btn_increase = tk.Button(master=self, text="+", command=self.decrease) # command=self.stop for debouncer fail
-        self.btn_increase.bind('<Button-1>', self.increase)
-        self.btn_increase.grid(row=0, column=3, sticky="nsew")
-
-        self.pos_label = tk.Label(master=self, text=f"{round(self._pos*180/math.pi,2)}")
-        self.pos_label.grid(row=0, column=4)
-
         # failsafe for when debouncer fails
         # master.bind('<KeyPress-' + increaseKey + '>', self.increase)
         # master.bind('<KeyRelease-' + increaseKey + '>', self.stop)
@@ -55,8 +32,6 @@ class SingleMotor(tk.Frame):
         self.down_debouncer = Debouncer(self.decrease, self.increase)
         master.bind('<KeyPress-' + decreaseKey + '>', self.down_debouncer.pressed)
         master.bind('<KeyRelease-' + decreaseKey + '>', self.down_debouncer.released)
-
-        self.pack()
 
         # establish publisher
         self.pub = rospy.Publisher('vel_'+self.name,msg.Float32,queue_size=1)
@@ -84,6 +59,31 @@ class SingleMotor(tk.Frame):
     def position(self, new_pos):
         self._pos = new_pos
         self.pos_label["text"] = f"{round(self._pos*180/math.pi,2)}"
+
+    def createWidgets(self):
+        # name of motor label
+        self.name_label = tk.Label(master=self, text=f"{self.name}")
+        
+        # buttons and changing the velocity
+        self.btn_decrease = tk.Button(master=self, text="-", command=self.increase)
+        self.btn_decrease.bind('<Button-1>', self.decrease)
+        
+        self.vel_label = tk.Label(master=self, text=f"{self._velocity}")
+        
+        self.btn_increase = tk.Button(master=self, text="+", command=self.decrease) # command=self.stop for debouncer fail
+        self.btn_increase.bind('<Button-1>', self.increase)
+        
+        self.pos_label = tk.Label(master=self, text=f"{round(self._pos*180/math.pi,2)}")
+        
+
+    def layout(self):
+        self.rowconfigure(0,minsize=100, weight=1)
+        self.columnconfigure([0,1,2,3,4,5], minsize=100, weight=1)
+        self.name_label.grid(row=0, column=0)
+        self.vel_label.grid(row=0, column=2)
+        self.btn_decrease.grid(row=0, column=1, sticky="nsew")
+        self.btn_increase.grid(row=0, column=3, sticky="nsew")
+        self.pos_label.grid(row=0, column=4)
 
     def keyPress(self, e):
         print(f"keypressed: {e}")

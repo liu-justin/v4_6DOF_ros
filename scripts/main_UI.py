@@ -10,23 +10,25 @@ import tkinter as tk
 from singleMotorControl import SingleMotor
 from speed_selector import SpeedSelector
 from home_button import HomeButton
+from graph import TransfGraph
 import unpack as unp
 
 
 if __name__ == "__main__":
     try:
-        T_ee, T_list, body_list, G_list = unp.unpack_XML("scripts/6DoF_URDF.xml")
-        theta_home = np.array([0,-1*np.pi/2, np.pi/2,0,0,0])
-        M_home = mr.FKinBody(T_ee, body_list, theta_home)
+        # T_ee, T_list, body_list, G_list = unp.unpack_XML("scripts/6DoF_URDF.xml")
+        # theta_home = np.array([0,-1*np.pi/2, np.pi/2,0,0,0])
+        # M_home = mr.FKinBody(T_ee, body_list, theta_home)
 
         # send msg with only int8; have 6 different topics for 6 motors
 
         window = tk.Tk()
+        window.rowconfigure([0,1,2,3,4,5,6,7], minsize=100, weight=1)
+        window.columnconfigure([0,1,2,3,4,5,6,7], minsize=100, weight=1)
         rospy.init_node('talker', anonymous=True)
 
         ss = SpeedSelector(window)
-        
-        #setting up all the motor button controls
+                #setting up all the motor button controls
         motors = []
         motors.append(SingleMotor(window, ss.getSpeed, "motorR1", 'q', 'a'))
         motors.append(SingleMotor(window, ss.getSpeed, "motorT1", 'w', 's'))
@@ -35,9 +37,34 @@ if __name__ == "__main__":
         motors.append(SingleMotor(window, ss.getSpeed, "motorT3", 't', 'g'))
         motors.append(SingleMotor(window, ss.getSpeed, "motorR3", 'y', 'h'))
 
-        import graph
+        home = HomeButton(window, motors)
+        transf_graph = TransfGraph(window, motors)
 
-        homeButton = HomeButton(window, motors)
+        ss.grid(row=0, column=0, columnspan=3)
+        home.grid(row=0, column=3)
+        transf_graph.grid(row=0, column=4, columnspan=4, rowspan=4)
+        for i in range(len(motors)):
+            motors[i].grid(row=i+1, column=0, columnspan=4)
+
+        
+        
+        ss.createWidgets()
+        ss.layout()
+
+        home.createWidgets()
+        home.layout()
+
+        transf_graph.createWidgets()
+        # transf_graph.layout()
+
+        for m in motors:
+            m.createWidgets()
+            m.layout()
+        
+
+
+        
+        
         
         while not rospy.is_shutdown():
             window.mainloop()

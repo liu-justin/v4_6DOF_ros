@@ -1,24 +1,31 @@
-import tkinter
+import tkinter as tk
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.backends.backend_tkagg import (
                                     FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.figure import Figure
 
-root = tkinter.Frame()
-root.wm_title("Embedding in Tk")
+class TransfGraph(tk.Frame):
+    def __init__(self, master, motors):
+        super().__init__(master)
 
-fig = Figure(figsize=(5, 4), dpi=100)
+        # self.wm_title("Embedding in Tk")
 
-canvas = FigureCanvasTkAgg(fig, master=root)  # A tk.DrawingArea.
-canvas.draw()
+        # canvas.grid(row=1,column=5)
+        # self.pack()
+    def createWidgets(self):
+        self.fig = Figure(figsize=(4, 4), dpi=100)
 
-ax = fig.add_subplot(111, projection="3d")
-t = np.arange(0, 3, .01)
-ax.plot(t, 2 * np.sin(2 * np.pi * t))
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self)  # A tk.DrawingArea.
+        self.canvas.draw()
 
-toolbar = NavigationToolbar2Tk(canvas, root)
-toolbar.update()
-canvas.get_tk_widget().pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
+        self.ax = self.fig.add_subplot(111, projection="3d")
+        t = np.arange(0, 3, .01)
+        self.ax.plot(t, 2 * np.sin(2 * np.pi * t))
 
-root.pack()
+        # self.toolbar = NavigationToolbar2Tk(self.canvas, self)
+        # self.toolbar.update()
+        self.canvas.get_tk_widget().pack()
+
+    # def layout(self):
+        # self.canvas.get_tk_widget().grid(row=0, column=0)

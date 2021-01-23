@@ -21,11 +21,11 @@ class HomeButton(tk.Frame):
         # create the trajectory, N x n matrix where each row is  n-vector of joint variables at an instant in time
         self.trajectory = mr.JointTrajectory(theta_rest, theta_home, self.T_final, self.N, method)
 
-        self.rowconfigure(0, minsize=100, weight=1)
-        self.columnconfigure([0], minsize=100, weight=1)
+    def createWidgets(self):
         self.button = tk.Button(master=self, text="home", command=self.home)
-        self.button.grid(row=0,column=1)
-        self.pack()
+
+    def layout(self):
+        self.button.grid(row=0,column=0)
 
     def home(self):
         # get number of divisions to get from first angles to last angles
