@@ -16,10 +16,6 @@ import unpack as unp
 
 if __name__ == "__main__":
     try:
-        # T_ee, T_list, body_list, G_list = unp.unpack_XML("scripts/6DoF_URDF.xml")
-        # theta_home = np.array([0,-1*np.pi/2, np.pi/2,0,0,0])
-        # M_home = mr.FKinBody(T_ee, body_list, theta_home)
-
         # send msg with only int8; have 6 different topics for 6 motors
 
         window = tk.Tk()

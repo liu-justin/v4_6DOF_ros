@@ -52,7 +52,7 @@ def Normalize(V):
 *** CHAPTER 3: RIGID-BODY MOTIONS ***
 '''
 def RollPitchYawToRot(r, p, y):
-    """Creates a rotation matrix fro roll-pitch-yaw angles
+    """Creates a rotation matrix from roll-pitch-yaw angles
     Example Input:
         roll = np.pi/4 (about the z-axis)
         pitch = np.pi/6 (about the y-axis)
