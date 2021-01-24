@@ -7,7 +7,6 @@ import time
 # first untagnle the xml file, then create the inputs for ch4 forward kinematics
 
 def unpack_XML(xml):
-    print(xml)
     obj = untangle.parse(xml)
     # [child["name"] for child in o.root.child]
 
