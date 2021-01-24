@@ -16,11 +16,10 @@ class TransfGraph(tk.Frame):
         cwd = os.getcwd()
         print(cwd)
 
-        self.T_ee, self.T_list, self.body_list, self.G_list = unp.unpack_XML("/home/justin/catkin_ws/src/v4_6dof/scripts/6DoF_URDF.xml")
+        self.M_rest, self.T_list, self.body_list, self.G_list = unp.unpack_XML("/home/justin/catkin_ws/src/v4_6dof/scripts/6DoF_URDF.xml")
 
-        self.theta_home = np.array([0,-1*np.pi/2, np.pi/2,0,0,0])
-        self.M_rest = self.T_ee
-        self.M_home = mr.FKinBody(self.T_ee, self.body_list, self.theta_home)
+        # self.theta_home = np.array([0,-1*np.pi/2, np.pi/2,0,0,0])
+        # self.M_home = mr.FKinBody(self.M_rest, self.body_list, self.theta_home)
 
     def createWidgets(self):
         self.fig = Figure(figsize=(4, 4), dpi=100)
@@ -38,6 +37,11 @@ class TransfGraph(tk.Frame):
         # self.toolbar = NavigationToolbar2Tk(self.canvas, self)
         # self.toolbar.update()
         self.canvas.get_tk_widget().pack()
+
+    def updatePlot(self,theta_list):
+        new_M = mr.FKinBody(self.M_rest, self.body_list, self.theta_list)
+        self.plotTransf(new_M)
+
 
     def plotTransf(self, M):
         R,p = mr.TransToRp(M)
