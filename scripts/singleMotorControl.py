@@ -60,6 +60,9 @@ class SingleMotor(tk.Frame):
         self._pos = new_pos
         self.pos_label["text"] = f"{round(self._pos*180/math.pi,2)}"
 
+    def linkSpeedGetter(self, getSpeed):
+        self.getSpeed = getSpeed
+
     def createWidgets(self):
         # name of motor label
         self.name_label = tk.Label(master=self, text=f"{self.name}")
