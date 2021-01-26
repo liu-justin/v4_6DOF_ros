@@ -9,21 +9,13 @@ import modern_robotics as mr
 import math
 
 class SingleMotor(tk.Frame):
-    def __init__(self, master, getSpeed, name, increaseKey, decreaseKey):
+    def __init__(self, master, name, increaseKey, decreaseKey):
         super().__init__(master)
         self.name = name
-
-        self.getSpeed = getSpeed
 
         self._velocity = 0.0
 
         self._pos = 0.0 
-
-        # failsafe for when debouncer fails
-        # master.bind('<KeyPress-' + increaseKey + '>', self.increase)
-        # master.bind('<KeyRelease-' + increaseKey + '>', self.stop)
-        # master.bind('<KeyPress-' + decreaseKey + '>', self.decrease)
-        # master.bind('<KeyRelease-' + decreaseKey + '>', self.stop)
 
         # keyboard command setup (currently fails when user mousepress on button, and mouserelease off button)
         self.up_debouncer = Debouncer(self.increase, self.decrease)
