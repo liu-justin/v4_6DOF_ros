@@ -12,6 +12,7 @@ from speed_selector import SpeedSelector
 from home_button import HomeButton
 from graph import TransfGraph
 import unpack as unp
+from functools import partial
 
 def a2aPublish(angle_list):
     # get current angle_list from mm and do a mr.JointTrajectory like in home
@@ -19,6 +20,7 @@ def a2aPublish(angle_list):
     placeholder_t = 5
     final_angles = list(map(int, angle_list.split()))
     trajectory = mr.JointTrajectory(mm.pos_six, final_angles, placeholder_t, 10, 3)
+    print(trajectory)
     # probably have a function to determine the ideal number of sample times (10 now)
 
 def t2tPublish(rpyxyz_string):
@@ -27,6 +29,7 @@ def t2tPublish(rpyxyz_string):
     rpyxyz = list(map(int, rpyxyz_string.split()))
     final_transf = mr.rpyxyzToTransf(rpyxyz)
     trajectory = mr.CartesianTrajectory(mm.transf, final_transf, 5,10,3)
+    print(trajectory)
 
 if __name__ == "__main__":
     try:
@@ -48,7 +51,7 @@ if __name__ == "__main__":
         # create widgets for a2a frame
         a2a_label = tk.Label(master=a2a_frame, text="Angle to angle")
         a2a_entry = tk.Entry(master=a2a_frame)
-        a2a_button = tk.Button(master=a2a_frame, text="Confirm", command = a2aPublish(a2a_entry.get()))
+        a2a_button = tk.Button(master=a2a_frame, text="Confirm", command = partial(a2aPublish,a2a_entry.get())
 
         a2a_frame.rowconfigure(0,minsize=100, weight=1)
         a2a_frame.columnconfigure([0,1,2], minsize=100, weight=1)
@@ -59,7 +62,7 @@ if __name__ == "__main__":
         # create widgets for t2t frame
         t2t_label = tk.Label(master=t2t_frame, text="Angle to angle")
         t2t_entry = tk.Entry(master=t2t_frame)
-        t2t_button = tk.Button(master=t2t_frame, text="Confirm", command = t2tPublish(t2t_entry.get()))
+        t2t_button = tk.Button(master=t2t_frame, text="Confirm", command = partial(t2tPublish,t2t_entry.get())
 
         t2t_frame.rowconfigure(0,minsize=100, weight=1)
         t2t_frame.columnconfigure([0,1,2], minsize=100, weight=1)
