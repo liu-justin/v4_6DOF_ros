@@ -13,12 +13,15 @@ from home_button import HomeButton
 from graph import TransfGraph
 import unpack as unp
 from functools import partial
+import modern_robotics as mr
 
 def a2aPublish(angle_list):
     # get current angle_list from mm and do a mr.JointTrajectory like in home
     # probably get time from entry
     placeholder_t = 5
     final_angles = list(map(int, angle_list.split()))
+    print(mm.pos_six)
+    print(final_angles)
     trajectory = mr.JointTrajectory(mm.pos_six, final_angles, placeholder_t, 10, 3)
     print(trajectory)
     # probably have a function to determine the ideal number of sample times (10 now)
@@ -42,11 +45,11 @@ if __name__ == "__main__":
 
         # create main containers
         a2a_frame = tk.Frame()
-        f2t_frame = tk.Frame()
+        t2t_frame = tk.Frame()
 
         # align main containers
-        angle_to_angle_frame.grid(row=1, column=0, columnspan=3)
-        transf_to_transf_frame.grid(row=2, column=0, columnspan=3)
+        a2a_frame.grid(row=1, column=0, columnspan=3)
+        t2t_frame.grid(row=2, column=0, columnspan=3)
 
         # create widgets for a2a frame
         a2a_label = tk.Label(master=a2a_frame, text="Angle to angle")

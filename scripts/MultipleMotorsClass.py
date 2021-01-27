@@ -15,8 +15,8 @@ class MultipleMotors():
         self.vel_six = [0.0,0.0,0.0,0.0,0.0,0.0]
         self.pos_six = [0.0,0.0,0.0,0.0,0.0,0.0]
 
-        self.pub = rospy.Publisher('vel_six'+self.name,msg.Float32,queue_size=1)
-        self.sub = rospy.Subscriber('pos_six'+self.name, msg.Float32,self.updateAllPos)
+        self.pub = rospy.Publisher('vel_six',msg.Float32,queue_size=1)
+        self.sub = rospy.Subscriber('pos_six', msg.Float32,self.updateAllPos)
 
 
     def updateSingleVel(self, index, vel):
