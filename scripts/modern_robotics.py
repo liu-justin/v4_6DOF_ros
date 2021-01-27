@@ -179,7 +179,7 @@ def MatrixLog3(R):
         return VecToso3(np.pi * omg)
     else:
         theta = np.arccos(acosinput)
-        return theta / 2.0 / np.sin(theta) * (R - np.array(R).T)
+        return theta / 2.0 / np.sin(theta) * (R - np.array(R).T) 
 
 def RpToTrans(R, p):
     """Converts a rotation matrix and a position vector into homogeneous
@@ -199,6 +199,14 @@ def RpToTrans(R, p):
                   [0, 0,  0, 1]])
     """
     return np.r_[np.c_[R, p], [[0, 0, 0, 1]]]
+
+def rpyxyzToTrans(rpyxyz):
+    roll = rpyxyz[0]
+    pitch = rpyxyz[1]
+    yaw = rpyxyz[2]
+    R = RollPitchYawToRot(roll, pitch, yaw)
+    p = rpyxyz[3:6]
+    return RpToTrans(R,p)
 
 def TransToRp(T):
     """Converts a homogeneous transformation matrix into a rotation matrix

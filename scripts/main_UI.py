@@ -21,10 +21,11 @@ def a2aPublish(angle_list):
     trajectory = mr.JointTrajectory(mm.pos_six, final_angles, placeholder_t, 10, 3)
     # probably have a function to determine the ideal number of sample times (10 now)
 
-def t2tPublish(transf):
+def t2tPublish(rpyxyz_string):
     # create function in mr to convert 6 rpy xyz values into a transf matrix 
     # calc the R with rpyToRotation, then RpToTransf
-    final_transf = mr.rpyxyzToTransf(roll,pitch,yaw,x,y,z)
+    rpyxyz = list(map(int, rpyxyz_string.split()))
+    final_transf = mr.rpyxyzToTransf(rpyxyz)
     trajectory = mr.CartesianTrajectory(mm.transf, final_transf, 5,10,3)
 
 if __name__ == "__main__":
@@ -58,7 +59,7 @@ if __name__ == "__main__":
         # create widgets for t2t frame
         t2t_label = tk.Label(master=t2t_frame, text="Angle to angle")
         t2t_entry = tk.Entry(master=t2t_frame)
-        t2t_button = tk.Button(master=t2t_frame, text="Confirm", command = attPublish(t2t_entry.get()))
+        t2t_button = tk.Button(master=t2t_frame, text="Confirm", command = t2tPublish(t2t_entry.get()))
 
         t2t_frame.rowconfigure(0,minsize=100, weight=1)
         t2t_frame.columnconfigure([0,1,2], minsize=100, weight=1)
