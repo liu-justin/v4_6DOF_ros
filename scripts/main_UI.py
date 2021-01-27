@@ -20,7 +20,7 @@ def a2aPublish():
     # probably get time from entry
     angle_list = a2a_entry.get()
     placeholder_t = 5
-    final_angles = list(map(int, angle_list.split()))
+    final_angles = list(map(float, angle_list.split()))
     print(mm.pos_six)
     print(angle_list)
     trajectory = mr.JointTrajectory(mm.pos_six, final_angles, placeholder_t, 10, 3)
@@ -30,10 +30,11 @@ def a2aPublish():
 def t2tPublish():
     # create function in mr to convert 6 rpy xyz values into a transf matrix 
     # calc the R with rpyToRotation, then RpToTransf
-    rpyxyz_string = a2a_entry.get()
-    rpyxyz = list(map(int, rpyxyz_string.split()))
+    rpyxyz_string = t2t_entry.get()
+    rpyxyz = list(map(float, rpyxyz_string.split()))
+    print(rpyxyz)
     final_transf = mr.rpyxyzToTrans(rpyxyz)
-    trajectory = mr.CartesianTrajectory(mm.transf, final_transf, 5,10,3)
+    trajectory = mr.CartesianTrajectory(mm.M_current, final_transf, 5,10,3)
     print(trajectory)
 
 if __name__ == "__main__":
@@ -41,8 +42,8 @@ if __name__ == "__main__":
         mm = MultipleMotors()
 
         window = tk.Tk()
-        window.rowconfigure([0,1,2,3,4,5,6,7], minsize=100, weight=1)
-        window.columnconfigure([0,1,2,3,4,5,6,7], minsize=100, weight=1)
+        window.rowconfigure([0,1,2,3], minsize=100, weight=1)
+        window.columnconfigure([0,1,2,3,4,5], minsize=100, weight=1)
         rospy.init_node('talker', anonymous=True)
 
         # create main containers
@@ -65,7 +66,7 @@ if __name__ == "__main__":
         a2a_button.grid(row=0, column=2)
 
         # create widgets for t2t frame
-        t2t_label = tk.Label(master=t2t_frame, text="Angle to angle")
+        t2t_label = tk.Label(master=t2t_frame, text="Enter roll pitch yaw x y z")
         t2t_entry = tk.Entry(master=t2t_frame)
         t2t_button = tk.Button(master=t2t_frame, text="Confirm", command = t2tPublish)
 
