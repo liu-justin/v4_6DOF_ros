@@ -15,6 +15,11 @@ import unpack as unp
 from functools import partial
 import modern_robotics as mr
 
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.backends.backend_tkagg import (
+                                    FigureCanvasTkAgg, NavigationToolbar2Tk)
+from matplotlib.figure import Figure
+
 def a2aPublish():
     # get current angle_list from mm and do a mr.JointTrajectory like in home
     # probably get time from entry
@@ -37,6 +42,29 @@ def t2tPublish():
     trajectory = mr.CartesianTrajectory(mm.M_current, final_transf, 5,10,3)
     print(trajectory)
 
+def plotTransf(M):
+        R,p = mr.TransToRp(M)
+        x_arrow_end = p + 0.2*R[:,0]
+        y_arrow_end = p + 0.2*R[:,1]
+        z_arrow_end = p + 0.2*R[:,2]
+        x_normal = np.c_[p,x_arrow_end]
+        y_normal = np.c_[p,y_arrow_end]
+        z_normal = np.c_[p,z_arrow_end]
+        
+        plot_x_norm.set_xdata(x_normal[0])
+        plot_x_norm.set_ydata(x_normal[1])
+        plot_x_norm.set_3d_properties(x_normal[2])
+
+        plot_y_norm.set_xdata(y_normal[0])
+        plot_y_norm.set_ydata(y_normal[1])
+        plot_y_norm.set_3d_properties(y_normal[2])
+
+        plot_z_norm.set_xdata(z_normal[0])
+        plot_z_norm.set_ydata(z_normal[1])
+        plot_z_norm.set_3d_properties(z_normal[2])
+
+        plot_canvas.draw()
+
 if __name__ == "__main__":
     try:
         mm = MultipleMotors()
@@ -49,10 +77,12 @@ if __name__ == "__main__":
         # create main containers
         a2a_frame = tk.Frame()
         t2t_frame = tk.Frame()
+        plot_frame = tk.Frame()
 
         # align main containers
         a2a_frame.grid(row=1, column=0, columnspan=3)
         t2t_frame.grid(row=2, column=0, columnspan=3)
+        plot_frame.grid(row=0,column=3, columnspan=3)
 
         # create widgets for a2a frame
         a2a_label = tk.Label(master=a2a_frame, text="Angle to angle")
@@ -74,8 +104,21 @@ if __name__ == "__main__":
         t2t_frame.columnconfigure([0,1,2], minsize=100, weight=1)
         t2t_label.grid(row=0, column=0)
         t2t_entry.grid(row=0, column=1)
-        t2t_button.grid(row=0, column=2)        
+        t2t_button.grid(row=0, column=2)
 
+        # create widgets for plot_frame
+        plot_fig = Figure(figsize=(3,3), dpi=100)
+        plot_canvas = FigureCanvasTkAgg(plot_fig, master=plot_frame)
+        plot_canvas.draw()
+        plot_ax = plot_fig.add_subplot(111,projection="3d")
+        plot_ax.axes.set_xlim3d(left=-2, right=2)
+        plot_ax.axes.set_ylim3d(bottom=-2, top=2)
+        plot_ax.axes.set_zlim3d(bottom=-1, top=1)
+        plot_x_norm, = plot_ax.plot([0,0],[0,0],[0,0])
+        plot_y_norm, = plot_ax.plot([0,0],[0,0],[0,0])
+        plot_z_norm, = plot_ax.plot([0,0],[0,0],[0,0])
+        plotTransf(mm.M_current)
+        plot_canvas.get_tk_widget().pack()
 
         # need a tkinter GUI, shows the current transf
         # need an input to the next transf, which will:
