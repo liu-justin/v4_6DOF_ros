@@ -12,12 +12,15 @@ from speed_selector import SpeedSelector
 from home_button import HomeButton
 from graph import TransfGraph
 import unpack as unp
+import modern_robotics as mr
 
 def a2aPublish(angle_list):
     # get current angle_list from mm and do a mr.JointTrajectory like in home
     # probably get time from entry
     placeholder_t = 5
     final_angles = list(map(int, angle_list.split()))
+    print(mm.pos_six)
+    print(final_angles)
     trajectory = mr.JointTrajectory(mm.pos_six, final_angles, placeholder_t, 10, 3)
     # probably have a function to determine the ideal number of sample times (10 now)
 
@@ -39,16 +42,16 @@ if __name__ == "__main__":
 
         # create main containers
         a2a_frame = tk.Frame()
-        f2t_frame = tk.Frame()
+        t2t_frame = tk.Frame()
 
         # align main containers
-        angle_to_angle_frame.grid(row=1, column=0, columnspan=3)
-        transf_to_transf_frame.grid(row=2, column=0, columnspan=3)
+        a2a_frame.grid(row=1, column=0, columnspan=3)
+        t2t_frame.grid(row=2, column=0, columnspan=3)
 
         # create widgets for a2a frame
         a2a_label = tk.Label(master=a2a_frame, text="Angle to angle")
         a2a_entry = tk.Entry(master=a2a_frame)
-        a2a_button = tk.Button(master=a2a_frame, text="Confirm", command = a2aPublish(a2a_entry.get()))
+        a2a_button = tk.Button(master=a2a_frame, text="Confirm")#, command = a2aPublish(a2a_entry.get()))
 
         a2a_frame.rowconfigure(0,minsize=100, weight=1)
         a2a_frame.columnconfigure([0,1,2], minsize=100, weight=1)
@@ -59,7 +62,7 @@ if __name__ == "__main__":
         # create widgets for t2t frame
         t2t_label = tk.Label(master=t2t_frame, text="Angle to angle")
         t2t_entry = tk.Entry(master=t2t_frame)
-        t2t_button = tk.Button(master=t2t_frame, text="Confirm", command = t2tPublish(t2t_entry.get()))
+        t2t_button = tk.Button(master=t2t_frame, text="Confirm")#, command = t2tPublish(t2t_entry.get()))
 
         t2t_frame.rowconfigure(0,minsize=100, weight=1)
         t2t_frame.columnconfigure([0,1,2], minsize=100, weight=1)
