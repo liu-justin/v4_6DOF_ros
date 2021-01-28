@@ -8,11 +8,7 @@ import time
  
 import tkinter as tk
 from MultipleMotorsClass import MultipleMotors
-from speed_selector import SpeedSelector
-from home_button import HomeButton
 from graph import TransfGraph
-import unpack as unp
-from functools import partial
 import modern_robotics as mr
 
 from mpl_toolkits.mplot3d import Axes3D
@@ -37,10 +33,22 @@ def t2tPublish():
     # calc the R with rpyToRotation, then RpToTransf
     rpyxyz_string = t2t_entry.get()
     rpyxyz = list(map(float, rpyxyz_string.split()))
-    print(rpyxyz)
     final_transf = mr.rpyxyzToTrans(rpyxyz)
-    trajectory = mr.CartesianTrajectory(mm.M_current, final_transf, 5,10,3)
-    print(trajectory)
+    transfTrajectory = mr.CartesianTrajectory(mm.M_current, final_transf, 5,30,3)
+    print(transfTrajectory)
+    trajectory = []
+    previous_kink = mm.pos_six
+    for i in range(1,len(transfTrajectory)):
+        current_kink, success = mr.IKinBody(mm.body_list, mm.M_rest, transfTrajectory[i], previous_kink, 0.1, 0.1)
+        print(current_kink)
+        angles = mr.JointTrajectory(previous_kink, current_kink, 1, 2,3)
+        # trajectory.append(angles)
+        trajectory = [*trajectory, *angles]
+
+        previous_kink = current_kink
+
+    # print(trajectory)
+
 
 def plotTransf(M):
         R,p = mr.TransToRp(M)
@@ -117,6 +125,7 @@ if __name__ == "__main__":
         plot_x_norm, = plot_ax.plot([0,0],[0,0],[0,0])
         plot_y_norm, = plot_ax.plot([0,0],[0,0],[0,0])
         plot_z_norm, = plot_ax.plot([0,0],[0,0],[0,0])
+        print(mm.M_current)
         plotTransf(mm.M_current)
         plot_canvas.get_tk_widget().pack()
 

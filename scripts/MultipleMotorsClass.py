@@ -4,7 +4,7 @@ import tkinter as tk
 from debouncer import Debouncer
 
 import rospy
-import std_msgs.msg as msg
+from v4_6dof.msg import Float_array_6
 import modern_robotics as mr
 from singleMotorControl import SingleMotor
 import unpack as unp
@@ -19,8 +19,8 @@ class MultipleMotors():
 
         self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six)
 
-        self.pub = rospy.Publisher('vel_six',msg.Float32,queue_size=1)
-        self.sub = rospy.Subscriber('pos_six', msg.Float32,self.updateAllPos)
+        self.pub = rospy.Publisher('vel_six',Float_array_6,queue_size=1)
+        self.sub = rospy.Subscriber('pos_six',Float_array_6,self.updateAllPos)
 
 
     def updateSingleVel(self, index, vel):
