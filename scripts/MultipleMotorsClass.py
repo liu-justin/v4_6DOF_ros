@@ -25,11 +25,12 @@ class MultipleMotors():
 
     def updateSingleVel(self, index, vel):
         self.vel_six[index] = vel
-        pub.publish(self.vel_six) # need to figure out correct way of setting up this data
+        self.pub.publish(self.vel_six)
+         # need to figure out correct way of setting up this data
 
     def updateAllVel(self, new_vel_six):
         self.vel_six = new_vel_six
-        pub.publish(self.vel_six)
+        self.pub.publish(self.vel_six)
 
     def updateAllPos(self, data):
         self.pos_six = data.data

@@ -16,6 +16,21 @@ from matplotlib.backends.backend_tkagg import (
                                     FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.figure import Figure
 
+def trajectory_publish(angle_six_list, total_time):
+    period = total_time/len(angle_six_list)
+    # for i in range(1,len(angle_six_list)):
+    previousTime = time.perf_counter()
+    
+    i = 1
+    while i < len(angle_six_list):
+        currentTime = time.perf_counter()
+        if currentTime - previousTime > period:
+            previousTime = currentTime
+            angular_velocity_six = (angle_six_list[i] - angle_six_list[i-1])/period
+            mm.updateAllVel(angular_velocity_six)
+            i += 1
+            
+
 def a2aPublish():
     # get current angle_list from mm and do a mr.JointTrajectory like in home
     # probably get time from entry
@@ -26,6 +41,7 @@ def a2aPublish():
     print(angle_list)
     trajectory = mr.JointTrajectory(mm.pos_six, final_angles, placeholder_t, 10, 3)
     print(trajectory)
+    trajectory_publish(trajectory, placeholder_t)
     # probably have a function to determine the ideal number of sample times (10 now)
 
 def t2tPublish():
@@ -39,10 +55,9 @@ def t2tPublish():
     trajectory = []
     previous_kink = mm.pos_six
     for i in range(1,len(transfTrajectory)):
-        current_kink, success = mr.IKinBody(mm.body_list, mm.M_rest, transfTrajectory[i], previous_kink, 0.1, 0.1)
+        current_kink, success = mr.IKinBody(mm.body_list, mm.M_rest, transfTrajectory[i], previous_kink, 0.01, 0.001)
         print(current_kink)
         angles = mr.JointTrajectory(previous_kink, current_kink, 1, 2,3)
-        # trajectory.append(angles)
         trajectory = [*trajectory, *angles]
 
         previous_kink = current_kink
