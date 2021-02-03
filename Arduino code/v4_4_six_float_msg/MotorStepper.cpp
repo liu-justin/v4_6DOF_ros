@@ -1,5 +1,5 @@
 
-#include "Motor_stepper.h"
+#include "MotorStepper.h"
 
 #include <ros.h>
 #include <std_msgs/String.h>
@@ -9,7 +9,7 @@
 // this value is being shared across all the instances of the class, need to fix
 //std_msgs::Float32 posMsg;
 
-Motor_stepper::Motor_stepper(int pulse, int direct, int lower, int upper, float stepSize, float multi)
+MotorStepper::MotorStepper(int pulse, int direct, int lower, int upper, float stepSize, float multi)
 {
 	pulsePin = pulse;
 	directionPin = direct;
@@ -28,15 +28,15 @@ Motor_stepper::Motor_stepper(int pulse, int direct, int lower, int upper, float 
 
  }
 
-int Motor_stepper::getVel() {
+int MotorStepper::getVel() {
 	return vel;
 }
 
-int Motor_stepper::getPos() {
+int MotorStepper::getPos() {
 	return pos;
 }
 
-void Motor_stepper::setVel(float incomingVel) {
+void MotorStepper::setVel(float incomingVel) {
 	vel = multipler*incomingVel;
 	if (vel < 0){
 		digitalWrite(directionPin, 0);
@@ -46,7 +46,7 @@ void Motor_stepper::setVel(float incomingVel) {
 	}
 }
 
-void Motor_stepper::pulse(){
+void MotorStepper::pulse(){
 	digitalWrite(pulsePin, HIGH);
 	digitalWrite(pulsePin, LOW);
 	// track the pos
@@ -54,7 +54,7 @@ void Motor_stepper::pulse(){
 }
 
 // automatically finds correct time to pulse, based on inputed velocity
-void Motor_stepper::step(){
+void MotorStepper::step(){
 	// if the velocity is zero, then just skip, don't even count the time
 	if (vel != 0){
 

@@ -1,16 +1,16 @@
-#ifndef Motor_stepper_h
-#define Motor_stepper_h
+#ifndef MotorStepper_h
+#define MotorStepper_h
 
-/*provides stepper Motor_stepper control thru single steps*/
+/*provides stepper MotorStepper control thru single steps*/
 
 #include <ros.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/Float32.h>
 
-class Motor_stepper {
+class MotorStepper {
 	public:
-		Motor_stepper(int pulse, int direct, int lower, int upper,float stepSize, float multipler);
+		MotorStepper(int pulse, int direct, int lower, int upper,float stepSize, float multipler);
 		int getPos();
 		int getVel();
 		void setVel(float incomingVel);
