@@ -1,4 +1,4 @@
-#include "Motor_stepper.h"
+#include "MotorStepper.h"
 
 #include <ros.h>
 #include <std_msgs/String.h>
@@ -13,10 +13,10 @@ int minorStepsPerMajorStep = minorStepsPerRev/200; // how many minor steps are i
 double radPerMajorStep = PI/100.0; // 2PI rads/200 steps
 double radPerMinorStep = radPerMajorStep/minorStepsPerMajorStep;
 
-Motor_stepper R1(13,12, -45,  45, radPerMinorStep, 4.0);
-Motor_stepper T1( 9, 8,-180, 180, radPerMinorStep, 4.0);
-Motor_stepper T2(11,10,-180, 180, radPerMinorStep, 4.0);
-Motor_stepper R2( 7, 6,-180, 180, radPerMinorStep, 4.0);
+MotorStepper R1(13,12, -45,  45, radPerMinorStep, 4.0);
+MotorStepper T1( 9, 8,-180, 180, radPerMinorStep, 4.0);
+MotorStepper T2(11,10,-180, 180, radPerMinorStep, 4.0);
+MotorStepper R2( 7, 6,-180, 180, radPerMinorStep, 4.0);
 //Motor_stepper R1(29,30, -45,  45, radPerMinorStep, 4.0);
 //Motor_stepper T1(25,26,-180, 180, radPerMinorStep, 4.0);
 //Motor_stepper T2(27,28,-180, 180, radPerMinorStep, 4.0);
