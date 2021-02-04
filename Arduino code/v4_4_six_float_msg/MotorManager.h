@@ -6,7 +6,7 @@
 #include <ros.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Empty.h>
-#include <std_msgs/Float32.h>
+#include <std_msgs/Float32MultiArray.h>
 
 #include "MotorStepper.h"
 
@@ -19,12 +19,18 @@ class MotorManager {
     //    motor_R2(R2){
     //
     //    };
-    MotorManager(MotorStepper* R1, MotorStepper* T1, MotorStepper* T2, MotorStepper* R2) {
+    MotorManager(MotorStepper* R1, MotorStepper* T1, MotorStepper* T2, MotorStepper* R2)
+    :sub("vel_six_chatter", messageCallback, this)
+    {
       motorlist[0] = R1;
       motorlist[1] = T1;
       motorlist[2] = T2;
       motorlist[3] = R2;
     };
+
+    void messageCallback( const std_msgs::Float32& vel_six){
+      
+    }
 
 
   private:
@@ -34,8 +40,8 @@ class MotorManager {
     //    MotorStepper motor_R2;
     MotorStepper *motorlist[4];
 
-    ros::Subscriber sub;
-    ros::Publisher pub;
+    ros::Subscriber<std_msgs::Float32, MotorManager> sub;
+//    ros::Publisher pub;
 
 
 };
