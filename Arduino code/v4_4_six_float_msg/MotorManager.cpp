@@ -6,12 +6,12 @@
 #include <std_msgs/Empty.h>
 #include <std_msgs/Float32.h>
 
-#include "MotorStepper.h"
+//#include "MotorStepper.h"
 
 //MotorManager::MotorManager(Motor_stepper& R1, Motor_stepper& T1, Motor_stepper& T2, Motor_stepper& R2)
-//MotorManager::MotorManager(Motor_stepper& R1)
+//MotorManager::MotorManager(Motor_stepper* R1)
 //{
-//
+//  
 //}
 
 //MotorManager::MotorManager()
