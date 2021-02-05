@@ -24,7 +24,7 @@ MotorStepper::MotorStepper(int pulse, int direct, int lower, int upper, float st
 	pos = 0.0;
 	vel = 0.0;
 
-	radiansPerMinorStep = stepSize;
+	rads_per_step = stepSize;
 
  }
 
@@ -36,8 +36,8 @@ int MotorStepper::getPos() {
 	return pos;
 }
 
-void MotorStepper::setVel(float incomingVel) {
-	vel = multipler*incomingVel;
+void MotorStepper::setVel(float incoming_vel) {
+	vel = multipler*incoming_vel;
 	if (vel < 0){
 		digitalWrite(directionPin, 0);
 	}
@@ -50,23 +50,20 @@ void MotorStepper::pulse(){
 	digitalWrite(pulsePin, HIGH);
 	digitalWrite(pulsePin, LOW);
 	// track the pos
-	pos += ((vel > 0) - (vel < 0))*radiansPerMinorStep/multipler;
+	pos += ((vel > 0) - (vel < 0))*rads_per_step/multipler;
 }
 
 // automatically finds correct time to pulse, based on inputed velocity
-void MotorStepper::step(){
+void MotorStepper::checkStep(unsigned long current_time){
 	// if the velocity is zero, then just skip, don't even count the time
 	if (vel != 0){
 
-		// get time for time period measurement
-		unsigned long timeA = millis();
-
 		// equation is v = x/t --> t = x/v (if time period exceeds this, then...)
-		if (((timeA-previousTime)/1000.0) > (radiansPerMinorStep/float(abs(vel)))){   
+		if (((current_time-previous_time)/1000.0) > (rads_per_step/float(abs(vel)))){   
 			pulse();         
 
-			// reset previousTime for nextTime period                 
-			previousTime = millis();
+			// reset previous_time for nextTime period                 
+			previous_time = current_time;
 
 		}
 	}

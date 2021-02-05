@@ -33,9 +33,6 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  R1.step();
-  T1.step();
-  T2.step();
-  R2.step();
+  mm.checkSteps();
   nh.spinOnce();
 }

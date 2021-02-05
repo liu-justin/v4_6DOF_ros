@@ -6,22 +6,32 @@
 #include <std_msgs/Empty.h>
 #include <std_msgs/Float32.h>
 
-//#include "MotorStepper.h"
+#include "MotorStepper.h"
 
-//MotorManager::MotorManager(Motor_stepper& R1, Motor_stepper& T1, Motor_stepper& T2, Motor_stepper& R2)
-//MotorManager::MotorManager(Motor_stepper* R1)
-//{
-//  
-//}
+MotorManager::MotorManager(MotorStepper* R1, MotorStepper* T1, MotorStepper* T2, MotorStepper* R2)
+  : sub("vel_six_chatter", &MotorManager::messageCallback, this)
+  , pub("pos_six_chatter", &pos_msg)
+{
+  motorlist[0] = R1;
+  motorlist[1] = T1;
+  motorlist[2] = T2;
+  motorlist[3] = R2;
+}
 
-//MotorManager::MotorManager()
-//{
-//  Motor_stepper R1(13,12, -45,  45, 1, 4.0);
-//  Motor_stepper T1( 9, 8,-180, 180, 1, 4.0);
-//  Motor_stepper T2(11,10,-180, 180, 1, 4.0);
-//  Motor_stepper R2( 7, 6,-180, 180, 1, 4.0);
-//  motor_list[0] = &R1;
-//  motor_list[1] = &T1;
-//  motor_list[2] = &T2;
-//  motor_list[3] = &R2;
-//}
+void MotorManager::messageCallback( const std_msgs::Float32MultiArray& vel_six) {
+  setVels(vel_six.data);
+}
+
+void MotorManager::setVels(float incoming_vels[6]) {
+  for (int i = 0 ; i < 4; i++) {
+    motorlist[i]->setVel(incoming_vels[i]);
+  }
+}
+
+void MotorManager::checkSteps() {
+  unsigned long current_time = millis();
+
+  for (int i = 0 ; i < 4; i++) {
+    motorlist[i]->checkStep(current_time);
+  }
+}

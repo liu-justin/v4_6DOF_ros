@@ -13,13 +13,9 @@ class MotorStepper {
 		MotorStepper(int pulse, int direct, int lower, int upper,float stepSize, float multipler);
 		int getPos();
 		int getVel();
-		void setVel(float incomingVel);
+		void setVel(float incoming_vel);
 		void pulse();
-		void step();
-
-		unsigned long previousTime;
-
-		std_msgs::Float32 posMsg;
+		void checkStep(unsigned long current_time);
 		
 	private:
 		
@@ -33,8 +29,8 @@ class MotorStepper {
 		float vel;
 
 		float multipler;
-
-		float radiansPerMinorStep;
+		float rads_per_step;
+    unsigned long previous_time;
 
 
 };
