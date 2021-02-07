@@ -2,9 +2,6 @@
 #include "MotorManager.h"
 
 #include <ros.h>
-#include <std_msgs/String.h>
-#include <std_msgs/Empty.h>
-#include <std_msgs/Float32.h>
 
 #include "MotorStepper.h"
 
