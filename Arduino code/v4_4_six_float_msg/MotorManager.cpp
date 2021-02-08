@@ -5,6 +5,7 @@
 
 #include "MotorStepper.h"
 
+
 MotorManager::MotorManager(MotorStepper* R1, MotorStepper* T1, MotorStepper* T2, MotorStepper* R2)
   : sub("vel_six_chatter", &MotorManager::messageCallback, this)
   , pub("pos_six_chatter", &pos_msg)

@@ -5,6 +5,7 @@
 #include <std_msgs/String.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/Float32.h>
+#include <v4_6dof/Float32List.h>
 
 ros::NodeHandle  nh;
 

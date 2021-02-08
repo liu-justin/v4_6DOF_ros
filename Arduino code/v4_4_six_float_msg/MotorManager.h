@@ -7,6 +7,7 @@
 #include <std_msgs/String.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/Float32MultiArray.h>
+#include <v4_6dof/Float32List.h>
 
 #include "MotorStepper.h"
 

@@ -4,7 +4,7 @@ import tkinter as tk
 from debouncer import Debouncer
 
 import rospy
-from std_msgs.msg import Float32MultiArray
+import v4_6dof.msg as msg
 import modern_robotics as mr
 from singleMotorControl import SingleMotor
 import unpack as unp
@@ -19,14 +19,19 @@ class MultipleMotors():
 
         self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six)
 
-        self.pub = rospy.Publisher('vel_six',Float32MultiArray,queue_size=1)
-        self.sub = rospy.Subscriber('pos_six',Float32MultiArray,self.updateAllPos)
+        self.pub = rospy.Publisher('vel_six',msg.Float32List,queue_size=1)
+        self.sub = rospy.Subscriber('pos_six',msg.Float32List,self.updateAllPos)
 
 
     def updateSingleVel(self, index, vel):
         self.vel_six[index] = vel
         self.pub.publish(self.vel_six)
          # need to figure out correct way of setting up this data
+
+    def publishArray(self):
+        arg = msg.Float32List()
+        arg.data = self.vel_six
+        self.pub.publish(arg)
 
     def updateAllVel(self, new_vel_six):
         self.vel_six = new_vel_six
