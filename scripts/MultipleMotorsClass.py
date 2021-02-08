@@ -19,8 +19,8 @@ class MultipleMotors():
 
         self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six)
 
-        self.pub = rospy.Publisher('vel_six',msg.Float32List,queue_size=1)
-        self.sub = rospy.Subscriber('pos_six',msg.Float32List,self.updateAllPos)
+        self.pub = rospy.Publisher('vel_six_chatter',msg.Float32List,queue_size=1)
+        self.sub = rospy.Subscriber('pos_six_chatter',msg.Float32List,self.updateAllPos)
 
 
     def updateSingleVel(self, index, vel):

@@ -29,6 +29,8 @@ def trajectory_publish(angle_six_list, total_time):
             angular_velocity_six = (angle_six_list[i] - angle_six_list[i-1])/period
             mm.updateAllVel(angular_velocity_six)
             i += 1
+    angular_velocity_six = [0,0,0,0,0,0]
+    mm.updateAllVel(angular_velocity_six)
             
 
 def a2aPublish():
