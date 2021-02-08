@@ -28,7 +28,10 @@ MotorManager mm(&R1, &T1, &T2, &R2);
 
 void setup() {
   // put your setup code here, to run once:
+  nh.getHardware()->setBaud(57600);
   nh.initNode();
+  nh.subscribe(mm.sub);
+  nh.advertise(mm.pub);
 
 }
 

@@ -16,7 +16,7 @@ MotorManager::MotorManager(MotorStepper* R1, MotorStepper* T1, MotorStepper* T2,
   motorlist[3] = R2;
 }
 
-void MotorManager::messageCallback( const std_msgs::Float32MultiArray& vel_six) {
+void MotorManager::messageCallback( const v4_6dof::Float32List& vel_six) {
   setVels(vel_six.data);
 }
 

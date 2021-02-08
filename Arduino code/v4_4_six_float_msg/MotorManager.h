@@ -22,10 +22,13 @@ class MotorManager {
     //    };
     MotorManager(MotorStepper* R1, MotorStepper* T1, MotorStepper* T2, MotorStepper* R2);
 
-    void messageCallback( const std_msgs::Float32MultiArray& vel_six);
+    void messageCallback( const v4_6dof::Float32List& vel_six);
 
     void setVels(float incoming_vels[]);
     void checkSteps();
+
+    ros::Subscriber<v4_6dof::Float32List, MotorManager> sub;
+    ros::Publisher pub;
 
   private:
     //    MotorStepper motor_R1;
@@ -34,9 +37,8 @@ class MotorManager {
     //    MotorStepper motor_R2;
     MotorStepper *motorlist[4];
 
-    ros::Subscriber<std_msgs::Float32MultiArray, MotorManager> sub;
-    ros::Publisher pub;
-    std_msgs::Float32MultiArray pos_msg;
+
+    v4_6dof::Float32List pos_msg;
 
 
 };
