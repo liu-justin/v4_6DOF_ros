@@ -103,11 +103,13 @@ if __name__ == "__main__":
         a2a_frame = tk.Frame()
         t2t_frame = tk.Frame()
         plot_frame = tk.Frame()
+        display_frame = tk.Frame()
 
         # align main containers
-        a2a_frame.grid(row=1, column=0, columnspan=3)
-        t2t_frame.grid(row=2, column=0, columnspan=3)
-        plot_frame.grid(row=0,column=3, columnspan=3)
+        a2a_frame.grid(row=0, column=0, columnspan=3)
+        t2t_frame.grid(row=1, column=0, columnspan=3)
+        display_frame.grid(row=2,column=0, rowspan=2, columnspan=5)
+        plot_frame.grid(row=0,column=3,rowspan=3, columnspan=3)
 
         # create widgets for a2a frame
         a2a_label = tk.Label(master=a2a_frame, text="Angle to angle")
@@ -145,6 +147,19 @@ if __name__ == "__main__":
         print(mm.M_current)
         plotTransf(mm.M_current)
         plot_canvas.get_tk_widget().pack()
+
+        #create widgets for display_frame
+        display_pos_label = tk.Label(master=display_frame, text="pos")
+        display_vel_label = tk.Label(master=display_frame, text="vel")
+        display_pos_value = tk.Label(master=display_frame, text=f"{mm.pos_six}")
+        display_vel_value = tk.Label(master=display_frame, text=f"{mm.vel_six}")
+
+        display_frame.rowconfigure([0,1],minsize=100, weight=1)
+        display_frame.columnconfigure([0,1,2], minsize=100, weight=1)
+        display_pos_label.grid(row=0, column=0)
+        display_vel_label.grid(row=1, column=0)
+        display_pos_value.grid(row=0, column=1, columnspan=1)
+        display_vel_value.grid(row=1, column=1, columnspan=1)
 
         # need a tkinter GUI, shows the current transf
         # need an input to the next transf, which will:

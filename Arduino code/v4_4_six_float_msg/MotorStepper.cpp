@@ -28,11 +28,10 @@ MotorStepper::MotorStepper(int pulse, int direct, int lower, int upper, float st
 
  }
 
-int MotorStepper::getVel() {
+float MotorStepper::getVel() {
 	return vel;
 }
-
-int MotorStepper::getPos() {
+float MotorStepper::getPos() {
 	return pos;
 }
 

@@ -24,7 +24,8 @@ class MotorManager {
 
     void messageCallback( const v4_6dof::Float32List& vel_six);
 
-    void setVels(float incoming_vels[]);
+    void setVels(const float incoming_vels[]);
+    void pubPoss();
     void checkSteps();
 
     ros::Subscriber<v4_6dof::Float32List, MotorManager> sub;
@@ -38,7 +39,7 @@ class MotorManager {
     MotorStepper *motorlist[4];
 
 
-    v4_6dof::Float32List pos_msg;
+    v4_6dof::Float32List &pos_msg;
 
 
 };
