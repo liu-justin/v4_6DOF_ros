@@ -96,8 +96,8 @@ if __name__ == "__main__":
         mm = MultipleMotors()
 
         window = tk.Tk()
-        window.rowconfigure([0,1,2,3], minsize=100, weight=1)
-        window.columnconfigure([0,1,2,3,4,5], minsize=100, weight=1)
+        window.rowconfigure([0,1,2,3,4], minsize=100, weight=1)
+        window.columnconfigure([0,1,2,3,4,5,6], minsize=100, weight=1)
         rospy.init_node('talker', anonymous=True)
 
         # create main containers
@@ -110,7 +110,7 @@ if __name__ == "__main__":
         a2a_frame.grid(row=0, column=0, columnspan=3)
         t2t_frame.grid(row=1, column=0, columnspan=3)
         display_frame.grid(row=2,column=0, rowspan=2, columnspan=5)
-        plot_frame.grid(row=0,column=3,rowspan=3, columnspan=3)
+        plot_frame.grid(row=0,column=4,rowspan=3, columnspan=3)
 
         # create widgets for a2a frame
         a2a_label = tk.Label(master=a2a_frame, text="Angle to angle")
@@ -152,21 +152,27 @@ if __name__ == "__main__":
         #create widgets for display_frame
         display_pos_label = tk.Label(master=display_frame, text="pos")
         display_vel_label = tk.Label(master=display_frame, text="vel")
-        display_pos_value = tk.Label(master=display_frame, text=f"{mm.pos_six}")
-        display_vel_value = tk.Label(master=display_frame, text=f"{mm.vel_six}")
+        display_pos_value = []
+        display_vel_value = []
+        for i in range(0,6):
+            display_pos_value.append(tk.Label(master=display_frame, text=f"{round(mm.pos_six[i],3)}"))
+            display_vel_value.append(tk.Label(master=display_frame, text=f"{round(mm.vel_six[i],3)}"))
 
         display_frame.rowconfigure([0,1],minsize=100, weight=1)
-        display_frame.columnconfigure([0,1,2], minsize=100, weight=1)
+        display_frame.columnconfigure([0,1,2], minsize=50, weight=1)
         display_pos_label.grid(row=0, column=0)
         display_vel_label.grid(row=1, column=0)
-        display_pos_value.grid(row=0, column=1, columnspan=1)
-        display_vel_value.grid(row=1, column=1, columnspan=1)
+        for i in range(0,6):
+            display_pos_value[i].grid(row=0, column=i+1)
+            display_vel_value[i].grid(row=1, column=i+1)
 
         def updateAllPos(data):
-            display_pos_value["text"] = f"{mm.pos_six}"
+            for i in range(0,6):
+                display_pos_value.append(tk.Label(master=display_frame, text=f"{round(mm.pos_six[i],3)}"))
 
         def updateAllVel(data):
-            display_vel_value["text"] = f"{mm.vel_six}"
+            for i in range(0,6):
+                display_vel_value.append(tk.Label(master=display_frame, text=f"{round(mm.vel_six[i],3)}"))
 
         sub_vel = rospy.Subscriber('vel_six_chatter',msg.Float32List,updateAllVel)
         sub_pos = rospy.Subscriber('pos_six_chatter',msg.Float32List,updateAllPos)
