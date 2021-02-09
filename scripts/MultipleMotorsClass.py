@@ -38,5 +38,6 @@ class MultipleMotors():
         self.pub.publish(self.vel_six)
 
     def updateAllPos(self, data):
+        rospy.loginfo(f"got this data: {data}")
         self.pos_six = data.data
 

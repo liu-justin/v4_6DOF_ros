@@ -20,7 +20,7 @@ void MotorManager::messageCallback( const v4_6dof::Float32List& vel_six) {
   setVels(vel_six.data);
 }
 
-void MotorManager::setVels(const float incoming_vels[6]) {
+void MotorManager::setVels(float incoming_vels[6]) {
   for (int i = 0 ; i < 4; i++) {
     motorlist[i]->setVel(incoming_vels[i]);
   }
@@ -30,7 +30,6 @@ void MotorManager::pubPoss() {
   for (int i = 0; i < 4; i++) {
     pos_msg.data[i] = motorlist[i]->getPos();
   }
-
   pub.publish(&pos_msg);
 
 }
@@ -41,4 +40,5 @@ void MotorManager::checkSteps() {
   for (int i = 0 ; i < 4; i++) {
     motorlist[i]->checkStep(current_time);
   }
+  pubPoss();
 }

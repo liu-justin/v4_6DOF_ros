@@ -14,7 +14,6 @@ MotorManager::MotorManager(MotorStepper* R1, MotorStepper* T1, MotorStepper* T2,
   motorlist[1] = T1;
   motorlist[2] = T2;
   motorlist[3] = R2;
-  pinMode(A1, OUTPUT);
 }
 
 void MotorManager::messageCallback( const v4_6dof::Float32List& vel_six) {
@@ -25,10 +24,16 @@ void MotorManager::setVels(float incoming_vels[6]) {
   
   for (int i = 0 ; i < 4; i++) {
     motorlist[i]->setVel(incoming_vels[i]);
-    digitalWrite(A1, HIGH);
-    delay(2);
-    digitalWrite(A1, LOW);
+
   }
+}
+
+void MotorManager::pubPoss() {
+  for (int i = 0; i < 4; i++) {
+    pos_msg.data[i] = motorlist[i]->getPos();
+  }
+  pub.publish(&pos_msg);
+
 }
 
 void MotorManager::checkSteps() {
@@ -37,4 +42,5 @@ void MotorManager::checkSteps() {
   for (int i = 0 ; i < 4; i++) {
     motorlist[i]->checkStep(current_time);
   }
+  pubPoss();
 }

@@ -10,6 +10,7 @@ import tkinter as tk
 from MultipleMotorsClass import MultipleMotors
 from graph import TransfGraph
 import modern_robotics as mr
+import v4_6dof.msg as msg
 
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.backends.backend_tkagg import (
@@ -161,8 +162,14 @@ if __name__ == "__main__":
         display_pos_value.grid(row=0, column=1, columnspan=1)
         display_vel_value.grid(row=1, column=1, columnspan=1)
 
-        pub = rospy.Publisher('vel_six_chatter',msg.Float32List,queue_size=1)
-        sub = rospy.Subscriber('pos_six_chatter',msg.Float32List,self.updateAllPos)
+        def updateAllPos(data):
+            display_pos_value["text"] = f"{mm.pos_six}"
+
+        def updateAllVel(data):
+            display_vel_value["text"] = f"{mm.vel_six}"
+
+        sub_vel = rospy.Subscriber('vel_six_chatter',msg.Float32List,updateAllVel)
+        sub_pos = rospy.Subscriber('pos_six_chatter',msg.Float32List,updateAllPos)
 
         # need a tkinter GUI, shows the current transf
         # need an input to the next transf, which will:
