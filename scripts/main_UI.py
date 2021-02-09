@@ -161,6 +161,9 @@ if __name__ == "__main__":
         display_pos_value.grid(row=0, column=1, columnspan=1)
         display_vel_value.grid(row=1, column=1, columnspan=1)
 
+        pub = rospy.Publisher('vel_six_chatter',msg.Float32List,queue_size=1)
+        sub = rospy.Subscriber('pos_six_chatter',msg.Float32List,self.updateAllPos)
+
         # need a tkinter GUI, shows the current transf
         # need an input to the next transf, which will:
             # first find the P2P in cartesian
