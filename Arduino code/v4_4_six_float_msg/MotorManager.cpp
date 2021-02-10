@@ -40,5 +40,5 @@ void MotorManager::checkSteps() {
   for (int i = 0 ; i < 4; i++) {
     motorlist[i]->checkStep(current_time);
   }
-  pubPoss();
+//  pubPoss();
 }

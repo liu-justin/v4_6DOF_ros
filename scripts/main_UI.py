@@ -103,13 +103,13 @@ if __name__ == "__main__":
         # create main containers
         a2a_frame = tk.Frame()
         t2t_frame = tk.Frame()
-        plot_frame = tk.Frame()
         display_frame = tk.Frame()
+        plot_frame = tk.Frame()
 
         # align main containers
         a2a_frame.grid(row=0, column=0, columnspan=3)
         t2t_frame.grid(row=1, column=0, columnspan=3)
-        display_frame.grid(row=2,column=0, rowspan=2, columnspan=5)
+        display_frame.grid(row=2,column=0, rowspan=2, columnspan=3)
         plot_frame.grid(row=0,column=4,rowspan=3, columnspan=3)
 
         # create widgets for a2a frame
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         a2a_entry = tk.Entry(master=a2a_frame)
         a2a_button = tk.Button(master=a2a_frame, text="Confirm", command = a2aPublish)
 
-        a2a_frame.rowconfigure(0,minsize=100, weight=1)
+        a2a_frame.rowconfigure(0,minsize=50, weight=1)
         a2a_frame.columnconfigure([0,1,2], minsize=100, weight=1)
         a2a_label.grid(row=0, column=0)
         a2a_entry.grid(row=0, column=1)
@@ -128,26 +128,11 @@ if __name__ == "__main__":
         t2t_entry = tk.Entry(master=t2t_frame)
         t2t_button = tk.Button(master=t2t_frame, text="Confirm", command = t2tPublish)
 
-        t2t_frame.rowconfigure(0,minsize=100, weight=1)
+        t2t_frame.rowconfigure(0,minsize=50, weight=1)
         t2t_frame.columnconfigure([0,1,2], minsize=100, weight=1)
         t2t_label.grid(row=0, column=0)
         t2t_entry.grid(row=0, column=1)
         t2t_button.grid(row=0, column=2)
-
-        # create widgets for plot_frame
-        plot_fig = Figure(figsize=(3,3), dpi=100)
-        plot_canvas = FigureCanvasTkAgg(plot_fig, master=plot_frame)
-        plot_canvas.draw()
-        plot_ax = plot_fig.add_subplot(111,projection="3d")
-        plot_ax.axes.set_xlim3d(left=-2, right=2)
-        plot_ax.axes.set_ylim3d(bottom=-2, top=2)
-        plot_ax.axes.set_zlim3d(bottom=-1, top=1)
-        plot_x_norm, = plot_ax.plot([0,0],[0,0],[0,0])
-        plot_y_norm, = plot_ax.plot([0,0],[0,0],[0,0])
-        plot_z_norm, = plot_ax.plot([0,0],[0,0],[0,0])
-        print(mm.M_current)
-        plotTransf(mm.M_current)
-        plot_canvas.get_tk_widget().pack()
 
         #create widgets for display_frame
         display_pos_label = tk.Label(master=display_frame, text="pos")
@@ -158,8 +143,8 @@ if __name__ == "__main__":
             display_pos_value.append(tk.Label(master=display_frame, text=f"{round(mm.pos_six[i],3)}"))
             display_vel_value.append(tk.Label(master=display_frame, text=f"{round(mm.vel_six[i],3)}"))
 
-        display_frame.rowconfigure([0,1],minsize=100, weight=1)
-        display_frame.columnconfigure([0,1,2], minsize=50, weight=1)
+        display_frame.rowconfigure([0,1],minsize=50, weight=1)
+        display_frame.columnconfigure([0,1,2,3,4,5,6], minsize=50, weight=1)
         display_pos_label.grid(row=0, column=0)
         display_vel_label.grid(row=1, column=0)
         for i in range(0,6):
@@ -176,6 +161,21 @@ if __name__ == "__main__":
 
         sub_vel = rospy.Subscriber('vel_six_chatter',msg.Float32List,updateAllVel)
         sub_pos = rospy.Subscriber('pos_six_chatter',msg.Float32List,updateAllPos)
+
+        # create widgets for plot_frame
+        plot_fig = Figure(figsize=(3,3), dpi=100)
+        plot_canvas = FigureCanvasTkAgg(plot_fig, master=plot_frame)
+        plot_canvas.draw()
+        plot_ax = plot_fig.add_subplot(111,projection="3d")
+        plot_ax.axes.set_xlim3d(left=-2, right=2)
+        plot_ax.axes.set_ylim3d(bottom=-2, top=2)
+        plot_ax.axes.set_zlim3d(bottom=-1, top=1)
+        plot_x_norm, = plot_ax.plot([0,0],[0,0],[0,0])
+        plot_y_norm, = plot_ax.plot([0,0],[0,0],[0,0])
+        plot_z_norm, = plot_ax.plot([0,0],[0,0],[0,0])
+        print(mm.M_current)
+        plotTransf(mm.M_current)
+        plot_canvas.get_tk_widget().pack()
 
         # need a tkinter GUI, shows the current transf
         # need an input to the next transf, which will:
