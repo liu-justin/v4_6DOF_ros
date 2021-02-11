@@ -63,7 +63,8 @@ void MotorStepper::checkStep(unsigned long current_time){
 			pulse();         
 
 			// reset previous_time for nextTime period                 
-			previous_time = current_time;
+//			previous_time = current_time;
+      previous_time += (rads_per_step/float(abs(vel)));
 
 		}
 	}
