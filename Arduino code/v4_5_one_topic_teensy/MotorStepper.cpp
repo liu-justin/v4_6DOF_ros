@@ -11,61 +11,66 @@
 
 MotorStepper::MotorStepper(int pulse, int direct, int lower, int upper, float stepSize, float multi)
 {
-	pulsePin = pulse;
-	directionPin = direct;
-	pinMode(pulsePin, OUTPUT);
-	pinMode(directionPin, OUTPUT);
+  pulse_pin = pulse;
+  direction_pin = direct;
+  pinMode(pulse_pin, OUTPUT);
+  pinMode(direction_pin, OUTPUT);
 
-	lowerLimit = lower;
-	upperLimit = upper;
+  lowerLimit = lower;
+  upperLimit = upper;
 
-	multipler = multi;
+  multipler = multi;
 
-	pos = 0.0;
-	vel = 0.0;
+  pos = 0.0;
+  vel = 0.0;
 
-	rads_per_step = stepSize;
+  rads_per_step = stepSize;
 
- }
+}
 
 float MotorStepper::getVel() {
-	return vel;
+  return vel;
 }
 float MotorStepper::getPos() {
-	return pos;
+  return pos;
 }
 
 void MotorStepper::setVel(float incoming_vel) {
-	vel = multipler*incoming_vel;
-	if (vel < 0){
-		digitalWrite(directionPin, 0);
-	}
-	else if (vel > 0){
-		digitalWrite(directionPin, 1);
-	}
+  vel = multipler * incoming_vel;
+  if (vel < 0) {
+    digitalWrite(direction_pin, 0);
+  }
+  else if (vel > 0) {
+    digitalWrite(direction_pin, 1);
+  }
 }
 
-void MotorStepper::pulse(){
-	digitalWrite(pulsePin, HIGH);
-  delayMicroseconds(5);
-	digitalWrite(pulsePin, LOW);
-	// track the pos
-	pos += ((vel > 0) - (vel < 0))*rads_per_step/multipler;
+void MotorStepper::pulse() {
+  digitalWrite(pulse_pin, HIGH);
+  pulse_high = true;
+  //  delayMicroseconds(5);
+  //	digitalWrite(pulse_pin, LOW);
+  // track the pos
+  pos += ((vel > 0) - (vel < 0)) * rads_per_step / multipler;
 }
 
 // automatically finds correct time to pulse, based on inputed velocity
-void MotorStepper::checkStep(unsigned long current_time){
-	// if the velocity is zero, then just skip, don't even count the time
-	if (vel != 0){
+void MotorStepper::checkStep(unsigned long current_time) {
+  // if the velocity is zero, then just skip, don't even count the time
+  if (vel != 0) {
+    if (pulse_high == true) {
+      delayMicroseconds(3);
+      digitalWrite(pulse_pin, LOW);
+      pulse_high = false;
+    }
 
-		// equation is v = x/t --> t = x/v (if time period exceeds this, then...)
-		if (((current_time-previous_time)/1000.0) > (rads_per_step/float(abs(vel)))){   
-			pulse();         
+    // equation is v = x/t --> t = x/v (if time period exceeds this, then...)
+    if (((current_time - previous_time) / 1000.0) > (rads_per_step / float(abs(vel)))) {
+      pulse();
 
-			// reset previous_time for nextTime period                 
-//			previous_time = current_time;
-      previous_time += (rads_per_step/float(abs(vel)));
+      // reset previous_time for nextTime period
+      previous_time = current_time;
 
-		}
-	}
+    }
+  }
 }

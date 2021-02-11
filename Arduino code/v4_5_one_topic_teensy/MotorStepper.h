@@ -19,8 +19,8 @@ class MotorStepper {
 		
 	private:
 		
-		int pulsePin;
-		int directionPin;
+		int pulse_pin;
+		int direction_pin;
 
 		int lowerLimit;
 		int upperLimit;
@@ -31,6 +31,8 @@ class MotorStepper {
 		float multipler;
 		float rads_per_step;
     unsigned long previous_time;
+
+    bool pulse_high;
 
 
 };

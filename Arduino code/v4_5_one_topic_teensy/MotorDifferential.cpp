@@ -69,8 +69,7 @@ void MotorDifferential::checkStep(unsigned long current_time) {
       pos_A = pos_A + sgn(vel_A) * minor_steps;
       odrive.SetPosition(0, pos_A);
 
-//      previous_time_A = current_time;
-      previous_time_A += (minor_steps / float(abs(vel_A)));
+      previous_time_A = current_time;
     }
   }
 
@@ -79,8 +78,7 @@ void MotorDifferential::checkStep(unsigned long current_time) {
       pos_B = pos_B + sgn(vel_B) * minor_steps;
       odrive.SetPosition(1, pos_B);
 
-//      previous_time_B = current_time;
-      previous_time_B = (minor_steps / float(abs(vel_B)));
+      previous_time_B = current_time;
     }
   }
 }
