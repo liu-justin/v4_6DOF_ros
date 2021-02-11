@@ -40,7 +40,7 @@ void MotorManager::pubPoss() {
 }
 
 void MotorManager::checkSteps() {
-  unsigned long current_time = millis();
+  unsigned long current_time = micros();
 
   for (int i = 0 ; i < 4; i++) {
     motorlist[i]->checkStep(current_time);

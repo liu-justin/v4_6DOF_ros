@@ -21,8 +21,8 @@ MotorDifferential::MotorDifferential(HardwareSerial& odrive_serial)
   pos_B = 0.0;
   vel_R3 = 0.0;
   vel_T3 = 0.0;
-  previous_time_A = 0.0;
-  previous_time_B = 0.0;
+//  previous_time_A = 0.0;
+//  previous_time_B = 0.0;
 
   speed_ratio = 3.95;
   rad_to_rev = 1 / (2 * PI);
@@ -65,7 +65,7 @@ float MotorDifferential::getPosR3() {
 
 void MotorDifferential::checkStep(unsigned long current_time) {
   if (vel_A != 0) {
-    if (((current_time - previous_time_A) / 1000.0) > (minor_steps / float(abs(vel_A)))) {
+    if ((float(current_time - previous_time_A) / 1000000.0) > (minor_steps / float(abs(vel_A)))) {
       pos_A = pos_A + sgn(vel_A) * minor_steps;
       odrive.SetPosition(0, pos_A);
 
@@ -74,7 +74,7 @@ void MotorDifferential::checkStep(unsigned long current_time) {
   }
 
   if (vel_B != 0) {
-    if (((current_time - previous_time_B) / 1000.0) > (minor_steps / float(abs(vel_B)))) {
+    if ((float(current_time - previous_time_B) / 1000000.0) > (minor_steps / float(abs(vel_B)))) {
       pos_B = pos_B + sgn(vel_B) * minor_steps;
       odrive.SetPosition(1, pos_B);
 

@@ -56,16 +56,14 @@ void MotorStepper::pulse() {
 
 // automatically finds correct time to pulse, based on inputed velocity
 void MotorStepper::checkStep(unsigned long current_time) {
+  if (pulse_high == true && current_time - previous_time >= 10) {
+    digitalWrite(pulse_pin, LOW);
+    pulse_high = false;
+  }
   // if the velocity is zero, then just skip, don't even count the time
   if (vel != 0) {
-    if (pulse_high == true) {
-      delayMicroseconds(3);
-      digitalWrite(pulse_pin, LOW);
-      pulse_high = false;
-    }
-
     // equation is v = x/t --> t = x/v (if time period exceeds this, then...)
-    if (((current_time - previous_time) / 1000.0) > (rads_per_step / float(abs(vel)))) {
+    if (((current_time - previous_time) / 1000000.0) > (rads_per_step / float(abs(vel)))) {
       pulse();
 
       // reset previous_time for nextTime period
