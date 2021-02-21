@@ -19,9 +19,10 @@ class MultipleMotors():
 
         self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six)
 
-        self.pub = rospy.Publisher('vel_six_chatter',msg.Float32List,queue_size=1)
-        self.sub = rospy.Subscriber('pos_six_chatter',msg.Float32List,self.updateAllPos)
-
+        self.pub = rospy.Publisher('vel_six_chatter',msg.PosTime,queue_size=1)
+        self.sub = rospy.Subscriber('pos_six_chatter',msg.PosTime,self.updateAllPos)
+        # self.pub = rospy.Publisher('vel_six_chatter',msg.Float32List,queue_size=1)
+        # self.sub = rospy.Subscriber('pos_six_chatter',msg.Float32List,self.updateAllPos)
 
     def updateSingleVel(self, index, vel):
         self.vel_six[index] = vel
@@ -41,3 +42,7 @@ class MultipleMotors():
         rospy.loginfo(f"got this data: {data}")
         self.pos_six = data.data
 
+    def updatePosTime(self, new_pos_six, time):
+        self.pos_six = new_pos_six
+        # need to fix this, doesnt work like this
+        self.pub.publish(self.pos_six, time)

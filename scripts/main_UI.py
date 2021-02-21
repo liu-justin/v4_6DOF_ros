@@ -17,7 +17,7 @@ from matplotlib.backends.backend_tkagg import (
                                     FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.figure import Figure
 
-def trajectory_publish(angle_six_list, total_time):
+def trajectory_publish_total_time(angle_six_list, total_time):
     period = total_time/len(angle_six_list)
     # for i in range(1,len(angle_six_list)):
     previousTime = time.perf_counter()
@@ -32,6 +32,19 @@ def trajectory_publish(angle_six_list, total_time):
             i += 1
     angular_velocity_six = [0,0,0,0,0,0]
     mm.updateAllVel(angular_velocity_six)
+
+def trajectory_publish(angle_six_list, time_gap):
+    # for i in range(1,len(angle_six_list)):
+    previousTime = time.perf_counter()
+    mm.updatePosTime(angle_six_list[1], time_gap)
+    mm.updatePosTime(angle_six_list[2], time_gap)
+    i = 3
+    while i < len(angle_six_list):
+        currentTime = time.perf_counter()
+        if currentTime - previousTime > time_gap:
+            previousTime = currentTime
+            mm.updatePosTime(angle_six_list[i], time_gap)
+            i += 1
             
 
 def a2aPublish():
@@ -40,11 +53,9 @@ def a2aPublish():
     angle_list = a2a_entry.get()
     placeholder_t = 5
     final_angles = list(map(float, angle_list.split()))
-    print(mm.pos_six)
-    print(angle_list)
-    trajectory = mr.JointTrajectory(mm.pos_six, final_angles, placeholder_t, 10, 3)
-    print(trajectory)
-    trajectory_publish(trajectory, placeholder_t)
+    placeholder_samplesize = 20
+    trajectory = mr.JointTrajectory(mm.pos_six, final_angles, placeholder_t, placeholder_samplesize, 3)
+    trajectory_publish(trajectory, placeholder_t/placeholder_samplesize)
     # probably have a function to determine the ideal number of sample times (10 now)
 
 def t2tPublish():

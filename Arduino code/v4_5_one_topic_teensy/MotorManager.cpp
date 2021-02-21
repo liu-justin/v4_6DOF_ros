@@ -46,5 +46,5 @@ void MotorManager::checkSteps() {
     motorlist[i]->checkStep(current_time);
   }
   motordiff->checkStep(current_time);
-//  pubPoss();
+  pubPoss();
 }
