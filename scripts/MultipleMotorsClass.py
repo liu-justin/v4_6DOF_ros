@@ -42,7 +42,6 @@ class MultipleMotors():
         rospy.loginfo(f"got this data: {data}")
         self.pos_six = data.data
 
-    def updatePosTime(self, new_pos_six, time):
-        self.pos_six = new_pos_six
-        # need to fix this, doesnt work like this
-        self.pub.publish(self.pos_six, time)
+    def updatePosTime(self, new_vel_six, time):
+        self.vel_six = new_vel_six
+        self.pub.publish(self.vel_six, time)

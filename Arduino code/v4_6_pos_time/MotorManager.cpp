@@ -17,8 +17,8 @@ MotorManager::MotorManager(MotorStepper* R1, MotorStepper* T1, MotorStepper* T2,
   motordiff = T3R3;
 }
 
-void MotorManager::messageCallback( const v4_6dof::Float32List& vel_six) {
-  setVels(vel_six.data);
+void MotorManager::messageCallback( const v4_6dof::PosTime& vel_six) {
+  setVels(vel_six.pos);
   // change this, need to establish goal pos, and the time to get there
 }
 
@@ -30,15 +30,15 @@ void MotorManager::setVels(float incoming_vels[6]) {
   motordiff->setVelR3(incoming_vels[5]);
 }
 
-void MotorManager::pubPoss() {
-  for (int i = 0; i < 4; i++) {
-    pos_msg.data[i] = motorlist[i]->getPos();
-  }
-  pos_msg.data[4] = motordiff->getPosT3();
-  pos_msg.data[5] = motordiff->getPosR3();
-  pub.publish(&pos_msg);
-
-}
+//void MotorManager::pubPoss() {
+//  for (int i = 0; i < 4; i++) {
+//    pos_msg.data[i] = motorlist[i]->getPos();
+//  }
+//  pos_msg.data[4] = motordiff->getPosT3();
+//  pos_msg.data[5] = motordiff->getPosR3();
+//  pub.publish(&pos_msg);
+//
+//}
 
 void MotorManager::checkSteps() {
   unsigned long current_time = micros();

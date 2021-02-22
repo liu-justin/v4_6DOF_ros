@@ -4,7 +4,7 @@
 #include <ros.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Empty.h>
-#include <std_msgs/PosTime.h>
+#include <v4_6dof/PosTime.h>
 
 #include <HardwareSerial.h>
 #include <SoftwareSerial.h>

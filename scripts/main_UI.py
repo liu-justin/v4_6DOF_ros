@@ -36,14 +36,15 @@ def trajectory_publish_total_time(angle_six_list, total_time):
 def trajectory_publish(angle_six_list, time_gap):
     # for i in range(1,len(angle_six_list)):
     previousTime = time.perf_counter()
-    mm.updatePosTime(angle_six_list[1], time_gap)
-    mm.updatePosTime(angle_six_list[2], time_gap)
+    mm.updatePosTime(angle_six_list[1]-angle_six_list[0], time_gap)
+    mm.updatePosTime(angle_six_list[2]-angle_six_list[1], time_gap)
     i = 3
     while i < len(angle_six_list):
         currentTime = time.perf_counter()
         if currentTime - previousTime > time_gap:
             previousTime = currentTime
-            mm.updatePosTime(angle_six_list[i], time_gap)
+            angular_velocity_six = (angle_six_list[i] - angle_six_list[i-1])/time_gap
+            mm.updatePosTime(angular_velocity_six, time_gap)
             i += 1
             
 
