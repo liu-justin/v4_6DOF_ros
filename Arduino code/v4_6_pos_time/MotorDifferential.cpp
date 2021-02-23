@@ -1,9 +1,6 @@
 #include "MotorDifferential.h"
 
 #include <ros.h>
-#include <std_msgs/String.h>
-#include <std_msgs/Empty.h>
-#include <v4_6dof/PosTime.h>
 
 #include <HardwareSerial.h>
 #include <ODriveArduino.h>

@@ -17,14 +17,14 @@ MotorManager::MotorManager(MotorStepper* R1, MotorStepper* T1, MotorStepper* T2,
   motordiff = T3R3;
 }
 
-void MotorManager::messageCallback( const v4_6dof::PosTime& vel_six) {
-  setVels(vel_six.pos);
+void MotorManager::messageCallback( const v4_6dof::VelGap& data) {
+  pushToQueue(data.vel, data.gap);
   // change this, need to establish goal pos, and the time to get there
 }
 
-void MotorManager::setVels(float incoming_vels[6]) {
+void MotorManager::pushToQueue(float incoming_vels[6], uint32_t incoming_gap ) {
   for (int i = 0 ; i < 4; i++) {
-    motorlist[i]->setVel(incoming_vels[i]);
+    motorlist[i]->pushVelAndGap(incoming_vels[i], incoming_gap);
   }
   motordiff->setVelT3(incoming_vels[4]);
   motordiff->setVelR3(incoming_vels[5]);
@@ -47,5 +47,5 @@ void MotorManager::checkSteps() {
     motorlist[i]->checkStep(current_time);
   }
   motordiff->checkStep(current_time);
-  pubPoss();
+//  pubPoss();
 }

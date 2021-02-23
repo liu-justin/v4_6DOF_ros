@@ -2,9 +2,6 @@
 #include "MotorStepper.h"
 
 #include <ros.h>
-#include <std_msgs/String.h>
-#include <std_msgs/Empty.h>
-#include <std_msgs/Float32.h>
 
 // this value is being shared across all the instances of the class, need to fix
 //std_msgs::Float32 posMsg;
@@ -36,13 +33,13 @@ float MotorStepper::getPos() {
   return pos;
 }
 
-void MotorStepper::pushVelAndGap(float incoming_vel, unsigned long incoming_gap) {
+void MotorStepper::pushVelAndGap(float incoming_vel, uint32_t incoming_gap) {
   float new_vel = multipler * incoming_vel;
   vel_queue.push(&new_vel);
   gap_queue.push(&incoming_gap);
 }
 
-void MotorStepper::popVel() {
+void MotorStepper::popVelAndGap() {
   vel_queue.pop(&vel);
   if (vel < 0) {
     digitalWrite(direction_pin, 0);
@@ -62,8 +59,11 @@ void MotorStepper::pulse() {
 }
 
 void MotorStepper::checkTimeGap() {
-  if (gap_timer > gap && !gap_queue.isEmpty()){
-    popVel();
+  if (gap_timer > gap && !vel_queue.isEmpty()){
+    popVelAndGap();
+  }
+  if (vel_queue.isEmpty() && vel != 0) {
+    vel = 0;
   }
 }
 

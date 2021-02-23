@@ -17,7 +17,7 @@ class MotorStepper {
 		float getVel();
 		void setVel(float incoming_vel);
     void pushVelAndGap(float incoming_vel, unsigned long incoming_gap);
-    void popVel();
+    void popVelAndGap();
 		void pulse();
 		void checkStep(unsigned long current_time);
     void checkTimeGap();
