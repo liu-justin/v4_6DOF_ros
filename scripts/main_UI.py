@@ -36,16 +36,17 @@ def trajectory_publish_total_time(angle_six_list, total_time):
 def trajectory_publish(angle_six_list, time_gap):
     # for i in range(1,len(angle_six_list)):
     previousTime = time.perf_counter()
-    mm.updatePosTime(angle_six_list[1]-angle_six_list[0], time_gap)
-    mm.updatePosTime(angle_six_list[2]-angle_six_list[1], time_gap)
+    mm.updateVelGap(angle_six_list[1]-angle_six_list[0], int(1000000*time_gap))
+    mm.updateVelGap(angle_six_list[2]-angle_six_list[1], int(1000000*time_gap))
     i = 3
     while i < len(angle_six_list):
         currentTime = time.perf_counter()
         if currentTime - previousTime > time_gap:
             previousTime = currentTime
             angular_velocity_six = (angle_six_list[i] - angle_six_list[i-1])/time_gap
-            mm.updatePosTime(angular_velocity_six, time_gap)
+            mm.updateVelGap(angular_velocity_six, int(1000000*time_gap))
             i += 1
+    mm.updateVelGap([0,0,0,0,0,0], int(1000000*time_gap))
             
 
 def a2aPublish():
@@ -56,7 +57,8 @@ def a2aPublish():
     final_angles = list(map(float, angle_list.split()))
     placeholder_samplesize = 20
     trajectory = mr.JointTrajectory(mm.pos_six, final_angles, placeholder_t, placeholder_samplesize, 3)
-    trajectory_publish(trajectory, placeholder_t/placeholder_samplesize)
+    gap_in_micros = placeholder_t/placeholder_samplesize
+    trajectory_publish(trajectory, gap_in_micros)
     # probably have a function to determine the ideal number of sample times (10 now)
 
 def t2tPublish():
@@ -171,8 +173,8 @@ if __name__ == "__main__":
             for i in range(0,6):
                 display_vel_value.append(tk.Label(master=display_frame, text=f"{round(mm.vel_six[i],3)}"))
 
-        sub_vel = rospy.Subscriber('vel_six_chatter',msg.Float32List,updateAllVel)
-        sub_pos = rospy.Subscriber('pos_six_chatter',msg.Float32List,updateAllPos)
+        # sub_vel = rospy.Subscriber('vel_six_chatter',msg.VelGap,updateAllVel)
+        # sub_pos = rospy.Subscriber('pos_six_chatter',msg.VelGap,updateAllPos)
 
         # create widgets for plot_frame
         plot_fig = Figure(figsize=(3,3), dpi=100)

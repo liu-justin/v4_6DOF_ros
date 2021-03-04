@@ -19,7 +19,6 @@ MotorManager::MotorManager(MotorStepper* R1, MotorStepper* T1, MotorStepper* T2,
 
 void MotorManager::messageCallback( const v4_6dof::VelGap& data) {
   pushToQueue(data.vel, data.gap);
-  // change this, need to establish goal pos, and the time to get there
 }
 
 void MotorManager::pushToQueue(float incoming_vels[6], uint32_t incoming_gap ) {

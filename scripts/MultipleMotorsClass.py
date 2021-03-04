@@ -19,8 +19,8 @@ class MultipleMotors():
 
         self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six)
 
-        self.pub = rospy.Publisher('vel_six_chatter',msg.PosTime,queue_size=1)
-        self.sub = rospy.Subscriber('pos_six_chatter',msg.PosTime,self.updateAllPos)
+        self.pub = rospy.Publisher('vel_six_chatter',msg.VelGap,queue_size=1)
+        self.sub = rospy.Subscriber('pos_six_chatter',msg.VelGap,self.updateAllPos)
         # self.pub = rospy.Publisher('vel_six_chatter',msg.Float32List,queue_size=1)
         # self.sub = rospy.Subscriber('pos_six_chatter',msg.Float32List,self.updateAllPos)
 
@@ -29,10 +29,10 @@ class MultipleMotors():
         self.pub.publish(self.vel_six)
          # need to figure out correct way of setting up this data
 
-    def publishArray(self):
-        arg = msg.Float32List()
-        arg.data = self.vel_six
-        self.pub.publish(arg)
+    # def publishArray(self):
+    #     arg = msg.Float32List()
+    #     arg.data = self.vel_six
+    #     self.pub.publish(arg)
 
     def updateAllVel(self, new_vel_six):
         self.vel_six = new_vel_six
@@ -42,6 +42,9 @@ class MultipleMotors():
         rospy.loginfo(f"got this data: {data}")
         self.pos_six = data.data
 
-    def updatePosTime(self, new_vel_six, time):
+    def updateVelGap(self, new_vel_six, time):       
         self.vel_six = new_vel_six
-        self.pub.publish(self.vel_six, time)
+        arg = msg.VelGap()
+        arg.vel = list(self.vel_six)
+        arg.gap = time
+        self.pub.publish(arg)

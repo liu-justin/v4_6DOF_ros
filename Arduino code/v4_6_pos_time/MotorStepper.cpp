@@ -59,21 +59,25 @@ void MotorStepper::pulse() {
 }
 
 void MotorStepper::checkTimeGap() {
-  if (gap_timer > gap && !vel_queue.isEmpty()){
+  if (gap_timer > gap && !vel_queue.isEmpty()) {
     popVelAndGap();
   }
-  if (vel_queue.isEmpty() && vel != 0) {
-    vel = 0;
-  }
+//  if (vel_queue.isEmpty() && vel != 0) {
+//    vel = 0;
+//  }
 }
 
 // automatically finds correct time to pulse, based on inputed velocity
 void MotorStepper::checkStep(unsigned long current_time) {
+  checkTimeGap();
+  
   // allowing time for driver to register the high, then sets pulse to low
   if (pulse_high == true && current_time - previous_time >= 10) {
     digitalWrite(pulse_pin, LOW);
     pulse_high = false;
   }
+
+  // main step check
   if (vel != 0) {
     // equation is v = x/t --> t = x/v (if time period exceeds this, then...)
     if (((current_time - previous_time) / 1000000.0) > (rads_per_step / float(abs(vel)))) {
