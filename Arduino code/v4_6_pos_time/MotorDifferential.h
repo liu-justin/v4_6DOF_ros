@@ -7,6 +7,8 @@
 #include <SoftwareSerial.h>
 #include <ODriveArduino.h>
 
+#include <cppQueue.h>
+
 class MotorDifferential {
   public:
     MotorDifferential(HardwareSerial& odrive_serial);
@@ -24,6 +26,13 @@ class MotorDifferential {
     float getPosT3();
     float getPosR3();
 
+    void pushVelandGapT3(float incoming_vel, unsigned long incoming_gap);
+    void pushVelandGapR3(float incoming_vel, unsigned long incoming_gap);
+    void popVelandGapT3();
+    void popVelandGapR3();
+    void checkTimeGap();
+
+
     ODriveArduino odrive;
     
   private:
@@ -39,6 +48,14 @@ class MotorDifferential {
     float vel_T3;
 
     float minor_steps;
+
+    cppQueue vel_queue_T3;
+    cppQueue gap_queue_T3;
+    elapsedMicros gap_timer_T3;
+
+    cppQueue vel_queue_R3;
+    cppQueue gap_queue_R3;
+    elapsedMicros gap_timer_R3;
 };
 
 #endif

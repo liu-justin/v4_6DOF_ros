@@ -11,6 +11,8 @@ template <typename T> int sgn(T val) {
 
 MotorDifferential::MotorDifferential(HardwareSerial& odrive_serial)
   : odrive(odrive_serial)
+  , vel_queue(sizeof(float), 5, FIFO)
+  , gap_queue(sizeof(unsigned long), 5, FIFO)
 {
   vel_A = 0.0;
   vel_B = 0.0;
@@ -18,8 +20,11 @@ MotorDifferential::MotorDifferential(HardwareSerial& odrive_serial)
   pos_B = 0.0;
   vel_R3 = 0.0;
   vel_T3 = 0.0;
-//  previous_time_A = 0.0;
-//  previous_time_B = 0.0;
+
+  gap_R3 = 0;
+  gap_timer_R3 = 0;
+  gap_T3 = 0;
+  gap_timer_T3 = 0;
 
   speed_ratio = 3.95;
   rad_to_rev = 1 / (2 * PI);
@@ -52,14 +57,6 @@ float MotorDifferential::getPosR3() {
   return (0.5*pos_A - 0.5*pos_B)/final_multipler;
 }
 
-//void MotorDifferential::publish_motor_pos(){
-//  pos_R3_msg.data = (-0.5*pos_A - 0.5*pos_B)/final_multipler;
-//  pub_R3.publish(&pos_R3_msg);
-//
-//  pos_T3_msg.data = (0.5*pos_A - 0.5*pos_B)/final_multipler;
-//  pub_T3.publish(&pos_T3_msg);
-//}
-
 void MotorDifferential::checkStep(unsigned long current_time) {
   if (vel_A != 0) {
     if ((float(current_time - previous_time_A) / 1000000.0) > (minor_steps / float(abs(vel_A)))) {
@@ -79,3 +76,11 @@ void MotorDifferential::checkStep(unsigned long current_time) {
     }
   }
 }
+
+//void MotorDifferential::publish_motor_pos(){
+//  pos_R3_msg.data = (-0.5*pos_A - 0.5*pos_B)/final_multipler;
+//  pub_R3.publish(&pos_R3_msg);
+//
+//  pos_T3_msg.data = (0.5*pos_A - 0.5*pos_B)/final_multipler;
+//  pub_T3.publish(&pos_T3_msg);
+//}
