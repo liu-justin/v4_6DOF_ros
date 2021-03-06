@@ -6,17 +6,16 @@
 // this value is being shared across all the instances of the class, need to fix
 //std_msgs::Float32 posMsg;
 
-MotorStepper::MotorStepper(int pulse, int direct, int lower, int upper, float stepSize, float multi)
-  : vel_queue(sizeof(float), 5, FIFO)
-  , gap_queue(sizeof(unsigned long), 5, FIFO)
+MotorStepper::MotorStepper(int pulse, int direct, int lower, int upper, float step_size, float multi)
+: MotorStepper::MotorAxis(lower, upper, step_size, multi)
 {
   pulse_pin = pulse;
   direction_pin = direct;
   pinMode(pulse_pin, OUTPUT);
   pinMode(direction_pin, OUTPUT);
 
-  lowerLimit = lower;
-  upperLimit = upper;
+  lower_limit = lower;
+  upper_limit = upper;
 
   multipler = multi;
 
@@ -25,46 +24,17 @@ MotorStepper::MotorStepper(int pulse, int direct, int lower, int upper, float st
   gap = 0;
   gap_timer = 0;
 
-  rads_per_step = stepSize;
+  rads_per_step = step_size;
 
-}
-
-float MotorStepper::getPos() {
-  return pos;
-}
-
-void MotorStepper::pushVelAndGap(float incoming_vel, uint32_t incoming_gap) {
-  float new_vel = multipler * incoming_vel;
-  vel_queue.push(&new_vel);
-  gap_queue.push(&incoming_gap);
-}
-
-void MotorStepper::popVelAndGap() {
-  vel_queue.pop(&vel);
-  if (vel < 0) {
-    digitalWrite(direction_pin, 0);
-  }
-  else if (vel > 0) {
-    digitalWrite(direction_pin, 1);
-  }
-  gap_queue.pop(&gap);
-  gap_timer = 0;
 }
 
 void MotorStepper::pulse() {
   digitalWrite(pulse_pin, HIGH);
+  digitalWrite(direction_pin, 1 - (vel < 0));
   pulse_high = true;
+  
   // track the pos
   pos += ((vel > 0) - (vel < 0)) * rads_per_step / multipler;
-}
-
-void MotorStepper::checkTimeGap() {
-  if (gap_timer > gap && !vel_queue.isEmpty()) {
-    popVelAndGap();
-  }
-//  if (vel_queue.isEmpty() && vel != 0) {
-//    vel = 0;
-//  }
 }
 
 // automatically finds correct time to pulse, based on inputed velocity

@@ -6,7 +6,7 @@
 // this value is being shared across all the instances of the class, need to fix
 //std_msgs::Float32 posMsg;
 
-MotorAxis::MotorAxis(int lower, int upper, float stepSize, float multi)
+MotorAxis::MotorAxis(int lower, int upper, float step_size, float multi)
   : vel_queue(sizeof(float), 5, FIFO)
   , gap_queue(sizeof(unsigned long), 5, FIFO)
 {
@@ -21,7 +21,7 @@ MotorAxis::MotorAxis(int lower, int upper, float stepSize, float multi)
   gap = 0;
   gap_timer = 0;
 
-  rads_per_step = stepSize;
+  rads_per_step = step_size;
 
 }
 

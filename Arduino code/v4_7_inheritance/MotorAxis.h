@@ -17,20 +17,20 @@ class MotorAxis {
     void popVelAndGap();
     void checkTimeGap();
 
-  private:
+  protected:
 
     int lower_limit;
     int upper_limit;
 
     float pos;
     float vel;
-    uint_32_t gap; # gap between queue pops
+    uint32_t gap; // gap between queue pops
     cppQueue vel_queue;
     cppQueue gap_queue;
     elapsedMicros gap_timer;
 
 
-    float multipler; # torque ratio from output to input
+    float multipler; // torque ratio from output to input
     float rads_per_step;
 
     bool pulse_high;

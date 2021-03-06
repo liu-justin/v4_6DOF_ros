@@ -49,13 +49,15 @@ class MotorDifferential {
 
     float minor_steps;
 
-    cppQueue vel_queue_T3;
-    cppQueue gap_queue_T3;
-    elapsedMicros gap_timer_T3;
-
-    cppQueue vel_queue_R3;
-    cppQueue gap_queue_R3;
-    elapsedMicros gap_timer_R3;
+//    cppQueue vel_queue_T3;
+//    cppQueue gap_queue_T3;
+//    elapsedMicros gap_timer_T3;
+//      uint32_t gap_T3;
+//
+//    cppQueue vel_queue_R3;
+//    cppQueue gap_queue_R3;
+//    elapsedMicros gap_timer_R3;
+//     uint32_t gap_R3;
 };
 
 #endif

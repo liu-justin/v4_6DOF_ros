@@ -11,8 +11,6 @@ template <typename T> int sgn(T val) {
 
 MotorDifferential::MotorDifferential(HardwareSerial& odrive_serial)
   : odrive(odrive_serial)
-  , vel_queue(sizeof(float), 5, FIFO)
-  , gap_queue(sizeof(unsigned long), 5, FIFO)
 {
   vel_A = 0.0;
   vel_B = 0.0;
@@ -21,10 +19,10 @@ MotorDifferential::MotorDifferential(HardwareSerial& odrive_serial)
   vel_R3 = 0.0;
   vel_T3 = 0.0;
 
-  gap_R3 = 0;
-  gap_timer_R3 = 0;
-  gap_T3 = 0;
-  gap_timer_T3 = 0;
+//  gap_R3 = 0;
+//  gap_timer_R3 = 0;
+//  gap_T3 = 0;
+//  gap_timer_T3 = 0;
 
   speed_ratio = 3.95;
   rad_to_rev = 1 / (2 * PI);
