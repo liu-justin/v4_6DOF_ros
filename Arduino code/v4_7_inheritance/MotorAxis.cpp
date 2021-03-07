@@ -3,10 +3,9 @@
 
 #include <ros.h>
 
-// this value is being shared across all the instances of the class, need to fix
-//std_msgs::Float32 posMsg;
+// velocity value in queue is the transformed input velocity needed to generate the output velocity
 
-MotorAxis::MotorAxis(int lower, int upper, float step_size, float multi)
+MotorAxis::MotorAxis(int lower, int upper, float multi)
   : vel_queue(sizeof(float), 5, FIFO)
   , gap_queue(sizeof(unsigned long), 5, FIFO)
 {
@@ -21,12 +20,18 @@ MotorAxis::MotorAxis(int lower, int upper, float step_size, float multi)
   gap = 0;
   gap_timer = 0;
 
-  rads_per_step = step_size;
-
 }
 
 float MotorAxis::getPos() {
   return pos;
+}
+
+float MotorAxis::getVel() {
+  return vel;
+}
+
+float MotorAxis::getMinorSteps() {
+  return rads_per_step;
 }
 
 void MotorAxis::pushVelAndGap(float incoming_vel, uint32_t incoming_gap) {

@@ -9,65 +9,46 @@ template <typename T> int sgn(T val) {
   return (T(0) < val) - (val < T(0));
 }
 
-MotorDifferential::MotorDifferential(HardwareSerial& odrive_serial)
+MotorDifferential::MotorDifferential(HardwareSerial& odrive_serial, int tilt_lower, int tilt_upper, int rot_lower, int rot_upper, float step_size, float multipler)
   : odrive(odrive_serial)
+  , tilt(tilt_lower, tilt_upper, multipler)
+  , rotation(rot_lower, rot_upper, multipler)
 {
   vel_A = 0.0;
   vel_B = 0.0;
   pos_A = 0.0;
   pos_B = 0.0;
-  vel_R3 = 0.0;
-  vel_T3 = 0.0;
-
-//  gap_R3 = 0;
-//  gap_timer_R3 = 0;
-//  gap_T3 = 0;
-//  gap_timer_T3 = 0;
 
   speed_ratio = 3.95;
-  rad_to_rev = 1 / (2 * PI);
-  final_multipler = speed_ratio * rad_to_rev;
-  minor_steps = 0.005;
+  rad_per_step = step_size;
 
   odrive_serial.begin(115200);
 }
 
-void MotorDifferential::setVelT3(float new_vel) {
-  vel_T3 = new_vel;
-  updateVelAB();
-}
-
-void MotorDifferential::setVelR3(float new_vel) {
-  vel_R3 = new_vel;
-  updateVelAB();
-}
-
-void MotorDifferential::updateVelAB() {
-  vel_A = final_multipler * (-1.0 * vel_R3 + vel_T3);
-  vel_B = final_multipler * (-1.0 * vel_R3 - vel_T3);
-}
-
-float MotorDifferential::getPosT3() {
-  return (-0.5*pos_A - 0.5*pos_B)/final_multipler;
-}
-
-float MotorDifferential::getPosR3() {
-  return (0.5*pos_A - 0.5*pos_B)/final_multipler;
-}
+//float MotorDifferential::getPosTilt() {
+//  return (-0.5*pos_A - 0.5*pos_B)/final_multipler;
+//}
+//
+//float MotorDifferential::getPosRot() {
+//  return (0.5*pos_A - 0.5*pos_B)/final_multipler;
+//}
 
 void MotorDifferential::checkStep(unsigned long current_time) {
+  // previously I changed this vel whenever a tilt, rot vel changed, now I have to sample on every loop
+  vel_A = speed_ratio * (-1.0 * rotation.getVel() + tilt.getVel());
   if (vel_A != 0) {
-    if ((float(current_time - previous_time_A) / 1000000.0) > (minor_steps / float(abs(vel_A)))) {
-      pos_A = pos_A + sgn(vel_A) * minor_steps;
+    if ((float(current_time - previous_time_A) / 1000000.0) > (rad_per_step / float(abs(vel_A)))) {
+      pos_A = pos_A + sgn(vel_A) * rad_per_step;
       odrive.SetPosition(0, pos_A);
 
       previous_time_A = current_time;
     }
   }
 
+  vel_B = speed_ratio * (-1.0 * rotation.getVel() - tilt.getVel());
   if (vel_B != 0) {
-    if ((float(current_time - previous_time_B) / 1000000.0) > (minor_steps / float(abs(vel_B)))) {
-      pos_B = pos_B + sgn(vel_B) * minor_steps;
+    if ((float(current_time - previous_time_B) / 1000000.0) > (rad_per_step / float(abs(vel_B)))) {
+      pos_B = pos_B + sgn(vel_B) * rad_per_step;
       odrive.SetPosition(1, pos_B);
 
       previous_time_B = current_time;

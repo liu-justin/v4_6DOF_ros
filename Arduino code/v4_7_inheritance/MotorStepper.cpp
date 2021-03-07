@@ -7,22 +7,14 @@
 //std_msgs::Float32 posMsg;
 
 MotorStepper::MotorStepper(int pulse, int direct, int lower, int upper, float step_size, float multi)
-: MotorStepper::MotorAxis(lower, upper, step_size, multi)
+: MotorStepper::MotorAxis(lower, upper, multi)
 {
   pulse_pin = pulse;
   direction_pin = direct;
   pinMode(pulse_pin, OUTPUT);
   pinMode(direction_pin, OUTPUT);
 
-  lower_limit = lower;
-  upper_limit = upper;
-
   multipler = multi;
-
-  pos = 0.0;
-  vel = 0.0;
-  gap = 0;
-  gap_timer = 0;
 
   rads_per_step = step_size;
 

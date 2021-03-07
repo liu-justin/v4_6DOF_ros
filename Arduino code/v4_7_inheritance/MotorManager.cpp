@@ -14,6 +14,8 @@ MotorManager::MotorManager(MotorStepper* R1, MotorStepper* T1, MotorStepper* T2,
   motorlist[1] = T1;
   motorlist[2] = T2;
   motorlist[3] = R2;
+//  motorlist[4] = T3R3->tilt;
+//  motorlist[5] = T3R3->rotation;
   motordiff = T3R3;
 }
 
@@ -25,8 +27,8 @@ void MotorManager::pushToQueue(float incoming_vels[6], uint32_t incoming_gap ) {
   for (int i = 0 ; i < 4; i++) {
     motorlist[i]->pushVelAndGap(incoming_vels[i], incoming_gap);
   }
-  motordiff->setVelT3(incoming_vels[4]);
-  motordiff->setVelR3(incoming_vels[5]);
+  motordiff->tilt->pushVelAndGap(incoming_vels[4], incoming_gap);
+  motordiff->rotation->pushVelAndGap(incoming_vels[5], incoming_gap);
 }
 
 //void MotorManager::pubPoss() {

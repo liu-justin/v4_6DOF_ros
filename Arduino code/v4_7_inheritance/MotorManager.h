@@ -7,6 +7,7 @@
 #include <v4_6dof/VelGap.h>
 #include "MotorStepper.h"
 #include "MotorDifferential.h"
+#include "MotorAxis.h"
 
 class MotorManager {
   public:

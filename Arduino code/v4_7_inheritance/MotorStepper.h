@@ -9,7 +9,7 @@
 
 class MotorStepper : public MotorAxis {
 	public:
-		MotorStepper(int pulse, int direct, int lower, int upper, float stepSize, float multi);
+		MotorStepper(int pulse, int direct, int lower, int upper, float step_size, float multi);
 		void pulse();
 		void checkStep(unsigned long current_time);
 
@@ -18,7 +18,10 @@ class MotorStepper : public MotorAxis {
 		int pulse_pin;
 		int direction_pin;
 
+    float rads_per_step;
+
   	unsigned long previous_time;
+
 
 };
 

@@ -9,13 +9,16 @@
 
 class MotorAxis {
   public:
-    MotorAxis(int lower, int upper, float stepSize, float multipler);
+    MotorAxis(int lower, int upper, float multipler);
     float getPos();
     float getVel();
     void setVel(float incoming_vel);
     void pushVelAndGap(float incoming_vel, unsigned long incoming_gap);
     void popVelAndGap();
     void checkTimeGap();
+
+    float getMinorSteps();
+    
 
   protected:
 
