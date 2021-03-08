@@ -27,8 +27,8 @@ void MotorManager::pushToQueue(float incoming_vels[6], uint32_t incoming_gap ) {
   for (int i = 0 ; i < 4; i++) {
     motorlist[i]->pushVelAndGap(incoming_vels[i], incoming_gap);
   }
-  motordiff->tilt->pushVelAndGap(incoming_vels[4], incoming_gap);
-  motordiff->rotation->pushVelAndGap(incoming_vels[5], incoming_gap);
+  motordiff->tilt.pushVelAndGap(incoming_vels[4], incoming_gap);
+  motordiff->rotation.pushVelAndGap(incoming_vels[5], incoming_gap);
 }
 
 //void MotorManager::pubPoss() {

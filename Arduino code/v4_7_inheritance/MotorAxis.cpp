@@ -5,15 +5,13 @@
 
 // velocity value in queue is the transformed input velocity needed to generate the output velocity
 
-MotorAxis::MotorAxis(int lower, int upper, float multi)
+MotorAxis::MotorAxis(int lower, int upper)
   : vel_queue(sizeof(float), 5, FIFO)
   , gap_queue(sizeof(unsigned long), 5, FIFO)
 {
 
   lower_limit = lower;
   upper_limit = upper;
-
-  multipler = multi;
 
   pos = 0.0;
   vel = 0.0;
@@ -30,12 +28,8 @@ float MotorAxis::getVel() {
   return vel;
 }
 
-float MotorAxis::getMinorSteps() {
-  return rads_per_step;
-}
-
 void MotorAxis::pushVelAndGap(float incoming_vel, uint32_t incoming_gap) {
-  float new_vel = multipler * incoming_vel;
+  float new_vel = incoming_vel;
   vel_queue.push(&new_vel);
   gap_queue.push(&incoming_gap);
 }

@@ -9,7 +9,7 @@
 
 class MotorAxis {
   public:
-    MotorAxis(int lower, int upper, float multipler);
+    MotorAxis(int lower, int upper);
     float getPos();
     float getVel();
     void setVel(float incoming_vel);
@@ -31,13 +31,6 @@ class MotorAxis {
     cppQueue vel_queue;
     cppQueue gap_queue;
     elapsedMicros gap_timer;
-
-
-    float multipler; // torque ratio from output to input
-    float rads_per_step;
-
-    bool pulse_high;
-
 
 };
 

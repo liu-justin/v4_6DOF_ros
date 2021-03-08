@@ -25,8 +25,8 @@ class MotorDifferential {
 
 
     ODriveArduino odrive;
-    MotorAxis *tilt;
-    MotorAxis *rotation;
+    MotorAxis tilt;
+    MotorAxis rotation;
     
   private:
     float speed_ratio;

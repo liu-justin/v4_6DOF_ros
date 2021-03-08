@@ -19,8 +19,11 @@ class MotorStepper : public MotorAxis {
 		int direction_pin;
 
     float rads_per_step;
+    float speed_ratio;
 
   	unsigned long previous_time;
+
+    bool pulse_high;
 
 
 };
