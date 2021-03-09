@@ -46,7 +46,7 @@ void MotorDifferential::checkStep(unsigned long current_time) {
   tilt.checkTimeGap();
 
   // previously I changed this vel_A whenever a tilt, rot vel changed, now I have to sample on every loop
-  vel_A = speed_ratio * (-1.0 * rotation.getVel() + tilt.getVel());
+  vel_A = speed_ratio * (-1.0 * rotation.getVel() - tilt.getVel());
   
   if (vel_A != 0) {
     //    odrive.SetPosition(0,0.25);
@@ -60,7 +60,7 @@ void MotorDifferential::checkStep(unsigned long current_time) {
   }
 
   rotation.checkTimeGap();
-  vel_B = speed_ratio * (-1.0 * rotation.getVel() - tilt.getVel());
+  vel_B = speed_ratio * (-1.0 * rotation.getVel() + tilt.getVel());
   if (vel_B != 0) {
     if ((float(current_time - previous_time_B) / 1000000.0) > (rad_per_step / float(abs(vel_B)))) {
       pos_B = pos_B + sgn(vel_B) * rad_per_step;
