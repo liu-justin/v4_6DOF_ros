@@ -23,6 +23,9 @@ class MotorDifferential {
     
     void checkTimeGap();
 
+    void pushVelAndGapTilt(float incoming_vel, uint32_t incoming_gap);
+    void pushVelAndGapRotation(float incoming_vel, uint32_t incoming_gap);
+
 
     ODriveArduino odrive;
     MotorAxis tilt;
