@@ -17,22 +17,6 @@ from matplotlib.backends.backend_tkagg import (
                                     FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.figure import Figure
 
-def trajectory_publish_total_time(angle_six_list, total_time):
-    period = total_time/len(angle_six_list)
-    # for i in range(1,len(angle_six_list)):
-    previousTime = time.perf_counter()
-    
-    i = 1
-    while i < len(angle_six_list):
-        currentTime = time.perf_counter()
-        if currentTime - previousTime > period:
-            previousTime = currentTime
-            angular_velocity_six = (angle_six_list[i] - angle_six_list[i-1])/period
-            mm.updateAllVel(angular_velocity_six)
-            i += 1
-    angular_velocity_six = [0,0,0,0,0,0]
-    mm.updateAllVel(angular_velocity_six)
-
 def trajectory_publish(angle_six_list, time_gap):
     # for i in range(1,len(angle_six_list)):
     previousTime = time.perf_counter()
@@ -49,7 +33,7 @@ def trajectory_publish(angle_six_list, time_gap):
     mm.updateVelGap([0,0,0,0,0,0], int(1000000*time_gap))
             
 
-def a2aPublish():
+def a2aAbsolutePublish():
     # get current angle_list from mm and do a mr.JointTrajectory like in home
     # probably get time from entry
     angle_list = a2a_entry.get()
@@ -59,6 +43,22 @@ def a2aPublish():
     trajectory = mr.JointTrajectory(mm.pos_six, final_angles, placeholder_t, placeholder_samplesize, 3)
     gap_in_micros = placeholder_t/placeholder_samplesize
     trajectory_publish(trajectory, gap_in_micros)
+    mm.updatePos(final_angles)
+    print(mm.M_current)
+
+def a2aRelativePublish():
+    # get current angle_list from mm and do a mr.JointTrajectory like in home
+    # probably get time from entry
+    angle_list = a2ar_entry.get()
+    final_angles = list(map(float, angle_list.split()))
+    placeholder_t = 5
+    placeholder_samplesize = 20
+    trajectory = mr.JointTrajectory([0,0,0,0,0,0], final_angles, placeholder_t, placeholder_samplesize, 3)
+    gap_in_micros = placeholder_t/placeholder_samplesize
+    trajectory_publish(trajectory, gap_in_micros)
+    mm.addPos(final_angles)
+    print(mm.M_current)
+    
     # probably have a function to determine the ideal number of sample times (10 now)
 
 def t2tPublish():
@@ -68,7 +68,6 @@ def t2tPublish():
     rpyxyz = list(map(float, rpyxyz_string.split()))
     final_transf = mr.rpyxyzToTrans(rpyxyz)
     transfTrajectory = mr.CartesianTrajectory(mm.M_current, final_transf, 5,30,3)
-    print(transfTrajectory)
     trajectory = []
     previous_kink = mm.pos_six
     for i in range(1,len(transfTrajectory)):
@@ -116,26 +115,39 @@ if __name__ == "__main__":
 
         # create main containers
         a2a_frame = tk.Frame()
+        a2ar_frame = tk.Frame()
         t2t_frame = tk.Frame()
         display_frame = tk.Frame()
         plot_frame = tk.Frame()
 
         # align main containers
         a2a_frame.grid(row=0, column=0, columnspan=3)
-        t2t_frame.grid(row=1, column=0, columnspan=3)
-        display_frame.grid(row=2,column=0, rowspan=2, columnspan=3)
+        a2ar_frame.grid(row=1, column=0, columnspan=3)
+        t2t_frame.grid(row=2, column=0, columnspan=3)
+        display_frame.grid(row=3,column=0, rowspan=2, columnspan=3)
         plot_frame.grid(row=0,column=4,rowspan=3, columnspan=3)
 
         # create widgets for a2a frame
-        a2a_label = tk.Label(master=a2a_frame, text="Angle to angle")
+        a2a_label = tk.Label(master=a2a_frame, text="Angle to angle Absolute")
         a2a_entry = tk.Entry(master=a2a_frame)
-        a2a_button = tk.Button(master=a2a_frame, text="Confirm", command = a2aPublish)
+        a2a_button = tk.Button(master=a2a_frame, text="Confirm", command = a2aAbsolutePublish)
 
         a2a_frame.rowconfigure(0,minsize=50, weight=1)
         a2a_frame.columnconfigure([0,1,2], minsize=100, weight=1)
         a2a_label.grid(row=0, column=0)
         a2a_entry.grid(row=0, column=1)
         a2a_button.grid(row=0, column=2)
+
+        # create widgets for a2ar frame
+        a2ar_label = tk.Label(master=a2ar_frame, text="Angle to angle Relative")
+        a2ar_entry = tk.Entry(master=a2ar_frame)
+        a2ar_button = tk.Button(master=a2ar_frame, text="Confirm", command = a2aRelativePublish)
+
+        a2ar_frame.rowconfigure(0,minsize=50, weight=1)
+        a2ar_frame.columnconfigure([0,1,2], minsize=100, weight=1)
+        a2ar_label.grid(row=0, column=0)
+        a2ar_entry.grid(row=0, column=1)
+        a2ar_button.grid(row=0, column=2)
 
         # create widgets for t2t frame
         t2t_label = tk.Label(master=t2t_frame, text="Enter roll pitch yaw x y z")
@@ -164,17 +176,6 @@ if __name__ == "__main__":
         for i in range(0,6):
             display_pos_value[i].grid(row=0, column=i+1)
             display_vel_value[i].grid(row=1, column=i+1)
-
-        def updateAllPos(data):
-            for i in range(0,6):
-                display_pos_value.append(tk.Label(master=display_frame, text=f"{round(mm.pos_six[i],3)}"))
-
-        def updateAllVel(data):
-            for i in range(0,6):
-                display_vel_value.append(tk.Label(master=display_frame, text=f"{round(mm.vel_six[i],3)}"))
-
-        # sub_vel = rospy.Subscriber('vel_six_chatter',msg.VelGap,updateAllVel)
-        # sub_pos = rospy.Subscriber('pos_six_chatter',msg.VelGap,updateAllPos)
 
         # create widgets for plot_frame
         plot_fig = Figure(figsize=(3,3), dpi=100)

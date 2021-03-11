@@ -20,9 +20,9 @@ class MultipleMotors():
         self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six)
 
         self.pub = rospy.Publisher('vel_six_chatter',msg.VelGap,queue_size=1)
-        self.sub = rospy.Subscriber('pos_six_chatter',msg.VelGap,self.updateAllPos)
+        self.sub = rospy.Subscriber('pos_six_chatter',msg.VelGap,self.updatePos)
         # self.pub = rospy.Publisher('vel_six_chatter',msg.Float32List,queue_size=1)
-        # self.sub = rospy.Subscriber('pos_six_chatter',msg.Float32List,self.updateAllPos)
+        # self.sub = rospy.Subscriber('pos_six_chatter',msg.Float32List,self.updatePos)
 
     def updateSingleVel(self, index, vel):
         self.vel_six[index] = vel
@@ -36,11 +36,14 @@ class MultipleMotors():
 
     def updateAllVel(self, new_vel_six):
         self.vel_six = new_vel_six
-        self.pub.publish(self.vel_six)
 
-    def updateAllPos(self, data):
-        rospy.loginfo(f"got this data: {data}")
-        self.pos_six = data.data
+    def updatePos(self, new_pos_six):
+        self.pos_six = new_pos_six
+        self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six)
+
+    def addPos(self, new_pos_six):
+        self.pos_six = [a + b for a, b in zip(new_pos_six, self.pos_six)]
+        self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six)
 
     def updateVelGap(self, new_vel_six, time):       
         self.vel_six = new_vel_six
