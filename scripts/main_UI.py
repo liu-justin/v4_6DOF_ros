@@ -69,13 +69,17 @@ def t2tPublish():
     rpyxyz_string = t2t_entry.get()
     rpyxyz = list(map(float, rpyxyz_string.split()))
     final_transf = mr.rpyxyzToTrans(rpyxyz)
-    transfTrajectory = mr.CartesianTrajectory(mm.M_current, final_transf, 5,30,3)
+    placeholder_t = 5
+    points_per_sec = 5
+    total_points = placeholder_t*points_per_sec
+    transfTrajectory = mr.CartesianTrajectory(mm.M_current, final_transf, placeholder_t,total_points,3)
     trajectory = []
     previous_kink = mm.pos_six
     for i in range(1,len(transfTrajectory)):
         current_kink, success = mr.IKinBody(mm.body_list, mm.M_rest, transfTrajectory[i], previous_kink, 0.01, 0.001)
-        angles = mr.JointTrajectory(previous_kink, current_kink, 1, 2,3)
-        trajectory = [*trajectory, *angles]
+        # angles = mr.JointTrajectory(previous_kink, current_kink, 1, 2,3)
+        # trajectory = [*trajectory, *angles]
+        trajectory.append(current_kink)
 
         previous_kink = current_kink
     print(trajectory)
