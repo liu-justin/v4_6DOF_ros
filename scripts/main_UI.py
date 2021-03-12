@@ -78,7 +78,7 @@ def t2tPublish():
     for i in range(1,len(transfTrajectory)):
         current_kink, success = mr.IKinBody(mm.body_list, mm.M_rest, transfTrajectory[i], previous_kink, 0.01, 0.001)
         # angles = mr.JointTrajectory(previous_kink, current_kink, 1, 2,3)
-        # trajectory = [*trajectory, *angles]
+        # trajectory = [*trajectory, *angles] # need to remove the first one to prevent dups, and add the very first one at the end
         trajectory.append(current_kink)
 
         previous_kink = current_kink
