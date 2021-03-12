@@ -37,11 +37,12 @@ def a2aAbsolutePublish():
     # get current angle_list from mm and do a mr.JointTrajectory like in home
     # probably get time from entry
     angle_list = a2a_entry.get()
-    placeholder_t = 5
     final_angles = list(map(float, angle_list.split()))
-    placeholder_samplesize = 20
-    trajectory = mr.JointTrajectory(mm.pos_six, final_angles, placeholder_t, placeholder_samplesize, 3)
-    gap_in_micros = placeholder_t/placeholder_samplesize
+    placeholder_t = 5
+    points_per_sec = 5
+    total_points = placeholder_t*points_per_sec
+    trajectory = mr.JointTrajectory(mm.pos_six, final_angles, placeholder_t, total_points, 3)
+    gap_in_micros = placeholder_t/(total_points-1)
     trajectory_publish(trajectory, gap_in_micros)
     mm.updatePos(final_angles)
     print(mm.M_current)
@@ -52,9 +53,10 @@ def a2aRelativePublish():
     angle_list = a2ar_entry.get()
     final_angles = list(map(float, angle_list.split()))
     placeholder_t = 5
-    placeholder_samplesize = 20
-    trajectory = mr.JointTrajectory([0,0,0,0,0,0], final_angles, placeholder_t, placeholder_samplesize, 3)
-    gap_in_micros = placeholder_t/placeholder_samplesize
+    points_per_sec = 5
+    total_points = placeholder_t*points_per_sec
+    trajectory = mr.JointTrajectory([0,0,0,0,0,0], final_angles, placeholder_t, total_points, 3)
+    gap_in_micros = placeholder_t/(total_points-1)
     trajectory_publish(trajectory, gap_in_micros)
     mm.addPos(final_angles)
     print(mm.M_current)
@@ -72,11 +74,11 @@ def t2tPublish():
     previous_kink = mm.pos_six
     for i in range(1,len(transfTrajectory)):
         current_kink, success = mr.IKinBody(mm.body_list, mm.M_rest, transfTrajectory[i], previous_kink, 0.01, 0.001)
-        print(current_kink)
         angles = mr.JointTrajectory(previous_kink, current_kink, 1, 2,3)
         trajectory = [*trajectory, *angles]
 
         previous_kink = current_kink
+    print(trajectory)
 
     # print(trajectory)
 
