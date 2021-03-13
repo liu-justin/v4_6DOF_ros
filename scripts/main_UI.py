@@ -39,7 +39,7 @@ def a2aAbsolutePublish():
     angle_list = a2a_entry.get()
     final_angles = list(map(float, angle_list.split()))
     placeholder_t = 5
-    points_per_sec = 5
+    points_per_sec = 10
     total_points = placeholder_t*points_per_sec
     trajectory = mr.JointTrajectory(mm.pos_six, final_angles, placeholder_t, total_points, 3)
     gap_in_micros = placeholder_t/(total_points-1)
@@ -53,7 +53,7 @@ def a2aRelativePublish():
     angle_list = a2ar_entry.get()
     final_angles = list(map(float, angle_list.split()))
     placeholder_t = 5
-    points_per_sec = 5
+    points_per_sec = 10
     total_points = placeholder_t*points_per_sec
     trajectory = mr.JointTrajectory([0,0,0,0,0,0], final_angles, placeholder_t, total_points, 3)
     gap_in_micros = placeholder_t/(total_points-1)
@@ -70,7 +70,7 @@ def t2tPublish():
     rpyxyz = list(map(float, rpyxyz_string.split()))
     final_transf = mr.rpyxyzToTrans(rpyxyz)
     placeholder_t = 5
-    points_per_sec = 5
+    points_per_sec = 10
     total_points = placeholder_t*points_per_sec
     transfTrajectory = mr.CartesianTrajectory(mm.M_current, final_transf, placeholder_t,total_points,3)
     trajectory = []
@@ -80,9 +80,11 @@ def t2tPublish():
         # angles = mr.JointTrajectory(previous_kink, current_kink, 1, 2,3)
         # trajectory = [*trajectory, *angles] # need to remove the first one to prevent dups, and add the very first one at the end
         trajectory.append(current_kink)
-
         previous_kink = current_kink
-    print(trajectory)
+    gap_in_micros = placeholder_t/(total_points-1)
+    trajectory_publish(trajectory, gap_in_micros)
+    print(trajectory[-1])
+    mm.updatePos(trajectory[-1])
 
     # print(trajectory)
 
