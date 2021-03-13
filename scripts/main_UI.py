@@ -38,11 +38,11 @@ def a2aAbsolutePublish():
     # probably get time from entry
     angle_list = a2a_entry.get()
     final_angles = list(map(float, angle_list.split()))
-    placeholder_t = 5
+    total_time = float(time_entry.get())
     points_per_sec = 10
-    total_points = placeholder_t*points_per_sec
-    trajectory = mr.JointTrajectory(mm.pos_six, final_angles, placeholder_t, total_points, 3)
-    gap_in_micros = placeholder_t/(total_points-1)
+    total_points = total_time*points_per_sec
+    trajectory = mr.JointTrajectory(mm.pos_six, final_angles, total_time, total_points, 3)
+    gap_in_micros = total_time/(total_points-1)
     trajectory_publish(trajectory, gap_in_micros)
     mm.updatePos(final_angles)
     print(mm.M_current)
@@ -52,11 +52,11 @@ def a2aRelativePublish():
     # probably get time from entry
     angle_list = a2ar_entry.get()
     final_angles = list(map(float, angle_list.split()))
-    placeholder_t = 5
+    total_time = float(time_entry.get())
     points_per_sec = 10
-    total_points = placeholder_t*points_per_sec
-    trajectory = mr.JointTrajectory([0,0,0,0,0,0], final_angles, placeholder_t, total_points, 3)
-    gap_in_micros = placeholder_t/(total_points-1)
+    total_points = total_time*points_per_sec
+    trajectory = mr.JointTrajectory([0,0,0,0,0,0], final_angles, total_time, total_points, 3)
+    gap_in_micros = total_time/(total_points-1)
     trajectory_publish(trajectory, gap_in_micros)
     mm.addPos(final_angles)
     print(mm.M_current)
@@ -69,10 +69,10 @@ def t2tPublish():
     rpyxyz_string = t2t_entry.get()
     rpyxyz = list(map(float, rpyxyz_string.split()))
     final_transf = mr.rpyxyzToTrans(rpyxyz)
-    placeholder_t = 5
+    total_time = float(time_entry.get())
     points_per_sec = 10
-    total_points = placeholder_t*points_per_sec
-    transfTrajectory = mr.CartesianTrajectory(mm.M_current, final_transf, placeholder_t,total_points,3)
+    total_points = total_time*points_per_sec
+    transfTrajectory = mr.CartesianTrajectory(mm.M_current, final_transf, total_time,total_points,3)
     trajectory = []
     previous_kink = mm.pos_six
     for i in range(1,len(transfTrajectory)):
@@ -81,7 +81,7 @@ def t2tPublish():
         # trajectory = [*trajectory, *angles] # need to remove the first one to prevent dups, and add the very first one at the end
         trajectory.append(current_kink)
         previous_kink = current_kink
-    gap_in_micros = placeholder_t/(total_points-1)
+    gap_in_micros = total_time/(total_points-1)
     trajectory_publish(trajectory, gap_in_micros)
     print(trajectory[-1])
     mm.updatePos(trajectory[-1])
@@ -125,14 +125,16 @@ if __name__ == "__main__":
         a2a_frame = tk.Frame()
         a2ar_frame = tk.Frame()
         t2t_frame = tk.Frame()
-        display_frame = tk.Frame()
+        time_frame = tk.Frame()
+        # display_frame = tk.Frame()
         plot_frame = tk.Frame()
 
         # align main containers
         a2a_frame.grid(row=0, column=0, columnspan=3)
         a2ar_frame.grid(row=1, column=0, columnspan=3)
         t2t_frame.grid(row=2, column=0, columnspan=3)
-        display_frame.grid(row=3,column=0, rowspan=2, columnspan=3)
+        time_frame.grid(row=3, column=0, columnspan=3)
+        # display_frame.grid(row=3,column=0, rowspan=2, columnspan=3)
         plot_frame.grid(row=0,column=4,rowspan=3, columnspan=3)
 
         # create widgets for a2a frame
@@ -168,22 +170,31 @@ if __name__ == "__main__":
         t2t_entry.grid(row=0, column=1)
         t2t_button.grid(row=0, column=2)
 
-        #create widgets for display_frame
-        display_pos_label = tk.Label(master=display_frame, text="pos")
-        display_vel_label = tk.Label(master=display_frame, text="vel")
-        display_pos_value = []
-        display_vel_value = []
-        for i in range(0,6):
-            display_pos_value.append(tk.Label(master=display_frame, text=f"{round(mm.pos_six[i],3)}"))
-            display_vel_value.append(tk.Label(master=display_frame, text=f"{round(mm.vel_six[i],3)}"))
+        # #create widgets for display_frame
+        # display_pos_label = tk.Label(master=display_frame, text="pos")
+        # display_vel_label = tk.Label(master=display_frame, text="vel")
+        # display_pos_value = []
+        # display_vel_value = []
+        # for i in range(0,6):
+        #     display_pos_value.append(tk.Label(master=display_frame, text=f"{round(mm.pos_six[i],3)}"))
+        #     display_vel_value.append(tk.Label(master=display_frame, text=f"{round(mm.vel_six[i],3)}"))
 
-        display_frame.rowconfigure([0,1],minsize=50, weight=1)
-        display_frame.columnconfigure([0,1,2,3,4,5,6], minsize=50, weight=1)
-        display_pos_label.grid(row=0, column=0)
-        display_vel_label.grid(row=1, column=0)
-        for i in range(0,6):
-            display_pos_value[i].grid(row=0, column=i+1)
-            display_vel_value[i].grid(row=1, column=i+1)
+        # display_frame.rowconfigure([0,1],minsize=50, weight=1)
+        # display_frame.columnconfigure([0,1,2,3,4,5,6], minsize=50, weight=1)
+        # display_pos_label.grid(row=0, column=0)
+        # display_vel_label.grid(row=1, column=0)
+        # for i in range(0,6):
+        #     display_pos_value[i].grid(row=0, column=i+1)
+        #     display_vel_value[i].grid(row=1, column=i+1)
+
+        # create widgets for time_frame
+        time_label = tk.Label(master=time_frame, text="Time (sec)")
+        time_entry = tk.Entry(master=time_frame)
+
+        time_frame.rowconfigure(0,minsize=50, weight=1)
+        time_frame.columnconfigure([0,1,2], minsize=100, weight=1)
+        time_label.grid(row=0, column=0)
+        time_entry.grid(row=0, column=1)
 
         # create widgets for plot_frame
         plot_fig = Figure(figsize=(3,3), dpi=100)
