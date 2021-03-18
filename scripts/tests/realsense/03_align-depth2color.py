@@ -51,6 +51,8 @@ clipping_distance = clipping_distance_in_meters / depth_scale
 align_to = rs.stream.color
 align = rs.align(align_to)
 
+a = np.array([np.array([2899, 2899, 2899, 2912, 2912, 2912]), np.array([2926,2912,2912,2912,2926,2926])])
+
 # Streaming loop
 try:
     while True:
@@ -82,7 +84,7 @@ try:
         #   depth on right
         depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
 
-        depth_image_converted = depth_image*255/(1/depth_scale)
+        depth_image_converted = depth_image*255/(3/depth_scale)
         depth_image_converted_3d = np.dstack((depth_image_converted,depth_image_converted,depth_image_converted))
 
         images = np.hstack((color_image, depth_image_converted_3d))
