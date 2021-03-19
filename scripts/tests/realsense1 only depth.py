@@ -33,6 +33,8 @@ device_product_line = str(device.get_info(rs.camera_info.product_line))
 
 config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
 
+depth_scale = 0.0010000000474974513
+
 # Start streaming
 pipeline.start(config)
 
@@ -47,9 +49,10 @@ try:
 
         # Convert images to numpy arrays
         depth_image = np.asanyarray(depth_frame.get_data())
-        depth_image_255 = depth_image * 255 // 3000 # selected 3.0 because max range of this camera is 3meters
-
-        depth_image_3d = np.dstack((depth_image_255*64,depth_image_255*128,depth_image_255*192))
+        depth_image_converted = depth_image*(1/(6/depth_scale))
+        # depth_image_converted = depth_image_converted.astype(np.int16)
+        depth_image_converted_3d = np.dstack((depth_image_converted,depth_image_converted,depth_image_converted))
+        # depth_image_converted_3d = np.where((depth_image_converted_3d > 255), 255, depth_image_converted_3d)
 
         # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
         depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
@@ -64,11 +67,11 @@ try:
         #     images = np.hstack((color_image, depth_colormap))
 
         # images = np.hstack((depth_image_3d, depth_colormap))
-        images = np.hstack((depth_colormap,depth_colormap))        
+        images = np.hstack((depth_colormap,depth_image_converted_3d))        
 
         # Show images
         cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
-        cv2.imshow('RealSense', depth_image_3d)
+        cv2.imshow('RealSense', depth_image_converted)
         cv2.waitKey(1)
 
 finally:

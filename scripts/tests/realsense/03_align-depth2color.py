@@ -51,8 +51,6 @@ clipping_distance = clipping_distance_in_meters / depth_scale
 align_to = rs.stream.color
 align = rs.align(align_to)
 
-a = np.array([np.array([2899, 2899, 2899, 2912, 2912, 2912]), np.array([2926,2912,2912,2912,2926,2926])])
-
 # Streaming loop
 try:
     while True:
@@ -73,19 +71,24 @@ try:
 
         depth_image = np.asanyarray(aligned_depth_frame.get_data())
         color_image = np.asanyarray(color_frame.get_data())
+        print(depth_image)
+        print(color_image)
 
         # Remove background - Set pixels further than clipping_distance to grey
         grey_color = 153
         depth_image_3d = np.dstack((depth_image,depth_image,depth_image)) #depth image is 1 channel, color is 3 channels
+        # print(depth_image_3d)
         bg_removed = np.where((depth_image_3d > clipping_distance) | (depth_image_3d <= 0), grey_color, color_image)
 
         # Render images:
         #   depth align to color on left
         #   depth on right
         depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
-
-        depth_image_converted = depth_image*255/(3/depth_scale)
+        depth_image_converted = depth_image*(255/(4/depth_scale))
+        depth_image_converted = depth_image_converted.astype(np.int16)
+        print(depth_image_converted)
         depth_image_converted_3d = np.dstack((depth_image_converted,depth_image_converted,depth_image_converted))
+        print(depth_image_converted_3d)
 
         images = np.hstack((color_image, depth_image_converted_3d))
 
