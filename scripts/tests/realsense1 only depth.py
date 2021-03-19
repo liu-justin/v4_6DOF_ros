@@ -49,29 +49,30 @@ try:
 
         # Convert images to numpy arrays
         depth_image = np.asanyarray(depth_frame.get_data())
-        depth_image_converted = depth_image*(1/(6/depth_scale))
-        # depth_image_converted = depth_image_converted.astype(np.int16)
+        depth_image_converted = depth_image/(6/depth_scale)
         depth_image_converted_3d = np.dstack((depth_image_converted,depth_image_converted,depth_image_converted))
-        # depth_image_converted_3d = np.where((depth_image_converted_3d > 255), 255, depth_image_converted_3d)
+        depth_image_converted_3d = np.where((depth_image_converted_3d > 1), 1, depth_image_converted_3d)
+        depth_image_converted_3d = np.where((depth_image_converted_3d < 0), 0, depth_image_converted_3d)
 
-        # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
-        depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
+        depth_image_255 = (depth_image_converted_3d*255).astype(np.uint8)
 
-        depth_colormap_dim = depth_colormap.shape
+        # https://stackoverflow.com/questions/41893029/opencv-canny-edge-detection-not-working-properly
+        sigma = 0.33
+        v = np.median(depth_image_255)
+        lower = int(max(0, (1.0 - sigma) * v))
+        upper = int(min(255, (1.0 + sigma) * v))    
 
-        # # If depth and color resolutions are different, resize color image to match depth image for display
-        # if depth_colormap_dim != color_colormap_dim:
-        #     resized_color_image = cv2.resize(color_image, dsize=(depth_colormap_dim[1], depth_colormap_dim[0]), interpolation=cv2.INTER_AREA)
-        #     images = np.hstack((resized_color_image, depth_colormap))
-        # else:
-        #     images = np.hstack((color_image, depth_colormap))
+        depth_image_canny = cv2.Canny(depth_image_255, lower, upper)
 
-        # images = np.hstack((depth_image_3d, depth_colormap))
-        images = np.hstack((depth_colormap,depth_image_converted_3d))        
+        # https://stackoverflow.com/questions/60259169/how-to-group-nearby-contours-in-opencv-python-zebra-crossing-detection
+        # https://www.geeksforgeeks.org/find-and-draw-contours-using-opencv-python/
+        contours, hierarchy = cv2.findContours(depth_image_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+        # images = np.hstack((depth_image_converted_3d,depth_image_canny))        
 
         # Show images
         cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
-        cv2.imshow('RealSense', depth_image_converted)
+        cv2.imshow('RealSense', depth_image_canny)
         cv2.waitKey(1)
 
 finally:
