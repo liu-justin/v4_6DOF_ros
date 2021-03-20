@@ -39,7 +39,7 @@ depth_scale = 0.0010000000474974513
 pipeline.start(config)
 
 # 10m/s
-# store all good contours in this list outside the try loop
+# store all good contours in this list outside the try loop (try a deque)
 # associate an time to live with each contour, every loop decrease the time to live by 1
 # on each loop, look in sphere of influence around the good contour to see if any past contours are in the sphere
 #   sphere from x,y coords and depth
