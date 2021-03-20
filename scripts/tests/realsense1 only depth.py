@@ -38,6 +38,14 @@ depth_scale = 0.0010000000474974513
 # Start streaming
 pipeline.start(config)
 
+# 10m/s
+# store all good contours in this list outside the try loop
+# associate an time to live with each contour, every loop decrease the time to live by 1
+# on each loop, look in sphere of influence around the good contour to see if any past contours are in the sphere
+#   sphere from x,y coords and depth
+#   use speed of 10m/s, little under 25 mph; with 30 fps, 0.03333 secs btwn frames --> sphere of 0.333m
+#   add current contour to all past contours in sphere,
+
 try:
     while True:
 
@@ -66,13 +74,34 @@ try:
 
         # https://stackoverflow.com/questions/60259169/how-to-group-nearby-contours-in-opencv-python-zebra-crossing-detection
         # https://www.geeksforgeeks.org/find-and-draw-contours-using-opencv-python/
-        contours, hierarchy = cv2.findContours(depth_image_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        contours, hierarchy = cv2.findContours(depth_image_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        print(hierarchy)
 
-        # images = np.hstack((depth_image_converted_3d,depth_image_canny))        
+        for c in contours:
+            contour_area = cv2.contourArea(c)
+            if contour_area < 10:
+                continue
+            try:
+                ellipse = cv2.fitEllipse(c)
+                (x,y), (w,h), angle = ellipse
+                aspect_ratio = max(w,h) / min(w,h)  
+            except:
+                continue
+            
+            # print(ellipse)
+            ellipse_area = np.pi*w*h/4
+            if ((ellipse_area - contour_area)/ellipse_area) > 0.5 or aspect_ratio > 8:
+                continue
+
+            cv2.ellipse(depth_image_converted_3d, ellipse, (0,255,0),2)
+
+            # cv2.drawContours(depth_image_converted_3d, c, -1 , (0,255,0),3)
+
+        # images = np.hstack((depth_image_converted,depth_image_canny))        
 
         # Show images
         cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
-        cv2.imshow('RealSense', depth_image_canny)
+        cv2.imshow('RealSense', depth_image_converted_3d)
         cv2.waitKey(1)
 
 finally:
