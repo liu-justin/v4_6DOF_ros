@@ -80,22 +80,36 @@ try:
         contours, hierarchy = cv2.findContours(depth_image_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         for c in contours:
-            contour_area = cv2.contourArea(c)
-            if contour_area < 10:
-                continue
             try:
                 ellipse = cv2.fitEllipse(c)
                 (x,y), (w,h), angle = ellipse
-                aspect_ratio = max(w,h) / min(w,h)  
             except:
                 continue
-            
-            # print(ellipse)
-            ellipse_area = np.pi*w*h/4
-            if ((ellipse_area - contour_area)/ellipse_area) > 0.5 or aspect_ratio > 8:
+
+            # removing small contours
+            contour_area = cv2.contourArea(c)
+            if contour_area < 30:
                 continue
 
-            point = rs.rs2_deproject_pixel_to_point(depth_intrin, [x,y], depth_frame.get_distance(int(x),int(y)))
+            if x*y*w*h <= 0:
+                continue
+            
+            # checking perecentage of contour filled
+            ellipse_area = np.pi*w*h/4
+            if (contour_area/ellipse_area) < 0.5:
+                continue
+            
+            aspect_ratio = max(w,h) / min(w,h)  
+            if aspect_ratio > 6:
+                continue
+
+            # removing zero depth
+            print(f"{x}, {y}")
+            center_depth = depth_frame.get_distance(int(x),int(y))
+            if center_depth < 0.1:
+                continue
+
+            point = rs.rs2_deproject_pixel_to_point(depth_intrin, [x,y], center_depth)
             # print(point)
 
             # check all past contours and see spheres of influence
@@ -104,7 +118,8 @@ try:
                     if ((past_point[0][0] - point[0])**2 + (past_point[0][1] - point[1])**2 + (past_point[0][2] - point[2])**2)**0.5 < 0.166*(4-i):
                         past_point.appendleft(point)
                         if len(past_point) > 5:
-                            print(past_point)
+                            # print(past_point)
+                            x = 0
 
 
             # if no contours link, then add the contour in its own deque in the 5th deque in contour_storage
