@@ -81,8 +81,11 @@ try:
 
         for c in contours:
             try:
-                ellipse = cv2.fitEllipse(c)
-                (x,y), (w,h), angle = ellipse
+                # ellipse = cv2.fitEllipse(c)
+                # (x,y), (w,h), angle = ellipse
+                ellipse = cv2.minEnclosingCircle(c)
+                (x,y), radius = ellipse
+                
             except:
                 continue
 
@@ -91,17 +94,18 @@ try:
             if contour_area < 30:
                 continue
 
-            if x*y*w*h <= 0:
+            if x*y*radius <= 0:
                 continue
             
             # checking perecentage of contour filled
-            ellipse_area = np.pi*w*h/4
-            if (contour_area/ellipse_area) < 0.5:
+            # ellipse_area = np.pi*w*h/4
+            ellipse_area = np.pi*radius**2
+            if (contour_area/ellipse_area) < 0.35:
                 continue
             
-            aspect_ratio = max(w,h) / min(w,h)  
-            if aspect_ratio > 6:
-                continue
+            # aspect_ratio = max(w,h) / min(w,h)  
+            # if aspect_ratio > 6:
+            #     continue
 
             # removing zero depth
             print(f"{x}, {y}")
@@ -125,7 +129,8 @@ try:
             # if no contours link, then add the contour in its own deque in the 5th deque in contour_storage
             contour_storage[4].append(deque([point]))
 
-            cv2.ellipse(depth_image_converted_3d, ellipse, (0,255,0),2)
+            # cv2.ellipse(depth_image_converted_3d, ellipse, (0,255,0),2)
+            cv2.circle(depth_image_converted_3d, (int(x),int(y)), int(radius), (0,255,0),2)
 
         # images = np.hstack((depth_image_converted,depth_image_canny))        
 
