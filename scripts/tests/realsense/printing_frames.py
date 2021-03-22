@@ -1,20 +1,10 @@
-## License: Apache 2.0. See LICENSE file in root directory.
-## Copyright(c) 2017 Intel Corporation. All Rights Reserved.
-
-#####################################################
-##              Align Depth to Color               ##
-#####################################################
-
-# same as before
-# numpy depth array is 1D, while numpy color array is 3D
-# create 3D depth array with depth in all three directions, then run thru numpy.where to alter the color array
-
 # First import the library
 import pyrealsense2 as rs
 # Import Numpy for easy array manipulation
 import numpy as np
 # Import OpenCV for easy image rendering
 import cv2
+import json
 
 # Create a pipeline
 pipeline = rs.pipeline()
@@ -70,31 +60,32 @@ try:
             continue
 
         depth_image = np.asanyarray(aligned_depth_frame.get_data())
+        np.save("depth_frame_2",depth_image)
         color_image = np.asanyarray(color_frame.get_data())
-        print(depth_image)
-        print(color_image)
+        np.save("color_frame_2", color_image)
 
         # Remove background - Set pixels further than clipping_distance to grey
         grey_color = 153
-        depth_image_3d = np.dstack((depth_image,depth_image,depth_image)) #depth image is 1 channel, color is 3 channels
-        # print(depth_image_3d)
+        depth_image_3d = np.dstack((depth_image,depth_image,depth_image)) 
+
         bg_removed = np.where((depth_image_3d > clipping_distance) | (depth_image_3d <= 0), grey_color, color_image)
 
         # Render images:
         #   depth align to color on left
         #   depth on right
         depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
-        depth_image_converted = depth_image*(255/(4/depth_scale))
-        depth_image_converted = depth_image_converted.astype(np.int16)
-        print(depth_image_converted)
-        depth_image_converted_3d = np.dstack((depth_image_converted,depth_image_converted,depth_image_converted))
-        print(depth_image_converted_3d)
+        # depth_image_converted = depth_image*(255/(4/depth_scale))
+        # depth_image_converted = depth_image_converted.astype(np.int16)
+        # print(depth_image_converted)
+        # depth_image_converted_3d = np.dstack((depth_image_converted,depth_image_converted,depth_image_converted))
+        # print(depth_image_converted_3d)
 
-        images = np.hstack((color_image, depth_image_converted_3d))
+        images = np.hstack((color_image, depth_colormap))
 
         cv2.namedWindow('Align Example', cv2.WINDOW_NORMAL)
         cv2.imshow('Align Example', images)
         key = cv2.waitKey(1)
+        
         # Press esc or 'q' to close the image window
         if key & 0xFF == ord('q') or key == 27:
             cv2.destroyAllWindows()

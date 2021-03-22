@@ -65,6 +65,8 @@ try:
         depth_image_converted_3d = np.where((depth_image_converted_3d > 1), 1, depth_image_converted_3d)
         depth_image_converted_3d = np.where((depth_image_converted_3d < 0), 0, depth_image_converted_3d)
 
+        # somehow need to clean up the shadows
+
         depth_image_255 = (depth_image_converted_3d*255).astype(np.uint8)
 
         # https://stackoverflow.com/questions/41893029/opencv-canny-edge-detection-not-working-properly
@@ -108,7 +110,6 @@ try:
             #     continue
 
             # removing zero depth
-            print(f"{x}, {y}")
             center_depth = depth_frame.get_distance(int(x),int(y))
             if center_depth < 0.1:
                 continue
@@ -121,9 +122,8 @@ try:
                 for past_point in contour_storage[i]:
                     if ((past_point[0][0] - point[0])**2 + (past_point[0][1] - point[1])**2 + (past_point[0][2] - point[2])**2)**0.5 < 0.166*(4-i):
                         past_point.appendleft(point)
-                        if len(past_point) > 5:
-                            # print(past_point)
-                            x = 0
+                        if len(past_point) > 2:
+                            print(past_point)
 
 
             # if no contours link, then add the contour in its own deque in the 5th deque in contour_storage
