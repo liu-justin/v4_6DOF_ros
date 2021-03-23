@@ -33,11 +33,17 @@ device = pipeline_profile.get_device()
 device_product_line = str(device.get_info(rs.camera_info.product_line))
 
 config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-
-depth_scale = 0.0010000000474974513
+config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 
 # Start streaming
-pipeline.start(config)
+profile = pipeline.start(config)
+depth_sensor = profile.get_device().first_depth_sensor()
+depth_scale = depth_sensor.get_depth_scale() # 0.0010000000474974513
+
+align_to = rs.stream.color
+align = rs.align(align_to)
+
+depth_background = np.array([])
 
 # 10m/s
 # store all good contours in this list outside the try loop (try a deque)
@@ -49,45 +55,71 @@ pipeline.start(config)
 contour_storage = deque([deque([]),deque([]),deque([]),deque([]),deque([])])
 
 try:
+
+    while True:
+        frames = pipeline.wait_for_frames() 
+        aligned_frames = align.process(frames)
+        depth_frame = aligned_frames.get_depth_frame()
+        if not depth_frame:
+            continue
+        depth_image = np.asanyarray(depth_frame.get_data())
+        depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
+        depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
+        depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
+
+        cv2.namedWindow('Main', cv2.WINDOW_AUTOSIZE)
+        cv2.imshow('Main', depth_cleaned)
+        key = cv2.waitKey(1)
+
+        if key & 0xFF == ord('q') or key == 27:
+            # save this depth_image as the background, but need to remove those 0s
+            depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
+            depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
+            depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
+            thresh, depth_mask = cv2.threshold(depth_cleaned,1,255,cv2.THRESH_BINARY_INV)
+            depth_background = cv2.inpaint(depth_cleaned, depth_mask, 3, cv2.INPAINT_TELEA)
+            
+            cv2.namedWindow('New', cv2.WINDOW_AUTOSIZE)
+            cv2.imshow('New', depth_background)
+            cv2.waitKey(100000)
+            cv2.destroyAllWindows()
+            break
+
     while True:
 
         # returns a composite frame
         frames = pipeline.wait_for_frames() 
-        depth_frame = frames.get_depth_frame()
+        aligned_frames = align.process(frames)
+        depth_frame = aligned_frames.get_depth_frame()
         if not depth_frame:
             continue
         depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
 
         # Convert images to numpy arrays
         depth_image = np.asanyarray(depth_frame.get_data())
-        depth_image_converted = depth_image/(6/depth_scale)
-        depth_image_converted_3d = np.dstack((depth_image_converted,depth_image_converted,depth_image_converted))
-        depth_image_converted_3d = np.where((depth_image_converted_3d > 1), 1, depth_image_converted_3d)
-        depth_image_converted_3d = np.where((depth_image_converted_3d < 0), 0, depth_image_converted_3d)
+        depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
+        depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
+        depth_cleaned = np.where((depth_cleaned <= 0), depth_background, depth_cleaned)
+        depth_cleaned_3d = np.dstack((depth_cleaned,depth_cleaned,depth_cleaned))
 
-        # somehow need to clean up the shadows
-
-        depth_image_255 = (depth_image_converted_3d*255).astype(np.uint8)
+        thresh, depth_mask = cv2.threshold(depth_cleaned,1,255,cv2.THRESH_BINARY_INV)
 
         # https://stackoverflow.com/questions/41893029/opencv-canny-edge-detection-not-working-properly
         sigma = 0.33
-        v = np.median(depth_image_255)
+        v = np.median(depth_cleaned_3d)
         lower = int(max(0, (1.0 - sigma) * v))
         upper = int(min(255, (1.0 + sigma) * v))    
 
-        depth_image_canny = cv2.Canny(depth_image_255, lower, upper)
+        depth_canny = cv2.Canny(depth_cleaned_3d, lower, upper)
 
         # https://stackoverflow.com/questions/60259169/how-to-group-nearby-contours-in-opencv-python-zebra-crossing-detection
         # https://www.geeksforgeeks.org/find-and-draw-contours-using-opencv-python/
-        contours, hierarchy = cv2.findContours(depth_image_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy = cv2.findContours(depth_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         for c in contours:
             try:
-                # ellipse = cv2.fitEllipse(c)
-                # (x,y), (w,h), angle = ellipse
                 ellipse = cv2.minEnclosingCircle(c)
-                (x,y), radius = ellipse
-                
+                (x,y), radius = ellipse                
             except:
                 continue
 
@@ -104,39 +136,32 @@ try:
             ellipse_area = np.pi*radius**2
             if (contour_area/ellipse_area) < 0.35:
                 continue
-            
-            # aspect_ratio = max(w,h) / min(w,h)  
-            # if aspect_ratio > 6:
-            #     continue
 
-            # removing zero depth
-            center_depth = depth_frame.get_distance(int(x),int(y))
-            if center_depth < 0.1:
-                continue
-
-            point = rs.rs2_deproject_pixel_to_point(depth_intrin, [x,y], center_depth)
-            # print(point)
+            point = rs.rs2_deproject_pixel_to_point(depth_intrin, [x,y], depth_frame.get_distance(int(x),int(y)))
 
             # check all past contours and see spheres of influence
             for i in range(len(contour_storage)-1):
                 for past_point in contour_storage[i]:
                     if ((past_point[0][0] - point[0])**2 + (past_point[0][1] - point[1])**2 + (past_point[0][2] - point[2])**2)**0.5 < 0.166*(4-i):
                         past_point.appendleft(point)
-                        if len(past_point) > 2:
-                            print(past_point)
+                        # if len(past_point) > 2:
+                            # print(past_point)
 
 
-            # if no contours link, then add the contour in its own deque in the 5th deque in contour_storage
+            # # if no contours link, then add the contour in its own deque in the 5th deque in contour_storage
             contour_storage[4].append(deque([point]))
 
             # cv2.ellipse(depth_image_converted_3d, ellipse, (0,255,0),2)
-            cv2.circle(depth_image_converted_3d, (int(x),int(y)), int(radius), (0,255,0),2)
+            cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(radius), (0,255,0),2)
 
         # images = np.hstack((depth_image_converted,depth_image_canny))        
 
         # Show images
-        cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
-        cv2.imshow('RealSense', depth_image_converted_3d)
+        cv2.namedWindow('Main', cv2.WINDOW_AUTOSIZE)
+        cv2.imshow('Main', depth_cleaned_3d)
+
+        cv2.namedWindow('Canny', cv2.WINDOW_AUTOSIZE)
+        cv2.imshow('Canny', depth_canny)
         cv2.waitKey(1)
 
         # empty 1st deque in contour_storage (ttl = 0)
