@@ -138,6 +138,9 @@ try:
                 continue
 
             point = rs.rs2_deproject_pixel_to_point(depth_intrin, [x,y], depth_frame.get_distance(int(x),int(y)))
+            if (point[0]*point[1]*point[2]):
+                continue
+            print(point)
 
             # check all past contours and see spheres of influence
             for i in range(len(contour_storage)-1):
