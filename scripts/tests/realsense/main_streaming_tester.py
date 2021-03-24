@@ -49,7 +49,7 @@ depth_background = np.array([])
 #   sphere from x,y coords and depth
 #   use speed of 5m/s, little under 12 mph; with 30 fps, 0.03333 secs btwn frames --> sphere of 0.166m
 #   add current contour to all past contours in sphere,
-contour_storage = deque([deque([]),deque([]),deque([]),deque([]),deque([])])
+point_storage = deque([deque([]),deque([]),deque([]),deque([]),deque([])])
 
 # fig, ax = plt.subplots()
 # ax = fig.add_subplot(111, projection="3d")
@@ -149,8 +149,8 @@ try:
             linked = False
 
             # check all past contours and see spheres of influence
-            for i in range(len(contour_storage)-1):
-                for past_point in contour_storage[i]:
+            for i in range(len(point_storage)-1):
+                for past_point in point_storage[i]:
                     if ((past_point[0][0] - point[0])**2 + (past_point[0][1] - point[1])**2 + (past_point[0][2] - point[2])**2)**0.5 < 0.166*(4-i):
                         past_point.appendleft(point)
                         linked = True
@@ -158,9 +158,9 @@ try:
                             print(past_point)
 
 
-            # # if no contours link, then add the contour in its own deque in the 5th deque in contour_storage
+            # # if no contours link, then add the contour in its own deque in the 5th deque in point_storage
             if not linked: 
-                contour_storage[4].append(deque([point]))
+                point_storage[4].append(deque([point]))
 
             # cv2.ellipse(depth_image_converted_3d, ellipse, (0,255,0),2)
             cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(radius), (0,255,0),2)
@@ -175,11 +175,11 @@ try:
         cv2.imshow('Canny', depth_canny)
         cv2.waitKey(1)
 
-        # empty 1st deque in contour_storage (ttl = 0)
-        contour_storage[0].clear()
+        # empty 1st deque in point_storage (ttl = 0)
+        point_storage[0].clear()
 
         # rotate contour storage left
-        contour_storage.rotate(-1)
+        point_storage.rotate(-1)
 
     plt.show()
 
