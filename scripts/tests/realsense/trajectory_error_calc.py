@@ -63,26 +63,51 @@ def poly(x1, x2, t1, t2, x_error, t_error):
 
     g = -9.81
 
-    b = (x2-x1)/(t2-t1) - g*(t2+t1)
-    c = x1 - g*(t1**2) - b*t1
+    # b = (x2-x1)/(t2-t1) - g*(t2+t1)
+    # c = x1 - g*(t1**2) - b*t1
     b_list = [0,0,0,0]
     c_list = [0,0,0,0]
     
-
     b_list[0], c_list[0] = poly_b_c(x2_high, t2_high, x1_high, t1_low) # TR2_TL1
     b_list[1], c_list[1] = poly_b_c(x2_high, t2_high, x1_high, t1_high) # TR2_TR1
     b_list[2], c_list[2] = poly_b_c(x2_high, t2_high, x1_low, t1_high) # TR2_BR1
     b_list[3], c_list[3] = poly_b_c(x2_high, t2_high, x1_low, t1_low) # TR2_BL1
 
-    x = np.array(range(1,6))
-    z1 = g*(x**2) + b*x + c
-    y = g*(x**2) + b_list*x + c_list
+    # find min/max of each corner in 2, then somehow figure out all the other stuff
+
+    b_list = [0,0,0,0]
+    c_list = [0,0,0,0]
     
+    b_list[0], c_list[0] = poly_b_c(x2_high, t2_low, x1_high, t1_low) # TR2_TL1
+    b_list[1], c_list[1] = poly_b_c(x2_high, t2_low, x1_high, t1_high) # TR2_TR1
+    b_list[2], c_list[2] = poly_b_c(x2_high, t2_low, x1_low, t1_high) # TR2_BR1
+    b_list[3], c_list[3] = poly_b_c(x2_high, t2_low, x1_low, t1_low) # TR2_BL1
+
+    b_list = [0,0,0,0]
+    c_list = [0,0,0,0]
+    
+    b_list[0], c_list[0] = poly_b_c(x2_low, t2_low, x1_high, t1_low) # TR2_TL1
+    b_list[1], c_list[1] = poly_b_c(x2_low, t2_low, x1_high, t1_high) # TR2_TR1
+    b_list[2], c_list[2] = poly_b_c(x2_low, t2_low, x1_low, t1_high) # TR2_BR1
+    b_list[3], c_list[3] = poly_b_c(x2_low, t2_low, x1_low, t1_low) # TR2_BL1
+
+    b_list = [0,0,0,0]
+    c_list = [0,0,0,0]
+    
+    b_list[0], c_list[0] = poly_b_c(x2_low, t2_high, x1_high, t1_low) # TR2_TL1
+    b_list[1], c_list[1] = poly_b_c(x2_low, t2_high, x1_high, t1_high) # TR2_TR1
+    b_list[2], c_list[2] = poly_b_c(x2_low, t2_high, x1_low, t1_high) # TR2_BR1
+    b_list[3], c_list[3] = poly_b_c(x2_low, t2_high, x1_low, t1_low) # TR2_BL1
+
+    x = np.arange(1,6,0.1)
+    z1 = g*(x**2) + b*x + c
     plt.scatter(t1, x1)
     plt.scatter(t2, x2)
     plt.plot(x,z1)
-    for y_plot in y:
-        plt.plot(x,y_plot)
+    # y = []
+    for i in range(0,4):
+        plt.plot(x, g*(x**2) + b_list[i]*x + c_list[i])
+
     plt.show()
 
     return b,c
@@ -99,7 +124,7 @@ x = np.array(range(10))
 
 m1, b1, m2, b2 = linear(x1, x2, t1, t2, 0.02, 0.02)
 print(f"{m1}, {b1}, {m2}, {b2}")
-b,c = poly(x1,x2,t1,t2,0.02, 0.05)
+b,c = poly(x1,x2,t1,t2,0.1, 0.2)
 
 y1 = m1*x+b1
 y2 = m2*x + b2

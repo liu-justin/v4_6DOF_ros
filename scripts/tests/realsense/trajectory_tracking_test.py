@@ -3,6 +3,8 @@ import numpy as np
 import cv2
 from collections import deque
 
+from Trajectory import Trajectory
+
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -29,7 +31,7 @@ align = rs.align(align_to)
 
 depth_background = np.array([])
 
-points = []
+trajectories = []
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection="3d")
@@ -77,6 +79,7 @@ try:
         frames = pipeline.wait_for_frames() 
         aligned_frames = align.process(frames)
         depth_frame = aligned_frames.get_depth_frame()
+        time = depth_frame.get_timestamp()
         if not depth_frame:
             continue
         depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
@@ -116,7 +119,6 @@ try:
                 continue
             
             # checking perecentage of contour filled
-            # ellipse_area = np.pi*w*h/4
             ellipse_area = np.pi*radius**2
             if (contour_area/ellipse_area) < 0.5:
                 continue
@@ -125,13 +127,14 @@ try:
             point = rs.rs2_deproject_pixel_to_point(depth_intrin, [x,y], depth_frame.get_distance(int(x),int(y)))
             if (point[0]*point[1]*point[2] == 0):
                 continue
-            # current_frame_points.append(point)
-            points.append(point)
 
-            # cv2.ellipse(depth_image_converted_3d, ellipse, (0,255,0),2)
+            added = False
+            for t in trajectories:
+                added = t.append(time, point)
+            if not added:
+                trajectories.append(Trajectory(time, point))
+
             cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(radius), (0,255,0),2)  
-        # if current_frame_points:
-        #     points.append(current_frame_points)
 
         # Show images
         cv2.namedWindow('Main', cv2.WINDOW_AUTOSIZE)
@@ -143,10 +146,11 @@ try:
 
         if key & 0xFF == ord('q') or key == 27:
             cv2.destroyAllWindows()
-            for i in range(len(points)):
-                ax.scatter(points[i][0], points[i][1], points[i][2])
-                ax.text(points[i][0], points[i][1], points[i][2], str(i))
-                plt.pause(0.01)
+            for t in trajectories:
+                for i in range(len(t.points)):
+                    ax.scatter(t.points[i][0], t.points[i][1], t.points[i][2])
+                    ax.text(t.points[i][0], t.points[i][1], t.points[i][2], str(i))
+                    plt.pause(0.01)
             cv2.waitKey(10000)
             
             break
