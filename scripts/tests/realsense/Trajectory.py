@@ -52,5 +52,7 @@ class Trajectory():
                 self.points.append(new_point)
                 return True
 
+            # need to figure out least squared fitting https://www.mathsisfun.com/data/least-squares-regression.html
+            # https://mathworld.wolfram.com/LeastSquaresFitting.html
             else:
                 return False
