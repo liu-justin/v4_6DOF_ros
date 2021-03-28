@@ -9,6 +9,19 @@ def poly(x1, x2, t1, t2):
     c = x1 - g*(t1**2) - b*t1
     return b,c
 
+def linear_least_squared(x, y):
+    n = len(x)
+    Sx = sum(x)
+    Sy = sum(y)
+    Sxx = [ xi**3 for xi in x ]
+    Syy = [ yi**3 for yi in y ]
+    Sxy = [xi*yi for xi,yi in zip(x,y)]
+    delta = n*Sxx - Sx**2
+
+    m = (n*Sxy - Sx*Sy) / delta
+    b = (Sxx*Sy - Sx*Sxy) / delta
+    return m,b
+
 class Trajectory():
     def __init__(self, time, point):
         self.times = [time]
