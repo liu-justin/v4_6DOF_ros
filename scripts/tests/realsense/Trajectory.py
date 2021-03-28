@@ -1,3 +1,6 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
 def linear(x1, x2, t1, t2):
     m = (x2 - x1)/(t2 - t1) # BL2_TR1_m
     b = x1 - m*t1
@@ -10,17 +13,44 @@ def poly(x1, x2, t1, t2):
     return b,c
 
 def linear_least_squared(x, y):
-    n = len(x)
-    Sx = sum(x)
-    Sy = sum(y)
-    Sxx = [ xi**3 for xi in x ]
-    Syy = [ yi**3 for yi in y ]
-    Sxy = [xi*yi for xi,yi in zip(x,y)]
-    delta = n*Sxx - Sx**2
+    # n = len(x)
+    # Sx = sum(x)
+    # Sy = sum(y)
+    # Sxx = [ xi**3 for xi in x ]
+    # Syy = [ yi**3 for yi in y ]
+    # Sxy = [xi*yi for xi,yi in zip(x,y)]
+    # delta = n*Sxx - Sx**2
 
-    m = (n*Sxy - Sx*Sy) / delta
-    b = (Sxx*Sy - Sx*Sxy) / delta
-    return m,b
+    # m = (n*Sxy - Sx*Sy) / delta
+    # b = (Sxx*Sy - Sx*Sxy) / delta
+    # return m,b
+    n = len(x)
+    x_bar = sum(x)/n
+    y_bar = sum(y)/n
+    # Sxy = sum([(xi-x_bar)*(yi-y_bar) for xi,yi in zip(x,y)])
+    # Sxx = sum([(xi - x_bar)**2 for xi in x])
+    Sxy = sum([(yi-y_bar)*xi for xi,yi in zip(x,y)])
+    Sxx = sum([(xi-x_bar)*xi for xi in x])
+
+    beta1 = Sxy/Sxx
+    beta0 = y_bar - beta1*x_bar
+    print(f"{beta1}, {beta0}")
+
+    return beta1, beta0
+
+x = [1,2,3,4,5,6,7,8,9]
+y = [0.98, 1.79, 3.01, 4.5, 5.1, 5.9, 6.94, 7.99, 9]
+
+beta1, beta0 = linear_least_squared(x,y)
+
+for x,y in zip(x,y):
+    plt.scatter(x,y)
+
+x = np.arange(1,10)
+y = beta1*x + beta0
+plt.plot(x,y)
+
+plt.show()
 
 class Trajectory():
     def __init__(self, time, point):
