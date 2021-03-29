@@ -79,7 +79,7 @@ try:
         frames = pipeline.wait_for_frames() 
         aligned_frames = align.process(frames)
         depth_frame = aligned_frames.get_depth_frame()
-        time = depth_frame.get_timestamp()
+        time = depth_frame.get_timestamp()/1000
         if not depth_frame:
             continue
         depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
