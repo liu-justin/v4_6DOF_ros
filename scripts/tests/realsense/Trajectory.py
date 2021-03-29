@@ -38,19 +38,21 @@ def linear_least_squared(x, y):
 
     return beta1, beta0
 
-x = [1,2,3,4,5,6,7,8,9]
-y = [0.98, 1.79, 3.01, 4.5, 5.1, 5.9, 6.94, 7.99, 9]
+def poly_least_squared(x, y): # derivation in google drive
+    n = len(x)
+    g = -9.81
+    x_bar = sum(x)/n
+    x_squared_bar = sum([xi**2 for xi in x])/n
+    y_bar = sum(y)/n
+    Sxy = sum([(yi-y_bar)*xi for xi,yi in zip(x,y)])
+    Sxx = sum([(xi-x_bar)*xi for xi in x])
+    g_sum = g * sum([xi*(xi**2-x_squared_bar) for xi in x])
+    beta1 = (Sxy - g_sum)/Sxx
+    beta0 = y_bar - beta1*x_bar - g*x_squared_bar
 
-beta1, beta0 = linear_least_squared(x,y)
+    print(f"{beta1}, {beta0}")
 
-for x,y in zip(x,y):
-    plt.scatter(x,y)
-
-x = np.arange(1,10)
-y = beta1*x + beta0
-plt.plot(x,y)
-
-plt.show()
+    return beta1, beta0
 
 class Trajectory():
     def __init__(self, time, point):
