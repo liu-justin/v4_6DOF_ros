@@ -38,9 +38,9 @@ ax = fig.add_subplot(111, projection="3d")
 ax.set_xlabel("X")
 ax.set_ylabel("Y")
 ax.set_zlabel("Z")
-ax.axes.set_xlim3d(left=-2, right=2)
+ax.axes.set_xlim3d(left=0, right=2)
 ax.axes.set_ylim3d(bottom=-2, top=2)
-ax.axes.set_zlim3d(bottom=0, top=2)
+ax.axes.set_zlim3d(bottom=-2, top=2)
 
 transf_camera_to_base = np.array([[0,0,1,0],\
                                  [0,-1,0,0],\
