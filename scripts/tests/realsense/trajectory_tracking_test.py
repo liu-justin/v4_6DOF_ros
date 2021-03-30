@@ -42,6 +42,11 @@ ax.axes.set_xlim3d(left=-2, right=2)
 ax.axes.set_ylim3d(bottom=-2, top=2)
 ax.axes.set_zlim3d(bottom=0, top=2)
 
+transf_camera_to_base = np.array([[0,0,1,0],\
+                                 [0,-1,0,0],\
+                                 [1,0,0,0],\
+                                 [0,0,0,1]])
+
 try:
 
     while True:
@@ -66,7 +71,7 @@ try:
             depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
             thresh, depth_mask = cv2.threshold(depth_cleaned,1,255,cv2.THRESH_BINARY_INV)
             depth_background = cv2.inpaint(depth_cleaned, depth_mask, 3, cv2.INPAINT_TELEA)
-            
+
             cv2.namedWindow('New', cv2.WINDOW_AUTOSIZE)
             cv2.imshow('New', depth_background)
             cv2.waitKey(100000)
@@ -127,10 +132,13 @@ try:
             point = rs.rs2_deproject_pixel_to_point(depth_intrin, [x,y], depth_frame.get_distance(int(x),int(y)))
             if (point[0]*point[1]*point[2] == 0):
                 continue
+            point = np.dot(transf_camera_to_base, np.r_[point,1])
 
             added = False
             for t in trajectories:
-                added = t.append(time, point)
+                success = t.append(time, point)
+                if success:
+                    added = True
             if not added:
                 trajectories.append(Trajectory(time, point))
 
