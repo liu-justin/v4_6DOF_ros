@@ -41,34 +41,46 @@ def poly_least_squared_beta0const(x, y, beta0):
     sum_xi = sum(x)
     sum_xi2 = sum([xi**2 for xi in x])
     sum_xi3 = sum([xi**3 for xi in x])
-    numerator_1 = -1*sum([xi**2*yi for xi,yi in zip(x,y)])
-    numerator_2 = sum([xi*yi for xi,yi in zip(x,y)])*sum_xi**3 / sum_xi**2
-    numerator_3 = beta0 * sum([xi**2 - sum_xi*sum_xi3/sum_xi2 for xi in x])
+    sum_xi4 = sum([xi**4 for xi in x])
+    sum_xiyi = sum([xi*yi for xi,yi in zip(x,y)])
+    # numerator_1 = -1*sum([xi**2*yi for xi,yi in zip(x,y)])
+    # numerator_2 = sum([xi*yi for xi,yi in zip(x,y)])*sum_xi**3 / sum_xi**2
+    # numerator_3 = beta0 * sum([xi**2 - sum_xi*sum_xi3/sum_xi2 for xi in x])
 
-    denom = sum([(sum_xi3/sum_xi2)*xi**3 - xi**4 for xi in x])
+    # denom = sum([(sum_xi3/sum_xi2)*xi**3 - xi**4 for xi in x])
+    # beta2 = (numerator_1 + numerator_2 + numerator_3)/denom
+    # beta1 = (sum([xi*yi for xi,yi in zip(x,y)]) - beta0*sum_xi - beta2*sum_xi3)de/sum_xi2
 
-    beta2 = (numerator_1 + numerator_2 + numerator_3)/denom
-    beta1 = (sum([xi*yi for xi,yi in zip(x,y)]) - beta0*sum_xi - beta2*sum_xi3)/sum_xi2
+    numerator_1 = sum([(xi**2)*yi for xi,yi in zip(x,y)])
+    numerator_2 = beta0 * sum_xi2
+    numerator_3 = sum_xiyi * sum_xi3 / sum_xi2
+    numerator_4 = beta0 * (sum_xi/sum_xi2) * sum_xi3
+
+    denom = -1*(sum_xi3*sum_xi3/sum_xi2 - sum_xi4)
+
+    beta2 = (numerator_1 - numerator_2 - numerator_3 + numerator_4)/denom
+    beta1 = (sum_xiyi - beta0*sum_xi - beta2*sum_xi3)/sum_xi2
 
     return beta2, beta1
 
-t = [0,0.0333399772644043,0.06669783592224121]
-y = [0.03290366,0.06382939, 0.08356368]
+# t = [0, 0.0333399772644043, 0.06669783592224121]
+# y = [0.03290366, 0.06382939, 0.08356368]
 
-beta1, beta0 = poly_least_squared_beta2const(t,y)
-beta1_a, beta0_a = poly_init_beta2const(y[0], y[1], t[0], t[1])
-beta2_b, beta1_b = poly_least_squared_beta0const(t,y,y[0])
-print(f"{beta1}, {beta0}")
-print(f"{beta1_a}, {beta0_a}")
+# beta1, beta0 = poly_least_squared_beta2const(t,y)
+# beta1_a, beta0_a = poly_init_beta2const(y[0], y[1], t[0], t[1])
+# beta2_b, beta1_b = poly_least_squared_beta0const(t,y,y[0])
+# print(f"{beta1}, {beta0}")
+# print(f"{beta1_a}, {beta0_a}")
+# print(f"{beta2_b}, {beta1_b}")
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
-for yi,ti in zip(y, t):
-    ax.scatter(ti, yi)
-x = np.arange(0,t[-1],0.01)
-y= 0.03290366 + beta1_b*x + beta2_b*(x**2)
-ax.plot(x,y)
-plt.show()
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# for yi,ti in zip(y, t):
+#     ax.scatter(ti, yi)
+# x = np.arange(0,t[-1],0.01)
+# y= y[0] + beta1_b*x + beta2_b*(x**2)
+# ax.plot(x,y)
+# plt.show()
 
 class Trajectory():
     def __init__(self, time, point):
@@ -124,8 +136,6 @@ class Trajectory():
         if abs((new_point[0]-predicted_x)/predicted_x) < 0.1 and abs((new_point[2]-predicted_z)/predicted_z) < 0.1:
             self.times.append(time_delta)
             self.points.append(new_point)
-            print(self.times)
-            print(self.points)
             self.beta1_x, self.beta0_x = linear_least_squared(self.times, [p[0] for p in self.points]) # X
             self.beta2_y, self.beta1_y = poly_least_squared_beta0const(self.times, [p[1] for p in self.points], self.beta0_y) # Y
             self.beta1_z, self.beta0_z = linear_least_squared(self.times, [p[2] for p in self.points]) # Z
