@@ -101,8 +101,10 @@ class Trajectory():
         ax.plot(x,y)
         plt.show()
 
+    # sets the linear betas
     def appendFirst(self, new_time, new_point):
         time_delta = new_time - self.init_time
+        if (time_delta == 0): return False
         self.beta1_x, self.beta0_x = linear_init(self.points[0][0], new_point[0], self.times[0], time_delta)
         self.beta1_z, self.beta0_z = linear_init(self.points[0][2], new_point[2], self.times[0], time_delta)
 
@@ -115,6 +117,7 @@ class Trajectory():
             print("failed in first append")
             return False
 
+    # sets the y betas and resets linear betas
     def appendSecond(self,new_time, new_point):
         time_delta = new_time - self.init_time
         predicted_x = self.beta0_x + self.beta1_x*time_delta
@@ -140,7 +143,7 @@ class Trajectory():
         else:
             time_delta = new_time - self.init_time
             predicted_x = self.beta0_x + self.beta1_x*time_delta
-            predicted_y = self.beta0_y + self.beta1_y*time_delta + -9.81*(time_delta**2)
+            predicted_y = self.beta0_y + self.beta1_y*time_delta + self.beta2_y*(time_delta**2)
             predicted_z = self.beta0_z + self.beta1_z*time_delta
 
             print(f"appending into traj w/ length {len(self.times)}: predicted {predicted_x},{predicted_y},{predicted_z}")

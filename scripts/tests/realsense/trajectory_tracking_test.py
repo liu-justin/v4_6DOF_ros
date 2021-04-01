@@ -31,8 +31,6 @@ align = rs.align(align_to)
 
 depth_background = np.array([])
 
-trajectories = []
-
 fig = plt.figure()
 ax = fig.add_subplot(111, projection="3d")
 ax.set_xlabel("X")
@@ -46,6 +44,9 @@ transf_camera_to_base = np.array([[0,0,1,0],\
                                  [0,-1,0,0],\
                                  [1,0,0,0],\
                                  [0,0,0,1]])
+
+trajectories = []
+old_trajectories = []
 
 try:
 
@@ -79,15 +80,29 @@ try:
             break
 
     while True:
-
         # returns a composite frame
         frames = pipeline.wait_for_frames() 
         aligned_frames = align.process(frames)
         depth_frame = aligned_frames.get_depth_frame()
-        time = depth_frame.get_timestamp()/1000
+        current_time = depth_frame.get_timestamp()/1000
         if not depth_frame:
             continue
         depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
+
+        # print(f"length of trajectories: {len(trajectories)}")
+        # for i in range(len(trajectories)):
+        #     if (current_time - trajectories[i].init_time) >= 3:
+        #         traj = trajectories.pop(i)
+        #         i -= 1
+        #         print("popv")
+        #         if (len(traj.times) > 3):
+        #             old_trajectories.append(traj)
+        #     print(i)
+        for traj in trajectories:
+            if (current_time - traj.init_time) >= 3:
+                trajectories.pop(trajectories.index(traj))
+                if (len(traj.times) > 3):
+                    old_trajectories.append(traj)
 
         # Convert images to numpy arrays
         depth_image = np.asanyarray(depth_frame.get_data())
@@ -99,10 +114,10 @@ try:
         thresh, depth_mask = cv2.threshold(depth_cleaned,1,255,cv2.THRESH_BINARY_INV)
 
         sigma = 0.33
-        v = np.median(depth_cleaned_3d)
+        v = np.median(depth_cleaned)
         lower = int(max(0, (1.0 - sigma) * v))
         upper = int(min(255, (1.0 + sigma) * v))    
-        depth_canny = cv2.Canny(depth_cleaned_3d, lower, upper)
+        depth_canny = cv2.Canny(depth_cleaned, lower, upper)
 
         contours, hierarchy = cv2.findContours(depth_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -111,36 +126,33 @@ try:
             try:
                 ellipse = cv2.minEnclosingCircle(c)
                 (x,y), radius = ellipse                
-            except:
-                continue
+            except: continue
+                
+            # removing weird edge cases
+            if x*y*radius <= 0: continue
 
             # removing small contours
             contour_area = cv2.contourArea(c)
-            if contour_area < 30:
-                continue
-
-            # removing weird edge cases
-            if x*y*radius <= 0:
-                continue
+            if contour_area < 30: continue
             
             # checking perecentage of contour filled
             ellipse_area = np.pi*radius**2
-            if (contour_area/ellipse_area) < 0.5:
-                continue
+            if (contour_area/ellipse_area) < 0.5: continue
 
             # grabbing from original depth image, without the cleanup
             point = rs.rs2_deproject_pixel_to_point(depth_intrin, [x,y], depth_frame.get_distance(int(x),int(y)))
-            if (point[0]*point[1]*point[2] == 0):
-                continue
+            if (point[0]*point[1]*point[2] == 0): continue
+
+            # rotation coords to x away, y up, z right
             point = np.dot(transf_camera_to_base, np.r_[point,1])
 
             added = False
             for t in trajectories:
-                success = t.append(time, point)
-                if success:
-                    added = True
+                success = t.append(current_time, point)
+                if success: added = True
+                    
             if not added:
-                trajectories.append(Trajectory(time, point))
+                trajectories.append(Trajectory(current_time, point))
 
             cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(radius), (0,255,0),2)  
 
@@ -159,8 +171,7 @@ try:
                     ax.scatter(t.points[i][0], t.points[i][1], t.points[i][2])
                     ax.text(t.points[i][0], t.points[i][1], t.points[i][2], str(i))
                     plt.pause(0.01)
-            cv2.waitKey(10000)
-            
+            cv2.waitKey(10000)            
             break
 
     plt.show()
