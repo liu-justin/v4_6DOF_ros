@@ -40,8 +40,8 @@ ax.axes.set_xlim3d(left=0, right=2)
 ax.axes.set_ylim3d(bottom=-2, top=2)
 ax.axes.set_zlim3d(bottom=-2, top=2)
 
-i = 0
-j = 0
+depths = []
+diameters = []
 
 try:
     while True:
@@ -51,7 +51,7 @@ try:
         color_frame = aligned_frames.get_color_frame()
         # if not depth_frame or color_frame: continue
         depth_image = np.asanyarray(depth_frame.get_data())
-        depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
+        depth_cleaned = (depth_image*(255/(3/depth_scale))).astype(np.uint8)
         depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
         depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
 
@@ -61,7 +61,7 @@ try:
 
         if key & 0xFF == ord('q') or key == 27:
             # save this depth_image as the background, but need to remove those 0s
-            depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
+            depth_cleaned = (depth_image*(255/(3/depth_scale))).astype(np.uint8)
             depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
             depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
             thresh, depth_mask = cv2.threshold(depth_cleaned,1,255,cv2.THRESH_BINARY_INV)
@@ -87,7 +87,7 @@ try:
         # Convert images to numpy arrays
         color_image = np.asanyarray(color_frame.get_data())
         depth_image = np.asanyarray(depth_frame.get_data())
-        depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
+        depth_cleaned = (depth_image*(255/(3/depth_scale))).astype(np.uint8)
         depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
         depth_cleaned = np.where((depth_cleaned <= 0), depth_background, depth_cleaned)
         depth_cleaned_3d = np.dstack((depth_cleaned,depth_cleaned,depth_cleaned))
@@ -107,10 +107,16 @@ try:
                 ellipse = cv2.minEnclosingCircle(c)
                 (x,y), radius = ellipse                
             except: continue
+
+            # removing small contours
+            contour_area = cv2.contourArea(c)
+            if contour_area < 5: continue
             
-            np.save("depth_frame_"+str(i)+"_"+str(j),depth_image)            
-            np.save("color_frame_"+str(i)+"_"+str(j),color_image)
-            j += 1
+            # checking perecentage of contour filled
+            ellipse_area = np.pi*radius**2
+            if (contour_area/ellipse_area) < 0.4: continue
+            
+            cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(radius), (0,255,0),2)  
             
 
         # Show images
@@ -121,8 +127,20 @@ try:
         cv2.imshow('Canny', depth_canny)
         key = cv2.waitKey(1)
 
+        if key & 0xFF == ord('g') or key == 27:
+            cv2.namedWindow('Areyousure', cv2.WINDOW_AUTOSIZE)
+            cv2.imshow('Areyousure', depth_cleaned_3d)
+            key2 = cv2.waitKey(100000)
+            if (key2 & 0xFF == ord('y')):
+                depths.append(depth_frame.get_distance(int(x),int(y)))
+                diameters.append(radius*2)
+
+            cv2.destroyWindow("Areyousure")
+
         if key & 0xFF == ord('q') or key == 27:
-            cv2.destroyAllWindows()       
+            cv2.destroyAllWindows()
+            np.save("depths", np.array(depths))
+            np.save("diameters", np.array(diameters))
             break
 
 finally:

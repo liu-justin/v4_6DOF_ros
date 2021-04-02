@@ -7,20 +7,15 @@ import cv2
 depth_scale = 0.0010000000474974513
 
 # Convert images to numpy arrays
-depth_image = np.load("depth_frame.npy")
-color_image = np.load("color_frame.npy")
+depth_image = np.load("scripts/tests/realsense/frames/depth_frame_0_2.npy")
+color_image = np.load("scripts/tests/realsense/frames/color_frame_0_2.npy")
+depth_background = np.load("scripts/tests/realsense/frames/depth_frame_background.npy")
 
 depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
-
 depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
-depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
+depth_cleaned = np.where((depth_cleaned <= 0), depth_background, depth_cleaned)
 depth_cleaned_3d = np.dstack((depth_cleaned,depth_cleaned,depth_cleaned))
-
-# somehow need to clean up the shadows
-
 thresh, depth_mask = cv2.threshold(depth_cleaned,1,255,cv2.THRESH_BINARY_INV)
-
-depth_image_after_inpaint = cv2.inpaint(depth_cleaned_3d, depth_mask, 3, cv2.INPAINT_NS)
 
 # https://stackoverflow.com/questions/41893029/opencv-canny-edge-detection-not-working-properly
 sigma = 0.33
@@ -36,31 +31,16 @@ contours, hierarchy = cv2.findContours(depth_image_canny, cv2.RETR_EXTERNAL, cv2
 
 for c in contours:
     try:
-        # ellipse = cv2.fitEllipse(c)
-        # (x,y), (w,h), angle = ellipse
         ellipse = cv2.minEnclosingCircle(c)
-        (x,y), radius = ellipse
+        (x,y), radius = ellipse                
+    except: continue
         
-    except:
-        continue
+    # removing weird edge cases
+    if x*y*radius <= 0: continue
 
-    # removing small contours
+    # # removing small contours
     contour_area = cv2.contourArea(c)
-    if contour_area < 30:
-        continue
-
-    if x*y*radius <= 0:
-        continue
-    
-    # checking perecentage of contour filled
-    # ellipse_area = np.pi*w*h/4
-    ellipse_area = np.pi*radius**2
-    if (contour_area/ellipse_area) < 0.35:
-        continue
-    
-    # aspect_ratio = max(w,h) / min(w,h)  
-    # if aspect_ratio > 6:
-    #     continue
+    if contour_area < 2: continue
 
     cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(radius), (0,255,0),2)
 
@@ -82,13 +62,10 @@ else:
 cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
 cv2.imshow('RealSense', images)
 
-cv2.namedWindow('Inpaint', cv2.WINDOW_AUTOSIZE)
-cv2.imshow('Inpaint', depth_image_after_inpaint)
+cv2.namedWindow('Canny', cv2.WINDOW_AUTOSIZE)
+cv2.imshow('Canny', depth_image_canny)
 
 cv2.namedWindow('Depth', cv2.WINDOW_AUTOSIZE)
 cv2.imshow('Depth', depth_cleaned_3d)
-
-cv2.namedWindow('Mask', cv2.WINDOW_AUTOSIZE)
-cv2.imshow('Mask', depth_mask)
 
 cv2.waitKey(100000)

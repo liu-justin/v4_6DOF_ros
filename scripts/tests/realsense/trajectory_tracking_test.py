@@ -54,8 +54,7 @@ try:
         frames = pipeline.wait_for_frames() 
         aligned_frames = align.process(frames)
         depth_frame = aligned_frames.get_depth_frame()
-        if not depth_frame:
-            continue
+        if not depth_frame: continue
         depth_image = np.asanyarray(depth_frame.get_data())
         depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
         depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
@@ -89,15 +88,7 @@ try:
             continue
         depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
 
-        # print(f"length of trajectories: {len(trajectories)}")
-        # for i in range(len(trajectories)):
-        #     if (current_time - trajectories[i].init_time) >= 3:
-        #         traj = trajectories.pop(i)
-        #         i -= 1
-        #         print("popv")
-        #         if (len(traj.times) > 3):
-        #             old_trajectories.append(traj)
-        #     print(i)
+        # remove old trajectories
         for traj in trajectories:
             if (current_time - traj.init_time) >= 3:
                 trajectories.pop(trajectories.index(traj))
@@ -110,7 +101,6 @@ try:
         depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
         depth_cleaned = np.where((depth_cleaned <= 0), depth_background, depth_cleaned)
         depth_cleaned_3d = np.dstack((depth_cleaned,depth_cleaned,depth_cleaned))
-
         thresh, depth_mask = cv2.threshold(depth_cleaned,1,255,cv2.THRESH_BINARY_INV)
 
         sigma = 0.33
