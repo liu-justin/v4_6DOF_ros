@@ -16,8 +16,14 @@ b2, b1, b0 = np.polyfit(depths, diameters, 2)
 
 x = np.arange(min(depths), max(depths),0.1)
 y = b2*x**2 + b1*x + b0
+y_upper = 1.15*(b2*x**2 + b1*x + b0)
+y_lower = 0.85*(b2*x**2 + b1*x + b0)
 
 ax.plot(x,y)
+ax.plot(x,y_upper)
+ax.plot(x,y_lower)
+
+np.save("betas", np.array([b0, b1, b2]))
 
 # a = np.array([0.4, 0.84, 1.56])
 

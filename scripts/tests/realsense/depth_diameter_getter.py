@@ -43,6 +43,8 @@ ax.axes.set_zlim3d(bottom=-2, top=2)
 depths = []
 diameters = []
 
+betas = np.load("betas.npy")
+
 try:
     while True:
         frames = pipeline.wait_for_frames() 
@@ -92,8 +94,6 @@ try:
         depth_cleaned = np.where((depth_cleaned <= 0), depth_background, depth_cleaned)
         depth_cleaned_3d = np.dstack((depth_cleaned,depth_cleaned,depth_cleaned))
 
-        thresh, depth_mask = cv2.threshold(depth_cleaned,1,255,cv2.THRESH_BINARY_INV)
-
         sigma = 0.33
         v = np.median(depth_cleaned)
         lower = int(max(0, (1.0 - sigma) * v))
@@ -104,15 +104,15 @@ try:
 
         for c in contours:
             try:
-                ellipse = cv2.minEnclosingCircle(c)
-                (x,y), radius = ellipse                
+                (x,y), radius = cv2.minEnclosingCircle(c)
+                depth = depth_frame.get_distance(int(x),int(y))                  
             except: continue
 
-            # removing small contours
-            contour_area = cv2.contourArea(c)
-            if contour_area < 5: continue
+            calculated_diameter = betas[0] + betas[1]*depth + betas[2]*(depth**2)            
+            if (abs(2*radius-calculated_diameter)/calculated_diameter) > 0.25: continue
             
             # checking perecentage of contour filled
+            contour_area = cv2.contourArea(c) 
             ellipse_area = np.pi*radius**2
             if (contour_area/ellipse_area) < 0.4: continue
             
