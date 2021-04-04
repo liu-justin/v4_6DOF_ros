@@ -7,70 +7,48 @@ import cv2
 depth_scale = 0.0010000000474974513
 
 # Convert images to numpy arrays
-depth_image = np.load("scripts/tests/realsense/frames/depth_frame_0_7.npy")
-color_image = np.load("scripts/tests/realsense/frames/color_frame_0_7.npy")
+depth_image = np.load("scripts/tests/realsense/frames/depth_frame_0_15.npy")
+color_image = np.load("scripts/tests/realsense/frames/color_frame_0_15.npy")
 depth_background = np.load("scripts/tests/realsense/frames/depth_frame_background.npy")
 
 depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
 depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
 depth_cleaned = np.where((depth_cleaned <= 0), depth_background, depth_cleaned)
+depth_cleaned = cv2.bilateralFilter(depth_cleaned, 9, 50, 50)
 depth_cleaned_3d = np.dstack((depth_cleaned,depth_cleaned,depth_cleaned))
 
-depth_cleaned = cv2.bilateralFilter(depth_cleaned, 9, 75, 75)
+cv2.namedWindow('canny_cleaned', cv2.WINDOW_AUTOSIZE)
 
-# https://stackoverflow.com/questions/41893029/opencv-canny-edge-detection-not-working-properly
-sigma = 0.33
-v = np.median(depth_cleaned_3d)
-lower = int(max(0, (1.0 - sigma) * v))
-upper = int(min(255, (1.0 + sigma) * v))    
+def on_sigma_trackbar(new_sigma):
+    sigma = new_sigma/100
+    # sigma = 0.33
+    v = np.median(depth_cleaned_3d)
+    lower = int(max(0, (1.0 - sigma) * v))
+    upper = int(min(255, (1.0 + sigma) * v))    
 
-depth_image_canny = cv2.Canny(depth_cleaned, lower, upper)
+    depth_canny = cv2.Canny(depth_cleaned, lower, upper)
+    depth_canny_3d = np.dstack((depth_canny, depth_canny, depth_canny))
 
-# https://stackoverflow.com/questions/60259169/how-to-group-nearby-contours-in-opencv-python-zebra-crossing-detection
-# https://www.geeksforgeeks.org/find-and-draw-contours-using-opencv-python/
-contours, hierarchy = cv2.findContours(depth_image_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(depth_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_L1)
+    print(hierarchy)
 
-for c in contours:
-    try:
-        ellipse = cv2.minEnclosingCircle(c)
-        (x,y), radius = ellipse                
-    except: continue
-        
-    # removing weird edge cases
-    if x*y*radius <= 0: continue
+    for c in contours:
+        try:
+            (x,y), radius = cv2.minEnclosingCircle(c)              
+        except: continue
+        cv2.circle(depth_canny_3d, (int(x),int(y)), 3, (0,0,255), 1)
+        # removing weird edge cases
+        if x*y*radius <= 0: continue
+        # # removing small contours
+        contour_area = cv2.contourArea(c)
+        if contour_area < 2: continue
 
-    # # removing small contours
-    contour_area = cv2.contourArea(c)
-    if contour_area < 2: continue
+        cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(radius), (0,255,0),2)
 
-    cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(radius), (0,255,0),2)
-    
+    images = np.hstack((depth_canny_3d, depth_cleaned_3d))
+    cv2.imshow('canny_cleaned', images)
 
+cv2.createTrackbar("sigma", "canny_cleaned", 0, 100, on_sigma_trackbar)
+on_sigma_trackbar(25)
 
-# Apply colormap on depth image (image must be converted to 8-bit per pixel first)
-depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
-
-depth_colormap_dim = depth_colormap.shape
-color_colormap_dim = color_image.shape
-
-# If depth and color resolutions are different, resize color image to match depth image for display
-if depth_colormap_dim != color_colormap_dim:
-    resized_color_image = cv2.resize(color_image, dsize=(depth_colormap_dim[1], depth_colormap_dim[0]), interpolation=cv2.INTER_AREA)
-    images = np.hstack((resized_color_image, depth_colormap))
-else:
-    images = np.hstack((color_image, depth_colormap))
-
-# Show images
-# cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
-# cv2.imshow('RealSense', images)
-
-cv2.namedWindow('Canny', cv2.WINDOW_AUTOSIZE)
-cv2.imshow('Canny', depth_image_canny)
-
-cv2.namedWindow('Cleaned', cv2.WINDOW_AUTOSIZE)
-cv2.imshow('Cleaned', depth_cleaned_3d)
-
-cv2.namedWindow('Filtered', cv2.WINDOW_AUTOSIZE)
-cv2.imshow('Filtered', depth_cleaned)
-
-cv2.waitKey(100000)
+cv2.waitKey()
