@@ -73,7 +73,6 @@ def linear_errored(x1, x2, t1, t2, x_error, t_error):
         beta0_low = x1_high - beta1_low*t1_high
         beta0_high = x1_low - beta1_high*t1_low
         print("full negative")
-
     
     # mixed slope
     elif (x2_low - x1_high) <= 0:
@@ -100,7 +99,13 @@ def linear_errored(x1, x2, t1, t2, x_error, t_error):
     # TR2_BL1_m = (x2_high - x1_low)/(t2_high - t1_low)
     # BL2_TR1_m = (x2_low - x1_high)/(t2_low - t1_high)
 
-def poly_errored(x1, x2, t1, t2, x_error, t_error):
+def poly_errored(x1, x2, t1, t2, x1_error, x2_error, t_error):
+    radius1 = np.sqrt(x1_error**2 + t_error**2)
+    radius2 = np.sqrt(x2_error**2 + t_error**2)
+
+    
+
+def poly_errored_old(x1, x2, t1, t2, x_error, t_error):
     x1_low = x1*(1-x_error)
     x1_high = x1*(1+x_error)
     t1_low = t1*(1-t_error)
@@ -127,26 +132,26 @@ def poly_errored(x1, x2, t1, t2, x_error, t_error):
     b_list = [0,0,0,0]
     c_list = [0,0,0,0]
     
-    b_list[0], c_list[0] = poly_b_c(x2_high, t2_low, x1_high, t1_low) # TR2_TL1
-    b_list[1], c_list[1] = poly_b_c(x2_high, t2_low, x1_high, t1_high) # TR2_TR1
-    b_list[2], c_list[2] = poly_b_c(x2_high, t2_low, x1_low, t1_high) # TR2_BR1
-    b_list[3], c_list[3] = poly_b_c(x2_high, t2_low, x1_low, t1_low) # TR2_BL1
+    b_list[0], c_list[0] = poly_simple(x2_high, t2_low, x1_high, t1_low) # TR2_TL1
+    b_list[1], c_list[1] = poly_simple(x2_high, t2_low, x1_high, t1_high) # TR2_TR1
+    b_list[2], c_list[2] = poly_simple(x2_high, t2_low, x1_low, t1_high) # TR2_BR1
+    b_list[3], c_list[3] = poly_simple(x2_high, t2_low, x1_low, t1_low) # TR2_BL1
 
     b_list = [0,0,0,0]
     c_list = [0,0,0,0]
     
-    b_list[0], c_list[0] = poly_b_c(x2_low, t2_low, x1_high, t1_low) # TR2_TL1
-    b_list[1], c_list[1] = poly_b_c(x2_low, t2_low, x1_high, t1_high) # TR2_TR1
-    b_list[2], c_list[2] = poly_b_c(x2_low, t2_low, x1_low, t1_high) # TR2_BR1
-    b_list[3], c_list[3] = poly_b_c(x2_low, t2_low, x1_low, t1_low) # TR2_BL1
+    b_list[0], c_list[0] = poly_simple(x2_low, t2_low, x1_high, t1_low) # TR2_TL1
+    b_list[1], c_list[1] = poly_simple(x2_low, t2_low, x1_high, t1_high) # TR2_TR1
+    b_list[2], c_list[2] = poly_simple(x2_low, t2_low, x1_low, t1_high) # TR2_BR1
+    b_list[3], c_list[3] = poly_simple(x2_low, t2_low, x1_low, t1_low) # TR2_BL1
 
     b_list = [0,0,0,0]
     c_list = [0,0,0,0]
     
-    b_list[0], c_list[0] = poly_b_c(x2_low, t2_high, x1_high, t1_low) # TR2_TL1
-    b_list[1], c_list[1] = poly_b_c(x2_low, t2_high, x1_high, t1_high) # TR2_TR1
-    b_list[2], c_list[2] = poly_b_c(x2_low, t2_high, x1_low, t1_high) # TR2_BR1
-    b_list[3], c_list[3] = poly_b_c(x2_low, t2_high, x1_low, t1_low) # TR2_BL1
+    b_list[0], c_list[0] = poly_simple(x2_low, t2_high, x1_high, t1_low) # TR2_TL1
+    b_list[1], c_list[1] = poly_simple(x2_low, t2_high, x1_high, t1_high) # TR2_TR1
+    b_list[2], c_list[2] = poly_simple(x2_low, t2_high, x1_low, t1_high) # TR2_BR1
+    b_list[3], c_list[3] = poly_simple(x2_low, t2_high, x1_low, t1_low) # TR2_BL1
 
     x = np.arange(1,6,0.1)
     z1 = g*(x**2) + b*x + c
