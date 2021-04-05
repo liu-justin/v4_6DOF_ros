@@ -31,14 +31,14 @@ align = rs.align(align_to)
 
 depth_background = np.array([])
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection="3d")
-ax.set_xlabel("X")
-ax.set_ylabel("Y")
-ax.set_zlabel("Z")
-ax.axes.set_xlim3d(left=0, right=2)
-ax.axes.set_ylim3d(bottom=-2, top=2)
-ax.axes.set_zlim3d(bottom=-2, top=2)
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection="3d")
+# ax.set_xlabel("X")
+# ax.set_ylabel("Y")
+# ax.set_zlabel("Z")
+# ax.axes.set_xlim3d(left=0, right=2)
+# ax.axes.set_ylim3d(bottom=-2, top=2)
+# ax.axes.set_zlim3d(bottom=-2, top=2)
 
 transf_camera_to_base = np.array([[0,0,1,0],\
                                  [0,-1,0,0],\
@@ -103,7 +103,7 @@ try:
         depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
         depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
         depth_cleaned = np.where((depth_cleaned <= 0), depth_background, depth_cleaned)
-        depth_cleaned = cv2.bilateralFilter(depth_cleaned, 5, 42, 42)
+        depth_cleaned = cv2.bilateralFilter(depth_cleaned, 5, 42, 42) # tuning in removing_shadows
         depth_cleaned_3d = np.dstack((depth_cleaned,depth_cleaned,depth_cleaned))
 
         sigma = 0.38
@@ -163,12 +163,12 @@ try:
 
         if key & 0xFF == ord('q') or key == 27:
             cv2.destroyAllWindows()
-            for t in trajectories:
-                for i in range(len(t.points)):
-                    ax.scatter(t.points[i][0], t.points[i][1], t.points[i][2])
-                    ax.text(t.points[i][0], t.points[i][1], t.points[i][2], str(i))
-                    plt.pause(0.01)
-            cv2.waitKey()            
+            # for t in trajectories:
+            #     for i in range(len(t.points)):
+            #         ax.scatter(t.points[i][0], t.points[i][1], t.points[i][2])
+            #         ax.text(t.points[i][0], t.points[i][1], t.points[i][2], str(i))
+            #         plt.pause(0.01)
+            # cv2.waitKey()            
             break
 
     plt.show()
