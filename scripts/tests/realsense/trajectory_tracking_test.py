@@ -61,6 +61,7 @@ try:
         depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
         depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
         depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
+        depth_cleaned = cv2.bilateralFilter(depth_cleaned, 9, 50, 50)
 
         cv2.namedWindow('Main', cv2.WINDOW_AUTOSIZE)
         cv2.imshow('Main', depth_cleaned)
@@ -102,35 +103,39 @@ try:
         depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
         depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
         depth_cleaned = np.where((depth_cleaned <= 0), depth_background, depth_cleaned)
+        depth_cleaned = cv2.bilateralFilter(depth_cleaned, 5, 42, 42)
         depth_cleaned_3d = np.dstack((depth_cleaned,depth_cleaned,depth_cleaned))
 
-        sigma = 0.33
+        sigma = 0.38
         v = np.median(depth_cleaned)
         lower = int(max(0, (1.0 - sigma) * v))
         upper = int(min(255, (1.0 + sigma) * v))    
         depth_canny = cv2.Canny(depth_cleaned, lower, upper)
+        depth_canny_3d = np.dstack((depth_canny,depth_canny,depth_canny))
 
         contours, hierarchy = cv2.findContours(depth_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        current_frame_points = []
         for c in contours:
             try:
-                ellipse = cv2.minEnclosingCircle(c)
-                (x,y), radius = ellipse
+                # (x,y), radius = cv2.minEnclosingCircle(c)
+                (x,y), (width, height), angle = cv2.minAreaRect(c)
+                diameter = min(width, height)
                 depth = depth_frame.get_distance(int(x),int(y))     
             except: continue
+            cv2.circle(depth_canny_3d, (int(x),int(y)), 3, (0,0,255), 1)
                 
             # removing weird edge cases
-            if x*y*radius <= 0: continue
+            if x*y*diameter <= 0: continue
 
             # if contour_area < 30: continue
             calculated_diameter = betas[0] + betas[1]*depth + betas[2]*(depth**2)
-            if ((2*radius-calculated_diameter)/calculated_diameter) > 0.25: continue
+            if ((diameter-calculated_diameter)/calculated_diameter) > 0.25: continue
 
-            # checking perecentage of contour filled
-            # contour_area = cv2.contourArea(c)
-            # ellipse_area = np.pi*radius**2
-            # if (contour_area/ellipse_area) < 0.5: continue
+            #checking perecentage of contour filled
+            contour_area = cv2.contourArea(c)
+            if (contour_area < 50): continue
+            ellipse_area = np.pi*(diameter/2)**2
+            if (contour_area/ellipse_area) < 0.5: continue
 
             # grabbing from original depth image, without the cleanup
             point = rs.rs2_deproject_pixel_to_point(depth_intrin, [x,y], depth)
@@ -147,14 +152,13 @@ try:
             if not added:
                 trajectories.append(Trajectory(current_time, point))
 
-            cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(radius), (0,255,0),2)  
+            cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(diameter/2), (0,255,0),2)  
 
+        images = np.hstack((depth_canny_3d, depth_cleaned_3d))
         # Show images
         cv2.namedWindow('Main', cv2.WINDOW_AUTOSIZE)
-        cv2.imshow('Main', depth_cleaned_3d)
+        cv2.imshow('Main', images)
 
-        cv2.namedWindow('Canny', cv2.WINDOW_AUTOSIZE)
-        cv2.imshow('Canny', depth_canny)
         key = cv2.waitKey(1)
 
         if key & 0xFF == ord('q') or key == 27:
@@ -164,7 +168,7 @@ try:
                     ax.scatter(t.points[i][0], t.points[i][1], t.points[i][2])
                     ax.text(t.points[i][0], t.points[i][1], t.points[i][2], str(i))
                     plt.pause(0.01)
-            cv2.waitKey(10000)            
+            cv2.waitKey()            
             break
 
     plt.show()

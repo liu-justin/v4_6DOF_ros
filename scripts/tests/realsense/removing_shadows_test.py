@@ -65,13 +65,15 @@ while 1:
 
     for c in contours:
         try:
-            (x,y), radius = cv2.minEnclosingCircle(c)              
+            # (x,y), radius = cv2.minEnclosingCircle(c)
+            (x,y), (width, height), angle = cv2.minAreaRect(c)
+            print(f"{width}, {height}")
         except: continue
         cv2.circle(depth_canny_3d, (int(x),int(y)), 3, (0,0,255), 1)
-        if x*y*radius <= 0: continue
+        if x*y <= 0: continue
         contour_area = cv2.contourArea(c)
         if contour_area < 2: continue
 
-        cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(radius), (0,255,0),2)
+        cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(width), (0,255,0),2)
 
 cv2.destroyAllWindows()
