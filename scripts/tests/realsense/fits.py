@@ -117,6 +117,10 @@ def poly_errored_old(x1, x2, t1, t2, x_error, t_error):
 
     g = -9.81
 
+    # full negative slope
+    if (x2_high - x1_low) <= 0:
+        x =0 
+
     # b = (x2-x1)/(t2-t1) - g*(t2+t1)
     # c = x1 - g*(t1**2) - b*t1
     b_list = [0,0,0,0]
