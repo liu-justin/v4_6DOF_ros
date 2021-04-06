@@ -33,8 +33,8 @@ class Trajectory():
     def appendFirst(self, new_time, new_point):
         time_delta = new_time - self.init_time
         if (time_delta == 0): return False
-        self.beta1_x, self.beta0_x = f.linear_simple(self.points[0][0], new_point[0], self.times[0], time_delta)
-        self.beta1_z, self.beta0_z = f.linear_simple(self.points[0][2], new_point[2], self.times[0], time_delta)
+        self.beta1_x, self.beta0_x = f.linear_simple(new_point[0], time_delta,  self.points[0][0], self.times[0])
+        self.beta1_z, self.beta0_z = f.linear_simple(new_point[2], time_delta,  self.points[0][2], self.times[0])
 
         if self.beta1_x <= 5 and self.beta1_z <= 5:
             self.times.append(time_delta)
@@ -42,8 +42,9 @@ class Trajectory():
             # for in plane coord errors, couldn't really think of a good value: some of the error will come from the image being off, some will come from deproject_pixel_to_point, some from canny
             # ended up going for half the size of the ball as total error (20mm), so 10mm on each side
             # for time errors, couldn't find anything again, so just a random value ( i get a sample timestamp accuracy on p72, but that is for the imu)
-            self.beta1_x_low, self.beta0_x_low, self.beta1_x_high, self.beta0_x_high = f.linear_errored(self.points[0][0], new_point[0], self.times[0], time_delta, 0.01, 0.01)
-            self.beta1_z_low, self.beta0_z_low, self.beta1_z_high, self.beta0_z_high = f.linear_errored(self.points[0][2], new_point[2], self.times[0], time_delta, 0.01, 0.001)
+            self.beta1_x_low, self.beta0_x_low, self.beta1_x_high, self.beta0_x_high = f.linear_errored(new_point[0], time_delta,  self.points[0][0], self.times[0], 0.01, 0.001)
+            self.beta1_z_low, self.beta0_z_low, self.beta1_z_high, self.beta0_z_high = f.linear_errored(new_point[2], time_delta,  self.points[0][2], self.times[0], 0.01, 0.001)
+            self.beta1_y_low, self.beta0_y_low, self.beta1_y_high, self.beta0_y_high = f.poly_errored(  new_point[1], time_delta,  self.points[0][1], self.times[0], 0.03, 0.001)
             print("suceeded in first append")
             return True
         else:
@@ -54,9 +55,12 @@ class Trajectory():
     def appendSecondSimple(self,new_time, new_point):
         time_delta = new_time - self.init_time
         predicted_x = self.beta0_x + self.beta1_x*time_delta
+        predicted_y = self.beta0_y + self.beta1_y*time_delta + self.beta2_y*(time_delta**2)
         predicted_z = self.beta0_z + self.beta1_z*time_delta
         print(f"appending into traj w/ length 1: predicted {predicted_x},{predicted_z}: actual {new_point[0]}, {new_point[2]}")
-        if abs((new_point[0]-predicted_x)/predicted_x) < 0.1 and abs((new_point[2]-predicted_z)/predicted_z) < 0.1:
+        if abs((new_point[0]-predicted_x)/predicted_x) < 0.1 and \
+           abs((new_point[1]-predicted_y)/predicted_y) < 0.2 and \
+           abs((new_point[2]-predicted_z)/predicted_z) < 0.1:
             self.times.append(time_delta)
             self.points.append(new_point)
             self.beta1_x, self.beta0_x = f.linear_least_squares(self.times, [p[0] for p in self.points]) # X
@@ -73,11 +77,15 @@ class Trajectory():
         time_delta = new_time - self.init_time
         predicted_x_low = self.beta0_x_low + self.beta1_x_low*time_delta
         predicted_x_high = self.beta0_x_high + self.beta1_x_high*time_delta
+        predicted_y_low = self.beta0_y_low + self.beta1_y_low*time_delta + self.beta2_y*(time_delta**2)
+        predicted_y_high = self.beta0_y_high + self.beta1_y_high*time_delta + self.beta2_y*(time_delta**2)
         predicted_z_low = self.beta0_z_low + self.beta1_z_low*time_delta
         predicted_z_high = self.beta0_z_high + self.beta1_z_high*time_delta
         print(f"appending into length 1: predicted x {predicted_x_low},{predicted_x_high}: actual {new_point[0]}")
         print(f"appending into length 1: predicted z {predicted_z_low},{predicted_z_high}: actual {new_point[2]}")
-        if predicted_x_low - 0.01 < new_point[0] < predicted_x_high + 0.01 and predicted_z_low - 0.01 < new_point[2] < predicted_z_high + 0.01:
+        if predicted_x_low - 0.01 < new_point[0] < predicted_x_high + 0.01 and \
+           predicted_z_low - 0.01 < new_point[2] < predicted_z_high + 0.01 and \
+           predicted_y_low - 0.03 < new_point[1] < predicted_y_high + 0.03    :
             self.times.append(time_delta)
             self.points.append(new_point)
             self.beta1_x, self.beta0_x = f.linear_least_squares(self.times, [p[0] for p in self.points]) # X

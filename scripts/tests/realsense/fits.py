@@ -2,12 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-def linear_simple(x1, x2, t1, t2):
+def linear_simple(x2, t2, x1, t1):
     beta1 = (x2 - x1)/(t2 - t1) # BL2_TR1_m
     beta0 = x1 - beta1*t1
     return beta1,beta0
 
-def poly_simple(x1, x2, t1, t2):
+def poly_simple(x2, t2, x1, t1):
     beta2 = -9.81
     beta1 = (x2-x1)/(t2-t1) - beta2*(t2+t1)
     beta0 = x1 - beta2*(t1**2) - beta1*t1
@@ -58,14 +58,15 @@ def poly_least_squares_beta0const(x, y, beta0):
     return beta2, beta1
 
 def linear_errored(x1, x2, t1, t2, x_error, t_error):
-    x1_low = x1*(1-x_error)
-    x1_high = x1*(1+x_error)
-    t1_low = t1*(1-t_error)
-    t1_high = t1*(1+t_error)
-    x2_low = x2*(1-x_error)
-    x2_high = x2*(1+x_error)
-    t2_low = t2*(1-t_error)
-    t2_high = t2*(1+t_error)
+    x1_low = x1 - x_error
+    x1_high = x1 + x_error
+    t1_low = t1 - t_error
+    t1_high = t1 + t_error
+    x2_low = x2 - x_error
+    x2_high = x2 + x_error
+    t2_low = t2 - t_error
+    t2_high = t2 + t_error
+
     # full negative slope
     if (x2_high - x1_low) <= 0:
         beta1_low = (x2_low - x1_high)/(t2_low - t1_high) # BL2_TR1_m
@@ -88,87 +89,50 @@ def linear_errored(x1, x2, t1, t2, x_error, t_error):
         beta1_high = (x2_high - x1_low)/(t2_low - t1_high) # TL2_BR1_m
         beta0_low = x1_high - beta1_low*t1_low
         beta0_high = x1_low - beta1_high*t1_high
-
         print("full positive")
 
     return beta1_low, beta0_low, beta1_high, beta0_high
 
+def poly_errored(x1, x2, t1, t2, x_error, t_error):
+    x1_low = x1 - x_error
+    x1_high = x1 + x_error
+    t1_low = t1 - t_error
+    t1_high = t1 + t_error
+    x2_low = x2 - x_error
+    x2_high = x2 + x_error
+    t2_low = t2 - t_error
+    t2_high = t2 + t_error
 
-    # TL2_BR1_m = (x2_high - x1_low)/(t2_low - t1_high)
-    # BR2_TL1_m = (x2_low - x1_high)/(t2_high - t1_low)
-    # TR2_BL1_m = (x2_high - x1_low)/(t2_high - t1_low)
-    # BL2_TR1_m = (x2_low - x1_high)/(t2_low - t1_high)
+    beta2 = -9.81
 
-def poly_errored(x1, x2, t1, t2, x1_error, x2_error, t_error):
-    radius1 = np.sqrt(x1_error**2 + t_error**2)
-    radius2 = np.sqrt(x2_error**2 + t_error**2)
-
-    
-
-def poly_errored_old(x1, x2, t1, t2, x_error, t_error):
-    x1_low = x1*(1-x_error)
-    x1_high = x1*(1+x_error)
-    t1_low = t1*(1-t_error)
-    t1_high = t1*(1+t_error)
-    x2_low = x2*(1-x_error)
-    x2_high = x2*(1+x_error)
-    t2_low = t2*(1-t_error)
-    t2_high = t2*(1+t_error)
-
-    g = -9.81
+    beta1_simple, beta0_simple = poly_simple(x2, t2, x1, t1)
+    # find which t is associated with the peak of the poly, differentiate and equate to 0
+    t_max = beta1_simple/(2*beta2)
 
     # full negative slope
     if (x2_high - x1_low) <= 0:
-        x =0 
+        if (t1 < t_max < t2): # if the peak is inbtwn the points
+            beta1_low, beta0_low = poly_simple(x2_low, t2_low, x1_high, t1_high)
+            beta1_high, beta0_high = poly_simple(x2_high, t2_high, x1_low, t1_low)
+        else: # both points are to the right of the peak
+            beta1_low, beta0_low = poly_simple(x2_low, t2_low, x1_high, t1_high)
+            beta1_high, beta0_high = poly_simple(x2_high, t2_high, x1_low, t1_low)
 
-    # b = (x2-x1)/(t2-t1) - g*(t2+t1)
-    # c = x1 - g*(t1**2) - b*t1
-    b_list = [0,0,0,0]
-    c_list = [0,0,0,0]
-    
-    b_list[0], c_list[0] = poly_simple(x2_high, t2_high, x1_high, t1_low) # TR2_TL1
-    b_list[1], c_list[1] = poly_simple(x2_high, t2_high, x1_high, t1_high) # TR2_TR1
-    b_list[2], c_list[2] = poly_simple(x2_high, t2_high, x1_low, t1_high) # TR2_BR1
-    b_list[3], c_list[3] = poly_simple(x2_high, t2_high, x1_low, t1_low) # TR2_BL1
+    # full positive slope
+    elif(x2_low - x1_high) >= 0:
+        if (t1 < t_max < t2):
+            beta1_low, beta0_low = poly_simple(x2_low, t2_low, x1_high, t1_low)
+            beta1_high, beta0_high = poly_simple(x2_high, t2_low, x1_low, t1_high)
+        else: # both points are to the left of the peak
+            beta1_low, beta0_low = poly_simple(x2_low, t2_high, x1_high, t1_low)
+            beta1_high, beta0_high = poly_simple(x2_high, t2_low, x1_low, t1_high)
 
-    # find min/max of each corner in 2, then somehow figure out all the other stuff
+    # pretty equal
+    else:
+        beta1_low, beta0_low = poly_simple(x2_low, t2_low, x1_high, t1_high)
+        beta1_high, beta0_high = poly_simple(x2_high, t2_low, x1_low, t1_high)
 
-    b_list = [0,0,0,0]
-    c_list = [0,0,0,0]
-    
-    b_list[0], c_list[0] = poly_simple(x2_high, t2_low, x1_high, t1_low) # TR2_TL1
-    b_list[1], c_list[1] = poly_simple(x2_high, t2_low, x1_high, t1_high) # TR2_TR1
-    b_list[2], c_list[2] = poly_simple(x2_high, t2_low, x1_low, t1_high) # TR2_BR1
-    b_list[3], c_list[3] = poly_simple(x2_high, t2_low, x1_low, t1_low) # TR2_BL1
-
-    b_list = [0,0,0,0]
-    c_list = [0,0,0,0]
-    
-    b_list[0], c_list[0] = poly_simple(x2_low, t2_low, x1_high, t1_low) # TR2_TL1
-    b_list[1], c_list[1] = poly_simple(x2_low, t2_low, x1_high, t1_high) # TR2_TR1
-    b_list[2], c_list[2] = poly_simple(x2_low, t2_low, x1_low, t1_high) # TR2_BR1
-    b_list[3], c_list[3] = poly_simple(x2_low, t2_low, x1_low, t1_low) # TR2_BL1
-
-    b_list = [0,0,0,0]
-    c_list = [0,0,0,0]
-    
-    b_list[0], c_list[0] = poly_simple(x2_low, t2_high, x1_high, t1_low) # TR2_TL1
-    b_list[1], c_list[1] = poly_simple(x2_low, t2_high, x1_high, t1_high) # TR2_TR1
-    b_list[2], c_list[2] = poly_simple(x2_low, t2_high, x1_low, t1_high) # TR2_BR1
-    b_list[3], c_list[3] = poly_simple(x2_low, t2_high, x1_low, t1_low) # TR2_BL1
-
-    x = np.arange(1,6,0.1)
-    z1 = g*(x**2) + b*x + c
-    plt.scatter(t1, x1)
-    plt.scatter(t2, x2)
-    plt.plot(x,z1)
-    # y = []
-    for i in range(0,4):
-        plt.plot(x, g*(x**2) + b_list[i]*x + c_list[i])
-
-    plt.show()
-
-    return b,c
+    return beta1_low, beta0_low, beta1_high, beta0_high
 
 # https://stackoverflow.com/questions/21565994/method-to-return-the-equation-of-a-straight-line-given-two-points
 
@@ -215,4 +179,30 @@ def poly_errored_old(x1, x2, t1, t2, x_error, t_error):
     y= y[0] + beta1_b*x + beta2_b*(x**2)
     ax.plot(x,y)
     plt.show()
+"""
+
+# list of all 16 combinations
+"""
+    b_list = [0] * 16
+    c_list = [0] * 16
+    
+    b_list[0], c_list[0] = poly_simple(x2_high, t2_high, x1_high, t1_low) # TR2_TL1
+    b_list[1], c_list[1] = poly_simple(x2_high, t2_high, x1_high, t1_high) # TR2_TR1
+    b_list[2], c_list[2] = poly_simple(x2_high, t2_high, x1_low, t1_high) # TR2_BR1
+    b_list[3], c_list[3] = poly_simple(x2_high, t2_high, x1_low, t1_low) # TR2_BL1
+    
+    b_list[4], c_list[4] = poly_simple(x2_high, t2_low, x1_high, t1_low) # TR2_TL1
+    b_list[5], c_list[5] = poly_simple(x2_high, t2_low, x1_high, t1_high) # TR2_TR1
+    b_list[6], c_list[6] = poly_simple(x2_high, t2_low, x1_low, t1_high) # TR2_BR1
+    b_list[7], c_list[7] = poly_simple(x2_high, t2_low, x1_low, t1_low) # TR2_BL1
+    
+    b_list[8], c_list[8] = poly_simple(x2_low, t2_low, x1_high, t1_low) # TR2_TL1
+    b_list[9], c_list[9] = poly_simple(x2_low, t2_low, x1_high, t1_high) # TR2_TR1
+    b_list[10], c_list[10] = poly_simple(x2_low, t2_low, x1_low, t1_high) # TR2_BR1
+    b_list[11], c_list[11] = poly_simple(x2_low, t2_low, x1_low, t1_low) # TR2_BL1
+    
+    b_list[12], c_list[12] = poly_simple(x2_low, t2_high, x1_high, t1_low) # TR2_TL1
+    b_list[13], c_list[13] = poly_simple(x2_low, t2_high, x1_high, t1_high) # TR2_TR1
+    b_list[14], c_list[14] = poly_simple(x2_low, t2_high, x1_low, t1_high) # TR2_BR1
+    b_list[15], c_list[15] = poly_simple(x2_low, t2_high, x1_low, t1_low) # TR2_BL1
 """
