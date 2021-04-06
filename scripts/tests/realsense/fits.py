@@ -13,7 +13,7 @@ def poly_simple(x1, x2, t1, t2):
     beta0 = x1 - beta2*(t1**2) - beta1*t1
     return beta1,beta0
 
-def linear_least_squared(x, y):
+def linear_least_squares(x, y):
     n = len(x)
     x_bar = sum(x)/n
     y_bar = sum(y)/n
@@ -24,7 +24,7 @@ def linear_least_squared(x, y):
 
     return beta1, beta0
 
-def poly_least_squared_beta2const(x, y): # derivation in google drive
+def poly_least_squares_beta2const(x, y): # derivation in google drive
     n = len(x)
     g = -9.81
     x_bar = sum(x)/n
@@ -38,7 +38,7 @@ def poly_least_squared_beta2const(x, y): # derivation in google drive
 
     return beta1, beta0
 
-def poly_least_squared_beta0const(x, y, beta0):
+def poly_least_squares_beta0const(x, y, beta0):
     sum_xi = sum(x)
     sum_xi2 = sum([xi**2 for xi in x])
     sum_xi3 = sum([xi**3 for xi in x])
@@ -200,9 +200,9 @@ def poly_errored_old(x1, x2, t1, t2, x_error, t_error):
     t = [0, 0.0333399772644043, 0.06669783592224121]
     y = [0.03290366, 0.06382939, 0.08356368]
 
-    beta1, beta0 = poly_least_squared_beta2const(t,y)
+    beta1, beta0 = poly_least_squares_beta2const(t,y)
     beta1_a, beta0_a = poly_init_beta2const(y[0], y[1], t[0], t[1])
-    beta2_b, beta1_b = poly_least_squared_beta0const(t,y,y[0])
+    beta2_b, beta1_b = poly_least_squares_beta0const(t,y,y[0])
     print(f"{beta1}, {beta0}")
     print(f"{beta1_a}, {beta0_a}")
     print(f"{beta2_b}, {beta1_b}")

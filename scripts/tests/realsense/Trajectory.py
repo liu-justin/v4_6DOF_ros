@@ -59,9 +59,9 @@ class Trajectory():
         if abs((new_point[0]-predicted_x)/predicted_x) < 0.1 and abs((new_point[2]-predicted_z)/predicted_z) < 0.1:
             self.times.append(time_delta)
             self.points.append(new_point)
-            self.beta1_x, self.beta0_x = f.linear_least_squared(self.times, [p[0] for p in self.points]) # X
-            self.beta2_y, self.beta1_y = f.poly_least_squared_beta0const(self.times, [p[1] for p in self.points], self.beta0_y) # Y
-            self.beta1_z, self.beta0_z = f.linear_least_squared(self.times, [p[2] for p in self.points]) # Z
+            self.beta1_x, self.beta0_x = f.linear_least_squares(self.times, [p[0] for p in self.points]) # X
+            self.beta2_y, self.beta1_y = f.poly_least_squares_beta0const(self.times, [p[1] for p in self.points], self.beta0_y) # Y
+            self.beta1_z, self.beta0_z = f.linear_least_squares(self.times, [p[2] for p in self.points]) # Z
             print("succeeded in second append")
             return True
         else:
@@ -80,9 +80,9 @@ class Trajectory():
         if predicted_x_low - 0.01 < new_point[0] < predicted_x_high + 0.01 and predicted_z_low - 0.01 < new_point[2] < predicted_z_high + 0.01:
             self.times.append(time_delta)
             self.points.append(new_point)
-            self.beta1_x, self.beta0_x = f.linear_least_squared(self.times, [p[0] for p in self.points]) # X
-            self.beta2_y, self.beta1_y = f.poly_least_squared_beta0const(self.times, [p[1] for p in self.points], self.beta0_y) # Y
-            self.beta1_z, self.beta0_z = f.linear_least_squared(self.times, [p[2] for p in self.points]) # Z
+            self.beta1_x, self.beta0_x = f.linear_least_squares(self.times, [p[0] for p in self.points]) # X
+            self.beta2_y, self.beta1_y = f.poly_least_squares_beta0const(self.times, [p[1] for p in self.points], self.beta0_y) # Y
+            self.beta1_z, self.beta0_z = f.linear_least_squares(self.times, [p[2] for p in self.points]) # Z
             print("succeeded in second append")
             return True
         else:
@@ -107,9 +107,9 @@ class Trajectory():
                 self.times.append(time_delta)
                 self.points.append(new_point)
 
-                self.beta1_x, self.beta0_x = f.linear_least_squared(self.times, [p[0] for p in self.points]) # X
-                self.beta2_y, self.beta1_y = f.poly_least_squared_beta0const(self.times, [p[1] for p in self.points], self.beta0_y) # Y
-                self.beta1_z, self.beta0_z = f.linear_least_squared(self.times, [p[2] for p in self.points]) # Z
+                self.beta1_x, self.beta0_x = f.linear_least_squares(self.times, [p[0] for p in self.points]) # X
+                self.beta2_y, self.beta1_y = f.poly_least_squares_beta0const(self.times, [p[1] for p in self.points], self.beta0_y) # Y
+                self.beta1_z, self.beta0_z = f.linear_least_squares(self.times, [p[2] for p in self.points]) # Z
 
                 print(f"succeeded in into traj w/ length {len(self.times)}")
                 self.plotY()
