@@ -55,9 +55,9 @@ def poly_least_squares_beta0const(x, y, beta0):
     beta2 = (numerator_1 - numerator_2 - numerator_3 + numerator_4)/denom
     beta1 = (sum_xiyi - beta0*sum_xi - beta2*sum_xi3)/sum_xi2
 
-    return beta2, beta1
+    return beta2, beta1, beta0
 
-def linear_errored(x1, x2, t1, t2, x_error, t_error):
+def linear_errored(x2, t2, x1, t1, x_error, t_error):
     x1_low = x1 - x_error
     x1_high = x1 + x_error
     t1_low = t1 - t_error
@@ -73,7 +73,6 @@ def linear_errored(x1, x2, t1, t2, x_error, t_error):
         beta1_high = (x2_high - x1_low)/(t2_high - t1_low) # TR2_BL1_m
         beta0_low = x1_high - beta1_low*t1_high
         beta0_high = x1_low - beta1_high*t1_low
-        print("full negative")
     
     # mixed slope
     elif (x2_low - x1_high) <= 0:
@@ -81,7 +80,6 @@ def linear_errored(x1, x2, t1, t2, x_error, t_error):
         beta1_high = (x2_high - x1_low)/(t2_low - t1_high) # TL2_BR1_m
         beta0_low = x1_high - beta1_low*t1_high
         beta0_high = x1_low - beta1_high*t1_high
-        print("mixed")
 
     # all positive slope
     else:
@@ -89,11 +87,10 @@ def linear_errored(x1, x2, t1, t2, x_error, t_error):
         beta1_high = (x2_high - x1_low)/(t2_low - t1_high) # TL2_BR1_m
         beta0_low = x1_high - beta1_low*t1_low
         beta0_high = x1_low - beta1_high*t1_high
-        print("full positive")
 
     return beta1_low, beta0_low, beta1_high, beta0_high
 
-def poly_errored(x1, x2, t1, t2, x_error, t_error):
+def poly_errored(x2, t2, x1, t1, x_error, t_error):
     x1_low = x1 - x_error
     x1_high = x1 + x_error
     t1_low = t1 - t_error

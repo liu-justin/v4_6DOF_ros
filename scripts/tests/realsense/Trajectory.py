@@ -7,6 +7,8 @@ class Trajectory():
         self.init_time = time
         self.times = [0]
         self.points = [point]
+        self.use_errored = [1,1,1]
+        self.betas = [[0,0,0],[0,0,0],[0,0,0]]
         self.beta1_x = 5
         self.beta0_x = 0
         self.beta1_x_low = 5
@@ -81,21 +83,36 @@ class Trajectory():
         predicted_y_high = self.beta0_y_high + self.beta1_y_high*time_delta + self.beta2_y*(time_delta**2)
         predicted_z_low = self.beta0_z_low + self.beta1_z_low*time_delta
         predicted_z_high = self.beta0_z_high + self.beta1_z_high*time_delta
-        print(f"appending into length 1: predicted x {predicted_x_low},{predicted_x_high}: actual {new_point[0]}")
-        print(f"appending into length 1: predicted z {predicted_z_low},{predicted_z_high}: actual {new_point[2]}")
+        print(f"appending into length 2: predicted x {predicted_x_low},{predicted_x_high}: actual {new_point[0]}")
+        print(f"appending into length 2: predicted y {predicted_y_low},{predicted_y_high}: actual {new_point[1]}")
+        print(f"appending into length 2: predicted z {predicted_z_low},{predicted_z_high}: actual {new_point[2]}")
         if predicted_x_low - 0.01 < new_point[0] < predicted_x_high + 0.01 and \
            predicted_z_low - 0.01 < new_point[2] < predicted_z_high + 0.01 and \
            predicted_y_low - 0.03 < new_point[1] < predicted_y_high + 0.03    :
             self.times.append(time_delta)
             self.points.append(new_point)
+
+            # determine which fit to use (errored or least_squares): find the R2 for each axis, modify the use_errored list, then continue 
+            # to find R2, I need to find the betas
+
             self.beta1_x, self.beta0_x = f.linear_least_squares(self.times, [p[0] for p in self.points]) # X
-            self.beta2_y, self.beta1_y = f.poly_least_squares_beta0const(self.times, [p[1] for p in self.points], self.beta0_y) # Y
+            self.beta2_y, self.beta1_y, self.beta0_y = f.poly_least_squares_beta0const(self.times, [p[1] for p in self.points], self.beta0_y) # Y
             self.beta1_z, self.beta0_z = f.linear_least_squares(self.times, [p[2] for p in self.points]) # Z
             print("succeeded in second append")
             return True
         else:
             print("failed in second append")
             return False
+
+    def determineFit(self):
+        self.beta1_x, self.beta0_x = f.linear_least_squares(self.times, [p[0] for p in self.points]) # X
+        self.beta2_y, self.beta1_y, self.beta0_y = f.poly_least_squares_beta0const(self.times, [p[1] for p in self.points], self.beta0_y) # Y
+        self.beta1_z, self.beta0_z = f.linear_least_squares(self.times, [p[2] for p in self.points]) # Z
+
+        RSS_x = sum([self.points[i][0] - self.beta0_x + self.beta1_x*self.times[i]] for i in range(len(self.points)))
+
+    def predicted(self, dim, i):
+        return 
 
             
     def append(self, new_time, new_point):
@@ -116,13 +133,14 @@ class Trajectory():
                 self.points.append(new_point)
 
                 self.beta1_x, self.beta0_x = f.linear_least_squares(self.times, [p[0] for p in self.points]) # X
-                self.beta2_y, self.beta1_y = f.poly_least_squares_beta0const(self.times, [p[1] for p in self.points], self.beta0_y) # Y
+                self.beta2_y, self.beta1_y, self.beta0_y = f.poly_least_squares_beta0const(self.times, [p[1] for p in self.points], self.beta0_y) # Y
                 self.beta1_z, self.beta0_z = f.linear_least_squares(self.times, [p[2] for p in self.points]) # Z
 
-                print(f"succeeded in into traj w/ length {len(self.times)}")
-                self.plotY()
+                print(f"succeeded in into traj w/ length {len(self.times)-1}, now length {len(self.times)}")
+                # self.plotY()
                 return True
 
             else:
                 print(f"failed in appending into traj w/ length {len(self.times)}")
                 return False
+    
