@@ -5,13 +5,13 @@ from mpl_toolkits.mplot3d import Axes3D
 def linear_simple(x2, t2, x1, t1):
     beta1 = (x2 - x1)/(t2 - t1) # BL2_TR1_m
     beta0 = x1 - beta1*t1
-    return beta1,beta0
+    return [beta0,beta1,0]
 
 def poly_simple(x2, t2, x1, t1):
     beta2 = -9.81
     beta1 = (x2-x1)/(t2-t1) - beta2*(t2+t1)
     beta0 = x1 - beta2*(t1**2) - beta1*t1
-    return beta1,beta0
+    return [beta0,beta1,beta2]
 
 def linear_least_squares(x, y):
     n = len(x)
@@ -22,21 +22,21 @@ def linear_least_squares(x, y):
     beta1 = Sxy/Sxx
     beta0 = y_bar - beta1*x_bar
 
-    return beta1, beta0
+    return [beta0, beta1, 0]
 
 def poly_least_squares_beta2const(x, y): # derivation in google drive
     n = len(x)
-    g = -9.81
+    beta2 = -9.81
     x_bar = sum(x)/n
     x2_bar = sum([xi**2 for xi in x])/n
     y_bar = sum(y)/n
     Sxy = sum([(yi-y_bar)*xi for xi,yi in zip(x,y)])
     Sxx = sum([(xi-x_bar)*xi for xi in x])
-    g_sum = g * sum([xi*(xi**2-x2_bar) for xi in x])
+    g_sum = beta2 * sum([xi*(xi**2-x2_bar) for xi in x])
     beta1 = (Sxy - g_sum)/Sxx
-    beta0 = y_bar - beta1*x_bar - g*x2_bar
+    beta0 = y_bar - beta1*x_bar - beta2*x2_bar
 
-    return beta1, beta0
+    return [beta0, beta1, beta2]
 
 def poly_least_squares_beta0const(x, y, beta0):
     sum_xi = sum(x)
@@ -55,7 +55,7 @@ def poly_least_squares_beta0const(x, y, beta0):
     beta2 = (numerator_1 - numerator_2 - numerator_3 + numerator_4)/denom
     beta1 = (sum_xiyi - beta0*sum_xi - beta2*sum_xi3)/sum_xi2
 
-    return beta2, beta1, beta0
+    return [beta0, beta1, beta2]
 
 def linear_errored(x2, t2, x1, t1, x_error, t_error):
     x1_low = x1 - x_error
@@ -69,26 +69,20 @@ def linear_errored(x2, t2, x1, t1, x_error, t_error):
 
     # full negative slope
     if (x2_high - x1_low) <= 0:
-        beta1_low = (x2_low - x1_high)/(t2_low - t1_high) # BL2_TR1_m
-        beta1_high = (x2_high - x1_low)/(t2_high - t1_low) # TR2_BL1_m
-        beta0_low = x1_high - beta1_low*t1_high
-        beta0_high = x1_low - beta1_high*t1_low
+        beta_low = linear_simple(x2_low, t2_low, x1_high, t1_high)
+        beta_high = linear_simple(x2_high, t2_high, x1_low, t1_low)
     
     # mixed slope
     elif (x2_low - x1_high) <= 0:
-        beta1_low = (x2_low - x1_high)/(t2_low - t1_high) # BL2_TR1_m
-        beta1_high = (x2_high - x1_low)/(t2_low - t1_high) # TL2_BR1_m
-        beta0_low = x1_high - beta1_low*t1_high
-        beta0_high = x1_low - beta1_high*t1_high
+        beta_low = linear_simple(x2_low, t2_low, x1_high, t1_high)
+        beta_high = linear_simple(x2_high, t2_low, x1_low, t1_high)
 
     # all positive slope
     else:
-        beta1_low = (x2_low - x1_high)/(t2_high - t1_low) # BR2_TL1_m
-        beta1_high = (x2_high - x1_low)/(t2_low - t1_high) # TL2_BR1_m
-        beta0_low = x1_high - beta1_low*t1_low
-        beta0_high = x1_low - beta1_high*t1_high
+        beta_low = linear_simple(x2_low, t2_high, x1_high, t1_low)
+        beta_high = linear_simple(x2_high, t2_low, x1_low, t1_high)
 
-    return beta1_low, beta0_low, beta1_high, beta0_high
+    return beta_low, beta_high
 
 def poly_errored(x2, t2, x1, t1, x_error, t_error):
     x1_low = x1 - x_error
@@ -102,34 +96,34 @@ def poly_errored(x2, t2, x1, t1, x_error, t_error):
 
     beta2 = -9.81
 
-    beta1_simple, beta0_simple = poly_simple(x2, t2, x1, t1)
+    beta_simple = poly_simple(x2, t2, x1, t1)
     # find which t is associated with the peak of the poly, differentiate and equate to 0
-    t_max = beta1_simple/(2*beta2)
+    t_max = beta_simple[1]/(2*beta2)
 
     # full negative slope
     if (x2_high - x1_low) <= 0:
         if (t1 < t_max < t2): # if the peak is inbtwn the points
-            beta1_low, beta0_low = poly_simple(x2_low, t2_low, x1_high, t1_high)
-            beta1_high, beta0_high = poly_simple(x2_high, t2_high, x1_low, t1_low)
+            beta_low = poly_simple(x2_low, t2_low, x1_high, t1_high)
+            beta_high = poly_simple(x2_high, t2_high, x1_low, t1_low)
         else: # both points are to the right of the peak
-            beta1_low, beta0_low = poly_simple(x2_low, t2_low, x1_high, t1_high)
-            beta1_high, beta0_high = poly_simple(x2_high, t2_high, x1_low, t1_low)
+            beta_low = poly_simple(x2_low, t2_low, x1_high, t1_high)
+            beta_high = poly_simple(x2_high, t2_high, x1_low, t1_low)
 
     # full positive slope
     elif(x2_low - x1_high) >= 0:
         if (t1 < t_max < t2):
-            beta1_low, beta0_low = poly_simple(x2_low, t2_low, x1_high, t1_low)
-            beta1_high, beta0_high = poly_simple(x2_high, t2_low, x1_low, t1_high)
+            beta_low = poly_simple(x2_low, t2_low, x1_high, t1_low)
+            beta_high = poly_simple(x2_high, t2_low, x1_low, t1_high)
         else: # both points are to the left of the peak
-            beta1_low, beta0_low = poly_simple(x2_low, t2_high, x1_high, t1_low)
-            beta1_high, beta0_high = poly_simple(x2_high, t2_low, x1_low, t1_high)
+            beta_low = poly_simple(x2_low, t2_high, x1_high, t1_low)
+            beta_high = poly_simple(x2_high, t2_low, x1_low, t1_high)
 
     # pretty equal
     else:
-        beta1_low, beta0_low = poly_simple(x2_low, t2_low, x1_high, t1_high)
-        beta1_high, beta0_high = poly_simple(x2_high, t2_low, x1_low, t1_high)
+        beta_low = poly_simple(x2_low, t2_low, x1_high, t1_high)
+        beta_high = poly_simple(x2_high, t2_low, x1_low, t1_high)
 
-    return beta1_low, beta0_low, beta1_high, beta0_high
+    return beta_low, beta_high
 
 # https://stackoverflow.com/questions/21565994/method-to-return-the-equation-of-a-straight-line-given-two-points
 
