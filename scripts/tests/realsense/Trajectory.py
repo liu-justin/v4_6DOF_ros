@@ -38,6 +38,33 @@ class Trajectory():
         ax.plot(x,y)
         plt.show()
 
+    def predicted(self, betas, time):
+        return betas[0] + betas[1]*time + betas[2]*(time**2)
+
+    def append(self, new_time, new_point):
+        if len(self.times) == 1:
+            return self.appendFirst(new_time, new_point)
+        else:
+            success = [False, False, False]
+
+            # for all dimensions, use the appropriate fit to check the new_point
+            for dim in self.betas.keys():
+                if self.use_errored[dimToInt(dim)]:
+                    success[dimToInt(dim)] = self.checkWithErrored(new_time, new_point, dim)
+                else:
+                    success[dimToInt(dim)] = self.checkWithLeastSquares(new_time, new_point, dim)
+            
+            # if new_point fits with all 3 dimensions, append it
+            if all(success):
+                time_delta = new_time - self.init_time
+                self.times.append(time_delta)
+                self.points.append(new_point)
+
+                # check thru all dimensions that still use errored fit, and see if they can switch to leastsquares
+                for dim in self.betas.keys():
+                    if self.use_errored[dimToInt(dim)]:
+                        self.determineFit(dim)
+
     # # sets the linear betas
     def appendFirst(self, new_time, new_point):
         time_delta = new_time - self.init_time
@@ -56,75 +83,46 @@ class Trajectory():
             print("failed in first append")
             return False
 
+    def checkWithErrored(self, new_time, new_point, dim):
+        time_delta = new_time - self.init_time
+        predicted_low = self.predicted(self.betas_low[dim], time_delta)
+        predicted_high = self.predicted(self.betas_high[dim], time_delta)
+        error = 0.03 if dim=="y" else 0.01
+        # if the point falls btwn the upper and lower bounds
+        if (predicted_low - error) < new_point[dimToInt(dim)] < (predicted_high + error): return True
+        else: return False
+
+    def checkWithLeastSquares(self, new_time, new_point, dim):
+        time_delta = new_time - self.init_time
+        predicted = self.predicted(self.betas[dim], time_delta)
+        error = 0.3 if dim=="y": else 0.15
+        # if the new_point falls within a percentage of the predicted
+        if abs(new_point[dimToInt(dim)] - predicted)/predicted < error: return True
+        else: return False
+"""
+    # for in plane coord errors, couldn't really think of a good value: some of the error will come from the image being off, some will come from deproject_pixel_to_point, some from canny
+    # ended up going for half the size of the ball as total error (20mm), so 10mm on each side
+    # for time errors, couldn't find anything again, so just a random value ( i get a sample timestamp accuracy on p72, but that is for the imu)
+"""
     def findBetasErrored(self, dim):
-        # for in plane coord errors, couldn't really think of a good value: some of the error will come from the image being off, some will come from deproject_pixel_to_point, some from canny
-        # ended up going for half the size of the ball as total error (20mm), so 10mm on each side
-        # for time errors, couldn't find anything again, so just a random value ( i get a sample timestamp accuracy on p72, but that is for the imu)
-        if dim == "y":
-            self.betas_low["y"], self.betas_high["y"] = f.poly_errored(  self.points[-1][dim_index], self.times[-1],  self.points[0][dimToInt(dim)], self.times[0], 0.03, 0.001)
-        else:
-            self.betas_low[dim], self.betas_high[dim] = f.linear_errored(self.points[-1][dim_index], self.times[-1],  self.points[0][dimToInt(dim)], self.times[0], 0.01, 0.001)
+        if dim == "y": self.betas_low["y"], self.betas_high["y"] = f.poly_errored(  self.points[-1][dimToInt(dim)], self.times[-1],  self.points[0][dimToInt(dim)], self.times[0], 0.03, 0.001)
+        else:          self.betas_low[dim], self.betas_high[dim] = f.linear_errored(self.points[-1][dimToInt(dim)], self.times[-1],  self.points[0][dimToInt(dim)], self.times[0], 0.01, 0.001)
 
     def findBetasLeastSquared(self, dim):
-        if dim == "y":
-            self.betas["y"] = f.poly_least_squares_beta0const(self.times, [p[1] for p in self.points], self.betas["y"][0])
-        else:
-            self.betas[dim] = f.linear_least_squares(self.times, [p[dimToInt(dim)] for p in self.points])
-
-    def predicted(self, betas, time):
-        return betas[0] + betas[1]*time + betas[2]*(time**2)
+        if dim == "y": self.betas["y"] = f.poly_least_squares_beta0const(self.times, [p[1] for p in self.points], self.betas["y"][0])
+        else:          self.betas[dim] = f.linear_least_squares(self.times, [p[dimToInt(dim)] for p in self.points])
 
     def determineFit(self, dim):
-        self.betas[dim] = self.findBetasLeastSquared(dim)
+        self.findBetasLeastSquared(dim)
 
         # https://stats.stackexchange.com/questions/219810/r-squared-and-higher-order-polynomial-regression
         RSS = sum([(p[dimToInt(dim)] - self.predicted(self.betas[dim], t))**2] for p,t in zip(self.points, self.times))
         bar = sum([p[dimToInt(dim)] for p in self.points])/len(self.points)
         TSS = sum([(p[dimToInt(dim)] - bar)**2 for p in self.points])
         R2 = 1 - RSS/TSS
-        if R2 < 0.75:
-            self.use_errored[dimToInt(dim)] = False
-        else:
-            self.findBetasErrored(dim)
-            
-    def append(self, new_time, new_point):
-        if len(self.times) == 1:
-            return self.appendFirst(new_time, new_point)
-        else:
-            success = [False, False, False]
-            for dim in self.betas.keys():
-                if self.use_errored[dimToInt(dim)]:
-                    success[i] = self.useErrored(new_time, new_point, dim)
-                else:
-                    success[i] = self.useLeastSquares(new_time, new_point, dim)
-            
-            if all(success):
-                self.times.append(time_delta)
-                self.points.append(new_point)
-                for dim in self.betas.keys():
-                    if self.use_errored[dimToInt(dim)]:
-                        self.determineFit(dim)
-                        
-
-    def useErrored(self, new_time, new_point, dim):
-        time_delta = new_time - self.init_time
-        predicted_low = self.predicted(self.betas_low[dim], time_delta)
-        predicted_high = self.predicted(self.betas_high[dim], time_delta)
-        if dim =="y": error = 0.03
-        else: error = 0.01
-
-        if (predicted_low - error) < new_point[dimToInt(dim)] < (predicted_high + error): return True
-        else: return False
-            
-
-    def useLeastSquares(self, new_time, new_point, dim):
-        time_delta = new_time - self.init_time
-        predicted = self.predicted(self.betas[dim], time_delta)
-        if dim =="y": error = 0.3
-        else: error = 0.15
-
-        if abs(new_point[dimToInt(dim)] - predicted)/predicted < error: return True
-        else: return False
+        # if the coefficient of determination is high enough (least squares is good enough)
+        if R2 < 0.75: self.use_errored[dimToInt(dim)] = False     
+        else:         self.findBetasErrored(dim) 
 
 """ 
     # sets the y betas and resets linear betas
