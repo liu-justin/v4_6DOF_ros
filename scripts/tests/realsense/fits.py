@@ -103,27 +103,27 @@ def poly_errored(x2, t2, x1, t1, x_error, t_error):
     # full negative slope
     if (x2_high - x1_low) <= 0:
         if (t1 < t_max < t2): # if the peak is inbtwn the points
-            beta_low = poly_simple(x2_low, t2_low, x1_high, t1_high)
-            beta_high = poly_simple(x2_high, t2_high, x1_low, t1_low)
+            betas_low = poly_simple(x2_low, t2_low, x1_high, t1_high)
+            betas_high = poly_simple(x2_high, t2_high, x1_low, t1_low)
         else: # both points are to the right of the peak
-            beta_low = poly_simple(x2_low, t2_low, x1_high, t1_high)
-            beta_high = poly_simple(x2_high, t2_high, x1_low, t1_low)
+            betas_low = poly_simple(x2_low, t2_low, x1_high, t1_high)
+            betas_high = poly_simple(x2_high, t2_high, x1_low, t1_low)
 
     # full positive slope
     elif(x2_low - x1_high) >= 0:
         if (t1 < t_max < t2):
-            beta_low = poly_simple(x2_low, t2_low, x1_high, t1_low)
-            beta_high = poly_simple(x2_high, t2_low, x1_low, t1_high)
+            betas_low = poly_simple(x2_low, t2_low, x1_high, t1_low)
+            betas_high = poly_simple(x2_high, t2_low, x1_low, t1_high)
         else: # both points are to the left of the peak
-            beta_low = poly_simple(x2_low, t2_high, x1_high, t1_low)
-            beta_high = poly_simple(x2_high, t2_low, x1_low, t1_high)
+            betas_low = poly_simple(x2_low, t2_high, x1_high, t1_low)
+            betas_high = poly_simple(x2_high, t2_low, x1_low, t1_high)
 
     # pretty equal
     else:
-        beta_low = poly_simple(x2_low, t2_low, x1_high, t1_high)
-        beta_high = poly_simple(x2_high, t2_low, x1_low, t1_high)
+        betas_low = poly_simple(x2_low, t2_low, x1_high, t1_high)
+        betas_high = poly_simple(x2_high, t2_low, x1_low, t1_high)
 
-    return beta_low, beta_high
+    return betas_low, betas_high
 
 # https://stackoverflow.com/questions/21565994/method-to-return-the-equation-of-a-straight-line-given-two-points
 
