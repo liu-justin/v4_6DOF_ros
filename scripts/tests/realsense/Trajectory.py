@@ -31,14 +31,22 @@ class Trajectory():
         self.betas_high["z"] = [0,5,0]
 
 
-    def plotY(self):
+    def plotErrors(self, dim, new_time, new_point):
+        time_delta = new_time - self.init_time
+        int_dim = dimToInt(dim)
+
+
         fig = plt.figure()
         ax = fig.add_subplot(111)
         for p,t in zip(self.points, self.times):
-            ax.scatter(t, p[1])
-        x = np.arange(0,self.times[-1],0.01)
-        y= self.betas["y"][0] + self.betas["y"][1]*x + self.betas["y"][2]*(x**2)
-        ax.plot(x,y)
+            ax.scatter(t, p[int_dim])
+        x = np.arange(0,time_delta,0.01)
+        least_squares = self.betas[dim][0] + self.betas[dim][1]*x + self.betas[dim][2]*(x**2)
+        low_errored = self.betas_low[dim][0] + self.betas_low[dim][1]*x + self.betas_low[dim][2]*(x**2)
+        high_errored = self.betas_high[dim][0] + self.betas_high[dim][1]*x + self.betas_high[dim][2]*(x**2)
+        ax.plot(x,least_squares, "r-" if self.use_errored[int_dim] else "g-")
+        ax.plot(x,low_errored, "g-" if self.use_errored[int_dim] else "r-")
+        ax.plot(x,high_errored, "g-" if self.use_errored[int_dim] else "r-")
         plt.show()
 
     def predicted(self, betas, time):
@@ -66,15 +74,14 @@ class Trajectory():
 
                 # check thru all dimensions leastsquares R2
                 for dim in self.betas.keys():
-                        self.determineFit(dim)
-                        
+                        self.determineFit(dim)        
                 return True
 
             # name and blame
             else:
-                for i in range(success):
+                for i in range(len(success)):
                     if not success[i]:
-                        self.plotErrors(intToDim(i))
+                        self.plotErrors(intToDim(i), new_time, new_point)
                 return False
 
             # check thru all dimensions, look at coefficient of determination on least squares to determine correct fit
