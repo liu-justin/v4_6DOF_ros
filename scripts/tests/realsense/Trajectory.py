@@ -6,6 +6,9 @@ from collections import OrderedDict
 def dimToInt(dim):
     return ord(dim)-120 #ASCII for "x" is 120
 
+def intToDim(num): # 0 -> "x"
+    return chr(num+120)
+
 class Trajectory():
     def __init__(self, time, point):
         self.init_time = time
@@ -66,8 +69,17 @@ class Trajectory():
                         self.determineFit(dim)
                         
                 return True
+
+            # name and blame
             else:
+                for i in range(success):
+                    if not success[i]:
+                        self.plotErrors(intToDim(i))
                 return False
+
+            # check thru all dimensions, look at coefficient of determination on least squares to determine correct fit
+            for dim in self.betas.keys():
+                self.determineFit(dim)
 
     # # sets the linear betas
     def appendFirst(self, new_time, new_point):
