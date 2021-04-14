@@ -34,7 +34,7 @@ class Trajectory():
         for p,t in zip(self.points, self.times):
             ax.scatter(t, p[1])
         x = np.arange(0,self.times[-1],0.01)
-        y= self.beta0_y + self.beta1_y*x + self.beta2_y*(x**2)
+        y= self.betas["y"][0] + self.betas["y"][1]*x + self.betas["y"][2]*(x**2)
         ax.plot(x,y)
         plt.show()
 
@@ -56,14 +56,18 @@ class Trajectory():
             
             # if new_point fits with all 3 dimensions, append it
             if all(success):
+                print(f"succeeded in appending to list length {len(self.times)}")
                 time_delta = new_time - self.init_time
                 self.times.append(time_delta)
                 self.points.append(new_point)
 
-                # check thru all dimensions that still use errored fit, and see if they can switch to leastsquares
+                # check thru all dimensions leastsquares R2
                 for dim in self.betas.keys():
-                    if self.use_errored[dimToInt(dim)]:
                         self.determineFit(dim)
+                        
+                return True
+            else:
+                return False
 
     # # sets the linear betas
     def appendFirst(self, new_time, new_point):
@@ -87,23 +91,23 @@ class Trajectory():
         time_delta = new_time - self.init_time
         predicted_low = self.predicted(self.betas_low[dim], time_delta)
         predicted_high = self.predicted(self.betas_high[dim], time_delta)
-        error = 0.03 if dim=="y" else 0.01
+        error = 0.05 if dim=="y" else 0.02
         # if the point falls btwn the upper and lower bounds
         if (predicted_low - error) < new_point[dimToInt(dim)] < (predicted_high + error): return True
-        else: return False
+        else:
+            print(f"{dim} failed: {predicted_low - error},{new_point[dimToInt(dim)]},{predicted_high + error}")
+            return False
 
     def checkWithLeastSquares(self, new_time, new_point, dim):
         time_delta = new_time - self.init_time
         predicted = self.predicted(self.betas[dim], time_delta)
-        error = 0.3 if dim=="y": else 0.15
+        error = 0.3 if dim=="y" else 0.15
         # if the new_point falls within a percentage of the predicted
         if abs(new_point[dimToInt(dim)] - predicted)/predicted < error: return True
-        else: return False
-"""
-    # for in plane coord errors, couldn't really think of a good value: some of the error will come from the image being off, some will come from deproject_pixel_to_point, some from canny
-    # ended up going for half the size of the ball as total error (20mm), so 10mm on each side
-    # for time errors, couldn't find anything again, so just a random value ( i get a sample timestamp accuracy on p72, but that is for the imu)
-"""
+        else:
+            print(f"{dim} failed: predicted{predicted} new_point{new_point[dimToInt(dim)]}")
+            return False
+
     def findBetasErrored(self, dim):
         if dim == "y": self.betas_low["y"], self.betas_high["y"] = f.poly_errored(  self.points[-1][dimToInt(dim)], self.times[-1],  self.points[0][dimToInt(dim)], self.times[0], 0.03, 0.001)
         else:          self.betas_low[dim], self.betas_high[dim] = f.linear_errored(self.points[-1][dimToInt(dim)], self.times[-1],  self.points[0][dimToInt(dim)], self.times[0], 0.01, 0.001)
@@ -116,13 +120,18 @@ class Trajectory():
         self.findBetasLeastSquared(dim)
 
         # https://stats.stackexchange.com/questions/219810/r-squared-and-higher-order-polynomial-regression
-        RSS = sum([(p[dimToInt(dim)] - self.predicted(self.betas[dim], t))**2] for p,t in zip(self.points, self.times))
+        RSS = sum([(p[dimToInt(dim)] - self.predicted(self.betas[dim], t))**2 for p,t in zip(self.points, self.times)])
         bar = sum([p[dimToInt(dim)] for p in self.points])/len(self.points)
         TSS = sum([(p[dimToInt(dim)] - bar)**2 for p in self.points])
         R2 = 1 - RSS/TSS
         # if the coefficient of determination is high enough (least squares is good enough)
-        if R2 < 0.75: self.use_errored[dimToInt(dim)] = False     
-        else:         self.findBetasErrored(dim) 
+        if R2 > 0.95: 
+            self.use_errored[dimToInt(dim)] = False
+            print("switching to least squares")
+        else:
+            self.use_errored[dimToInt(dim)] = True
+            self.findBetasErrored(dim) 
+            print(f"staying with errored: R2 was {R2}")
 
 """ 
     # sets the y betas and resets linear betas
@@ -171,3 +180,9 @@ class Trajectory():
         else:
             print("failed in second append")
             return False"""
+
+"""
+    # for in plane coord errors, couldn't really think of a good value: some of the error will come from the image being off, some will come from deproject_pixel_to_point, some from canny
+    # ended up going for half the size of the ball as total error (20mm), so 10mm on each side
+    # for time errors, couldn't find anything again, so just a random value ( i get a sample timestamp accuracy on p72, but that is for the imu)
+"""

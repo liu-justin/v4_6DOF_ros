@@ -31,14 +31,14 @@ align = rs.align(align_to)
 
 depth_background = np.array([])
 
-# fig = plt.figure()
-# ax = fig.add_subplot(111, projection="3d")
-# ax.set_xlabel("X")
-# ax.set_ylabel("Y")
-# ax.set_zlabel("Z")
-# ax.axes.set_xlim3d(left=0, right=2)
-# ax.axes.set_ylim3d(bottom=-2, top=2)
-# ax.axes.set_zlim3d(bottom=-2, top=2)
+fig = plt.figure()
+ax = fig.add_subplot(111, projection="3d")
+ax.set_xlabel("X")
+ax.set_ylabel("Y")
+ax.set_zlabel("Z")
+ax.axes.set_xlim3d(left=0, right=2)
+ax.axes.set_ylim3d(bottom=-2, top=2)
+ax.axes.set_zlim3d(bottom=-2, top=2)
 
 transf_camera_to_base = np.array([[0,0,1,0],\
                                  [0,-1,0,0],\
@@ -87,6 +87,7 @@ try:
         aligned_frames = align.process(frames)
         depth_frame = aligned_frames.get_depth_frame()
         current_time = depth_frame.get_timestamp()/1000
+        
         if not depth_frame:
             continue
         depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
@@ -146,6 +147,7 @@ try:
 
             added = False
             for t in trajectories:
+                print(current_time)
                 success = t.append(current_time, point)
                 if success: added = True
                     
@@ -163,12 +165,11 @@ try:
 
         if key & 0xFF == ord('q') or key == 27:
             cv2.destroyAllWindows()
-            # for t in trajectories:
-            #     for i in range(len(t.points)):
-            #         ax.scatter(t.points[i][0], t.points[i][1], t.points[i][2])
-            #         ax.text(t.points[i][0], t.points[i][1], t.points[i][2], str(i))
-            #         plt.pause(0.01)
-            # cv2.waitKey()            
+            for t in old_trajectories:
+                for i in range(len(t.points)):
+                    ax.scatter(t.points[i][0], t.points[i][1], t.points[i][2])
+                    # plt.pause(0.01)
+            cv2.waitKey()            
             break
 
     plt.show()
