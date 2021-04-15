@@ -46,8 +46,8 @@ class Trajectory():
         fig = plt.figure()
         ax = fig.add_subplot(111)
         for p,t in zip(self.points, self.times):
-            ax.scatter(t, p[int_dim], "g")
-        ax.scatter(new_time, new_point[int_dim], "r")
+            ax.scatter(t, p[int_dim])
+        ax.scatter(new_time, new_point[int_dim])
         x = np.arange(0,time_delta,0.01)
         least_squares = self.betas[dim][0] + self.betas[dim][1]*x + self.betas[dim][2]*(x**2)
         low_errored = self.betas_low[dim][0] + self.betas_low[dim][1]*x + self.betas_low[dim][2]*(x**2)
