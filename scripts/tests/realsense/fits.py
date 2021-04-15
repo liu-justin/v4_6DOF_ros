@@ -14,6 +14,7 @@ def poly_simple(x2, t2, x1, t1):
     return [beta0,beta1,beta2]
 
 def linear_least_squares(x, y):
+    beta2 = 0
     n = len(x)
     x_bar = sum(x)/n
     y_bar = sum(y)/n
@@ -22,7 +23,10 @@ def linear_least_squares(x, y):
     beta1 = Sxy/Sxx
     beta0 = y_bar - beta1*x_bar
 
-    return [beta0, beta1, 0]
+    y_predicted = [beta0 + beta1*xi + beta2*xi**2 for xi in x]
+    avg_residuals = sum([abs(yi - yi_p) for yi, yi_p in zip(y, y_predicted)])
+
+    return [beta0, beta1, beta2], avg_residuals
 
 def poly_least_squares_beta2const(x, y): # derivation in google drive
     n = len(x)
@@ -36,9 +40,13 @@ def poly_least_squares_beta2const(x, y): # derivation in google drive
     beta1 = (Sxy - g_sum)/Sxx
     beta0 = y_bar - beta1*x_bar - beta2*x2_bar
 
-    return [beta0, beta1, beta2]
+    y_predicted = [beta0 + beta1*xi + beta2*xi**2 for xi in x]
+    avg_residuals = sum([abs(yi - yi_p) for yi, yi_p in zip(y, y_predicted)])
+
+    return [beta0, beta1, beta2], avg_residuals
 
 def poly_least_squares_beta0const(x, y, beta0):
+    n = len(x)
     sum_xi = sum(x)
     sum_xi2 = sum([xi**2 for xi in x])
     sum_xi3 = sum([xi**3 for xi in x])
@@ -55,7 +63,10 @@ def poly_least_squares_beta0const(x, y, beta0):
     beta2 = (numerator_1 - numerator_2 - numerator_3 + numerator_4)/denom
     beta1 = (sum_xiyi - beta0*sum_xi - beta2*sum_xi3)/sum_xi2
 
-    return [beta0, beta1, beta2]
+    y_predicted = [beta0 + beta1*xi + beta2*xi**2 for xi in x]
+    avg_residuals = sum([abs(yi - yi_p) for yi, yi_p in zip(y, y_predicted)])
+
+    return [beta0, beta1, beta2], avg_residuals
 
 def linear_errored(x2, t2, x1, t1, x_error, t_error):
     x1_low = x1 - x_error

@@ -9,6 +9,8 @@ def dimToInt(dim):
 def intToDim(num): # 0 -> "x"
     return chr(num+120)
 
+ERRORS = [0.04, 0.04, 0.04]
+
 class Trajectory():
     def __init__(self, time, point):
         self.init_time = time
@@ -19,6 +21,11 @@ class Trajectory():
         self.betas["x"] = [0,5,0]
         self.betas["y"] = [self.points[0][1],0,-9.81]
         self.betas["z"] = [0,5,0]
+
+        self.avg_residuals = OrderedDict()
+        self.avg_residuals["x"] = 0
+        self.avg_residuals["y"] = 0
+        self.avg_residuals["z"] = 0
 
         self.betas_low = OrderedDict()
         self.betas_low["x"] = [0,5,0]
@@ -39,7 +46,8 @@ class Trajectory():
         fig = plt.figure()
         ax = fig.add_subplot(111)
         for p,t in zip(self.points, self.times):
-            ax.scatter(t, p[int_dim])
+            ax.scatter(t, p[int_dim], "g")
+        ax.scatter(new_time, new_point[int_dim], "r")
         x = np.arange(0,time_delta,0.01)
         least_squares = self.betas[dim][0] + self.betas[dim][1]*x + self.betas[dim][2]*(x**2)
         low_errored = self.betas_low[dim][0] + self.betas_low[dim][1]*x + self.betas_low[dim][2]*(x**2)
@@ -112,7 +120,7 @@ class Trajectory():
         predicted_high = self.predicted(self.betas_high[dim], time_delta)
         error = 0.05 if dim=="y" else 0.02
         # if the point falls btwn the upper and lower bounds
-        if (predicted_low - error) < new_point[dimToInt(dim)] < (predicted_high + error): return True
+        if (predicted_low - ERRORS[dimToInt(dim)]) < new_point[dimToInt(dim)] < (predicted_high + ERRORS[dimToInt(dim)]): return True
         else:
             print(f"{dim} failed: {predicted_low - error},{new_point[dimToInt(dim)]},{predicted_high + error}")
             return False
@@ -120,9 +128,11 @@ class Trajectory():
     def checkWithLeastSquares(self, new_time, new_point, dim):
         time_delta = new_time - self.init_time
         predicted = self.predicted(self.betas[dim], time_delta)
-        error = 0.3 if dim=="y" else 0.15
+        error = self.avg_residuals[dim]
+        predicted_low = predicted - error
+        predicted_high = predicted + error
         # if the new_point falls within a percentage of the predicted
-        if abs(new_point[dimToInt(dim)] - predicted)/predicted < error: return True
+        if (predicted_low - ERRORS[dimToInt(dim)]) < new_point[dimToInt(dim)] < (predicted_high + ERRORS[dimToInt(dim)]): return True
         else:
             print(f"{dim} failed: predicted{predicted} new_point{new_point[dimToInt(dim)]}")
             return False
@@ -132,8 +142,8 @@ class Trajectory():
         else:          self.betas_low[dim], self.betas_high[dim] = f.linear_errored(self.points[-1][dimToInt(dim)], self.times[-1],  self.points[0][dimToInt(dim)], self.times[0], 0.01, 0.001)
 
     def findBetasLeastSquared(self, dim):
-        if dim == "y": self.betas["y"] = f.poly_least_squares_beta0const(self.times, [p[1] for p in self.points], self.betas["y"][0])
-        else:          self.betas[dim] = f.linear_least_squares(self.times, [p[dimToInt(dim)] for p in self.points])
+        if dim == "y": self.betas["y"], self.avg_residuals["y"] = f.poly_least_squares_beta0const(self.times, [p[1] for p in self.points], self.betas["y"][0])
+        else:          self.betas[dim], self.avg_residuals[dim] = f.linear_least_squares(self.times, [p[dimToInt(dim)] for p in self.points])
 
     def determineFit(self, dim):
         self.findBetasLeastSquared(dim)
