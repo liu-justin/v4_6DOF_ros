@@ -8,6 +8,9 @@ from Trajectory import Trajectory
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+# testing accuracy of the depth sensor: moving the ball to specific distances from the camera and comparing to the readout
+# need to print a accurate layout for mounting the camera, using a tapemeasure, and measuring in z and y
+
 # Configure depth and color streams
 pipeline = rs.pipeline()
 config = rs.config()
@@ -45,23 +48,19 @@ transf_camera_to_base = np.array([[0,0,1,0],\
                                  [1,0,0,0],\
                                  [0,0,0,1]])
 
-trajectories = []
-old_trajectories = []
-
 betas = np.load("betas.npy")
 
 try:
-
     while True:
         frames = pipeline.wait_for_frames() 
         aligned_frames = align.process(frames)
         depth_frame = aligned_frames.get_depth_frame()
-        if not depth_frame: continue
+        color_frame = aligned_frames.get_color_frame()
+        # if not depth_frame or color_frame: continue
         depth_image = np.asanyarray(depth_frame.get_data())
         depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
         depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
         depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
-        depth_cleaned = cv2.bilateralFilter(depth_cleaned, 9, 50, 50)
 
         cv2.namedWindow('Main', cv2.WINDOW_AUTOSIZE)
         cv2.imshow('Main', depth_cleaned)
@@ -74,6 +73,7 @@ try:
             depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
             thresh, depth_mask = cv2.threshold(depth_cleaned,1,255,cv2.THRESH_BINARY_INV)
             depth_background = cv2.inpaint(depth_cleaned, depth_mask, 3, cv2.INPAINT_TELEA)
+            np.save("depth_frame_background",depth_background)  
 
             cv2.namedWindow('New', cv2.WINDOW_AUTOSIZE)
             cv2.imshow('New', depth_background)
@@ -91,16 +91,6 @@ try:
         if not depth_frame:
             continue
         depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
-
-        # remove old trajectories
-        for traj in trajectories:
-            if (len(traj.times) > 3):
-                success = traj.detectHit()
-
-            if (current_time - traj.init_time) >= 3:
-                trajectories.pop(trajectories.index(traj))
-                if (len(traj.times) > 3):
-                    old_trajectories.append(traj)
 
         # Convert images to numpy arrays
         depth_image = np.asanyarray(depth_frame.get_data())
@@ -125,6 +115,9 @@ try:
                 (x,y), (width, height), angle = cv2.minAreaRect(c)
                 diameter = min(width, height)
                 depth = depth_frame.get_distance(int(x),int(y))
+
+                other_depth = depth_image[int(x)][int(y)]
+                # print(f"depth: {depth}, other_depth: {other_depth}")
                 
             except: continue
             cv2.circle(depth_canny_3d, (int(x),int(y)), 3, (0,0,255), 1)
@@ -148,36 +141,27 @@ try:
 
             # rotation coords to x away, y up, z right
             point = np.dot(transf_camera_to_base, np.r_[point,1])
+            print(point)
 
-            added = False
-            for t in trajectories:
-                success = t.append(current_time, point)
-                if success: added = True
-                    
-            if not added:
-                trajectories.append(Trajectory(current_time, point))
+            cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(diameter/2), (0,255,0),2) 
+            
 
-            cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(diameter/2), (0,255,0),2)  
-
-        images = np.hstack((depth_canny_3d, depth_cleaned_3d))
         # Show images
         cv2.namedWindow('Main', cv2.WINDOW_AUTOSIZE)
-        cv2.imshow('Main', images)
+        cv2.imshow('Main', depth_cleaned_3d)
 
+        cv2.namedWindow('Canny', cv2.WINDOW_AUTOSIZE)
+        cv2.imshow('Canny', depth_canny)
         key = cv2.waitKey(1)
 
         if key & 0xFF == ord('q') or key == 27:
-            cv2.destroyAllWindows()
-            for t in old_trajectories:
-                for i in range(len(t.points)):
-                    ax.scatter(t.points[i][0], t.points[i][1], t.points[i][2])
-                    # plt.pause(0.01)
-            cv2.waitKey()            
+            cv2.destroyAllWindows()       
             break
-
-    plt.show()
 
 finally:
 
     # Stop streaming
     pipeline.stop()
+
+
+        

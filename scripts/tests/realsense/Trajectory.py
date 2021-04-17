@@ -37,11 +37,26 @@ class Trajectory():
         self.betas_high["y"] = [self.points[0][1],0,-9.81]
         self.betas_high["z"] = [0,5,0]
 
+    def detectHit(self):
+        # detecting if ball hits a board at x=0, y=(-0.16, 0.05), z=(-0.284,-0.06)
+
+        t = -1*self.betas["x"][0]/self.betas["x"][1]
+        hit_y = self.betas["y"][0] + self.betas["y"][1]*t + self.betas["y"][2]*(t**2)
+        hit_z = self.betas["z"][0] + self.betas["z"][1]*t + self.betas["z"][2]*(t**2)
+
+        print(f"hit: {hit_y}, {hit_z}")
+
+        if (-0.2 < hit_y < 0.09 and -0.324 < hit_z < -0.02):
+            print("HIT")
+            return True
+        else:
+            print("MISS")
+            return False
+
 
     def plotErrors(self, dim, new_time, new_point):
         time_delta = new_time - self.init_time
         int_dim = dimToInt(dim)
-
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -87,9 +102,9 @@ class Trajectory():
 
             # name and blame
             else:
-                for i in range(len(success)):
-                    if not success[i]:
-                        self.plotErrors(intToDim(i), new_time, new_point)
+                # for i in range(len(success)):
+                #     if not success[i]:
+                #         self.plotErrors(intToDim(i), new_time, new_point)
                 return False
 
             # check thru all dimensions, look at coefficient of determination on least squares to determine correct fit
@@ -122,7 +137,7 @@ class Trajectory():
         # if the point falls btwn the upper and lower bounds
         if (predicted_low - ERRORS[dimToInt(dim)]) < new_point[dimToInt(dim)] < (predicted_high + ERRORS[dimToInt(dim)]): return True
         else:
-            print(f"{dim} failed: {predicted_low - error},{new_point[dimToInt(dim)]},{predicted_high + error}")
+            # print(f"{dim} failed: {predicted_low - error},{new_point[dimToInt(dim)]},{predicted_high + error}")
             return False
 
     def checkWithLeastSquares(self, new_time, new_point, dim):
@@ -134,7 +149,7 @@ class Trajectory():
         # if the new_point falls within a percentage of the predicted
         if (predicted_low - ERRORS[dimToInt(dim)]) < new_point[dimToInt(dim)] < (predicted_high + ERRORS[dimToInt(dim)]): return True
         else:
-            print(f"{dim} failed: predicted{predicted} new_point{new_point[dimToInt(dim)]}")
+            # print(f"{dim} failed: predicted{predicted} new_point{new_point[dimToInt(dim)]}")
             return False
 
     def findBetasErrored(self, dim):
@@ -156,11 +171,11 @@ class Trajectory():
         # if the coefficient of determination is high enough (least squares is good enough)
         if R2 > 0.95: 
             self.use_errored[dimToInt(dim)] = False
-            print("switching to least squares")
+            # print("switching to least squares")
         else:
             self.use_errored[dimToInt(dim)] = True
             self.findBetasErrored(dim) 
-            print(f"staying with errored: R2 was {R2}")
+            # print(f"staying with errored: R2 was {R2}")
 
 """ 
     # sets the y betas and resets linear betas
