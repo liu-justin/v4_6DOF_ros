@@ -7,9 +7,9 @@ import numpy as np
 import time
  
 import tkinter as tk
-from MultipleMotorsClass import MultipleMotors
+from modules.MultipleMotorClass import MultipleMotors
 from graph import TransfGraph
-import modern_robotics as mr
+from modules import modern_robotics as mr
 import v4_6dof.msg as msg
 
 from mpl_toolkits.mplot3d import Axes3D

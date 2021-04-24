@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
-sys.path.append("~/catkin_ws/src/v4_6dof/scripts/tests/realsense")
-import fits as f
+from . import fits as f
 from collections import OrderedDict
 
 def dimToInt(dim):
