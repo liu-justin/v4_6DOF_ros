@@ -53,6 +53,11 @@ old_trajectories = []
 betas = np.load("betas.npy")
 
 mc = MotorController()
+at_rest_str = input("is arm at rest position y/n?")
+at_rest = True if at_rest_str=="y" else False
+
+# if at rest, go to cobra position
+if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, 0, 0], 5, True)
 
 try:
 
