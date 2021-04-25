@@ -1,4 +1,4 @@
-import modern_robotics as mr
+from modules import modern_robotics as mr
 import tkinter as tk
 import numpy as np
 import time

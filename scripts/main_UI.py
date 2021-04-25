@@ -7,7 +7,7 @@ import numpy as np
 import time
  
 import tkinter as tk
-from modules.MultipleMotorClass import MultipleMotors
+from modules.MotorController import MotorController
 from graph import TransfGraph
 from modules import modern_robotics as mr
 import v4_6dof.msg as msg
@@ -114,7 +114,7 @@ def plotTransf(M):
 
 if __name__ == "__main__":
     try:
-        mm = MultipleMotors()
+        mm = MotorController()
 
         window = tk.Tk()
         window.rowconfigure([0,1,2,3,4], minsize=100, weight=1)

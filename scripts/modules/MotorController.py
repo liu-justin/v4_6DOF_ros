@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import rospy
 import v4_6dof.msg as msg
-from modules import modern_robotics as mr
-from modules import unpack as unp
+from . import modern_robotics as mr
+from . import unpack as unp
 import time
 
 class MotorController():
@@ -11,7 +11,7 @@ class MotorController():
         self.vel_six = [0.0,0.0,0.0,0.0,0.0,0.0]
         self.pos_six = [0.0,0.0,0.0,0.0,0.0,0.0]
 
-        self.M_rest, self.T_list, self.body_list, self.G_list = unp.unpack_XML("/home/brigs/catkin_ws/src/v4_6dof/scripts/6DoF_URDF.xml")
+        self.M_rest, self.T_list, self.body_list, self.G_list = unp.unpack_XML("/home/brigs/catkin_ws/src/v4_6dof/scripts/constants/6DoF_URDF.xml")
 
         self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six)
 

@@ -1,7 +1,10 @@
+#!/usr/bin/env python3
+
+import rospy
+
 import pyrealsense2 as rs
 import numpy as np
 import cv2
-from collections import deque
 
 from modules.Trajectory import Trajectory
 from modules import modern_robotics as mr
@@ -9,6 +12,12 @@ from modules.MotorController import MotorController
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+
+import v4_6dof.msg as msg
+
+import os
+print(os.getcwd())
+
 
 # Configure depth and color streams
 pipeline = rs.pipeline()
@@ -50,9 +59,11 @@ transf_camera_to_base = np.array([[0,0,1,0],\
 trajectories = []
 old_trajectories = []
 
-betas = np.load("betas.npy")
+betas = np.load("/home/brigs/catkin_ws/src/v4_6dof/scripts/constants/betas.npy")
 
 mc = MotorController()
+rospy.init_node('talker', anonymous=True)
+
 at_rest_str = input("is arm at rest position y/n?")
 at_rest = True if at_rest_str=="y" else False
 

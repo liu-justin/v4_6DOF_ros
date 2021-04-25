@@ -6,8 +6,8 @@ from matplotlib.backends.backend_tkagg import (
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
-import modern_robotics as mr
-import unpack as unp
+from modules import modern_robotics as mr
+from modules import unpack as unp
 import os
 import rospy
 import std_msgs.msg as msg

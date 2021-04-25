@@ -1,4 +1,4 @@
-from modules import modern_robotics as mr
+from . import modern_robotics as mr
 import untangle
 import numpy as np
 import tkinter as tk
