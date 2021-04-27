@@ -179,53 +179,20 @@ class Trajectory():
             self.findBetasErrored(dim) 
             # print(f"staying with errored: R2 was {R2}")
 
-""" 
-    # sets the y betas and resets linear betas
-    def appendSecondSimple(self,new_time, new_point):
-        time_delta = new_time - self.init_time
-        predicted_x = self.beta0_x + self.beta1_x*time_delta
-        predicted_y = self.beta0_y + self.beta1_y*time_delta + self.beta2_y*(time_delta**2)
-        predicted_z = self.beta0_z + self.beta1_z*time_delta
-        print(f"appending into traj w/ length 1: predicted {predicted_x},{predicted_z}: actual {new_point[0]}, {new_point[2]}")
-        if abs((new_point[0]-predicted_x)/predicted_x) < 0.1 and \
-           abs((new_point[1]-predicted_y)/predicted_y) < 0.2 and \
-           abs((new_point[2]-predicted_z)/predicted_z) < 0.1:
-            self.times.append(time_delta)
-            self.points.append(new_point)
-            self.beta1_x, self.beta0_x = f.linear_least_squares(self.times, [p[0] for p in self.points]) # X
-            self.beta2_y, self.beta1_y = f.poly_least_squares_beta0const(self.times, [p[1] for p in self.points], self.beta0_y) # Y
-            self.beta1_z, self.beta0_z = f.linear_least_squares(self.times, [p[2] for p in self.points]) # Z
-            print("succeeded in second append")
-            return True
-        else:
-            print("failed in second append")
-            return False
-            """
+    def checkSphereIntersection(self, center, radius):
+        # plugging in the equation of the parabola into mag(x - center) = radius^2
+        t1,t2,t3,t4 = 0,0,0,0
+        for i in range(3):
+            dim = intToDim(i)
+            t4 += self.betas[dim][2]**2
+            t3 += 2*self.betas[dim][2]*self.betas[dim][1]
+            t2 += 2*self.betas[dim][2]*self.betas[dim][0] + self.betas[dim][1]**2 - 2*center[i]*self.betas[dim][2]
+            t1 += 2*self.betas[dim][1]*self.betas[dim][0] - 2*center[i]*self.betas[dim][1]
+            t0 += self.betas[dim][0]**2 - 2*center[i]*self.betas[dim][0] - (radius**2)
 
-"""
-    # sets the y betas and resets linear betas
-    def appendSecond(self,new_time, new_point):
-        time_delta = new_time - self.init_time
-        predicted_x_low = self.predicted(self.betas_low["x"], time_delta)
-        predicted_x_high = self.predicted(self.betas_high["x"], time_delta)
-        predicted_y_low = self.predicted(self.betas_low["y"], time_delta)
-        predicted_y_high = self.predicted(self.betas_high["y"], time_delta)
-        predicted_z_low = self.predicted(self.betas_low["z"], time_delta)
-        predicted_z_high = self.predicted(self.betas_high["z"], time_delta)
-        print(f"appending into length 2: predicted x {predicted_x_low},{predicted_x_high}: actual {new_point[0]}")
-        print(f"appending into length 2: predicted y {predicted_y_low},{predicted_y_high}: actual {new_point[1]}")
-        print(f"appending into length 2: predicted z {predicted_z_low},{predicted_z_high}: actual {new_point[2]}")
-        if predicted_x_low - 0.01 < new_point[0] < predicted_x_high + 0.01 and \
-           predicted_z_low - 0.01 < new_point[2] < predicted_z_high + 0.01 and \
-           predicted_y_low - 0.03 < new_point[1] < predicted_y_high + 0.03    :
-            self.times.append(time_delta)
-            self.points.append(new_point)
-            self.determineFit()
-            print("succeeded in second append")
-            return True
-        else:
-            print("failed in second append")
-            return False"""
+        # now using the quartic formula (Ax^4 + Bx^3 +Cx^2 + Dx + E = 0)
+        # look into Bairstow's Method
+
 
 """
     # for in plane coord errors, couldn't really think of a good value: some of the error will come from the image being off, some will come from deproject_pixel_to_point, some from canny
