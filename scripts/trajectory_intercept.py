@@ -68,7 +68,7 @@ at_rest_str = input("is arm at rest position y/n?")
 at_rest = True if at_rest_str=="y" else False
 
 # if at rest, go to cobra position
-if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, 0, 0], 5, True)
+if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, 0, 0], 2, True)
 
 try:
 
@@ -115,7 +115,7 @@ try:
         # remove old trajectories
         for traj in trajectories:
             if (len(traj.times) > 3):
-                success = traj.detectHit()
+                traj.checkSphereIntersection([0,0.180212,0], 0.4087037)
 
             if (current_time - traj.init_time) >= 3:
                 trajectories.pop(trajectories.index(traj))

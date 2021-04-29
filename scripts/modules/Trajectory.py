@@ -177,6 +177,34 @@ class Trajectory():
             self.findBetasErrored(dim) 
             # print(f"staying with errored: R2 was {R2}")
 
+    def checkSphereIntersection(self, center, radius):
+        # plugging in the equation of the parabola into mag(x - center) = radius^2
+        t1,t2,t3,t4 = 0,0,0,0
+        for i in range(3):
+            dim = intToDim(i)
+            a4 += self.betas[dim][2]**2
+            a3 += 2*self.betas[dim][2]*self.betas[dim][1]
+            a2 += 2*self.betas[dim][2]*self.betas[dim][0] + self.betas[dim][1]**2 - 2*center[i]*self.betas[dim][2]
+            a1 += 2*self.betas[dim][1]*self.betas[dim][0] - 2*center[i]*self.betas[dim][1]
+            a0 += self.betas[dim][0]**2 - 2*center[i]*self.betas[dim][0] - (radius**2)
+
+        print(f"{a4},{a3},{a2},{a1},{a0}")
+
+        # now using the quartic formula (Ax^4 + Bx^3 +Cx^2 + Dx + E = 0)
+        # look into Bairstow's Method, or use Newton Raphson
+
+    # problem with newton Raphson is there is a max in the parabola before the intersection, but distance from the center shouldn't be a problem
+    def newtonRaphsonQuartic(self, a, estimate, threshold):
+        counter=0
+        x = estimate
+        while counter<20:
+            f = a[0] + a[1]*x + a[2]*(x**2) + a[3]*(x**3) + a[4]*(x**4)
+            if abs(f) <= threshold: return x, True
+            f_prime = a[1] + 2*a[2]*(x) + 3*a[3]*(x**2) + 4*a[4]*(x**3)
+            x = x - f/f_prime
+        return estimate, False
+
+
 """ 
     # sets the y betas and resets linear betas
     def appendSecondSimple(self,new_time, new_point):
