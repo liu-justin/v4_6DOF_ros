@@ -177,21 +177,34 @@ class Trajectory():
             self.findBetasErrored(dim) 
             # print(f"staying with errored: R2 was {R2}")
 
+    def getCoord(self, dim, time):
+        return self.betas[dim][0] + self.betas[dim][1]*time + self.betas[dim][2]*(time**2)
+
     def checkSphereIntersection(self, center, radius):
         # plugging in the equation of the parabola into mag(x - center) = radius^2
-        t1,t2,t3,t4 = 0,0,0,0
+        a = [0,0,0,0,0]
         for i in range(3):
             dim = intToDim(i)
-            a4 += self.betas[dim][2]**2
-            a3 += 2*self.betas[dim][2]*self.betas[dim][1]
-            a2 += 2*self.betas[dim][2]*self.betas[dim][0] + self.betas[dim][1]**2 - 2*center[i]*self.betas[dim][2]
-            a1 += 2*self.betas[dim][1]*self.betas[dim][0] - 2*center[i]*self.betas[dim][1]
-            a0 += self.betas[dim][0]**2 - 2*center[i]*self.betas[dim][0] - (radius**2)
-
-        print(f"{a4},{a3},{a2},{a1},{a0}")
+            a[4] += self.betas[dim][2]**2
+            a[3] += 2*self.betas[dim][2]*self.betas[dim][1]
+            a[2] += 2*self.betas[dim][2]*self.betas[dim][0] + self.betas[dim][1]**2 - 2*center[i]*self.betas[dim][2]
+            a[1] += 2*self.betas[dim][1]*self.betas[dim][0] - 2*center[i]*self.betas[dim][1]
+            a[0] += self.betas[dim][0]**2 - 2*center[i]*self.betas[dim][0] - (radius**2)
 
         # now using the quartic formula (Ax^4 + Bx^3 +Cx^2 + Dx + E = 0)
         # look into Bairstow's Method, or use Newton Raphson
+
+        # using Netwon Raphson, good estimate for first collision is time0, will always be closest to the first intersection
+        collision_time, possible = self.newtonRaphsonQuartic(a, 0, 0.001)
+
+        if possible:
+            # plug in collision_time into trajectory and record the x,y,z
+            point = [self.getCoord("x", collision_time), self.getCoord("y", collision_time), self.getCoord("z", collision_time)]
+            return True, point, collision_time - self.times[-1]
+        else:
+            # if false, return to cobra in 5 seconds
+            return False, [0.201582, 0.498462, 0], 5
+
 
     # problem with newton Raphson is there is a max in the parabola before the intersection, but distance from the center shouldn't be a problem
     def newtonRaphsonQuartic(self, a, estimate, threshold):

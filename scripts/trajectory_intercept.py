@@ -51,10 +51,17 @@ ax.axes.set_xlim3d(left=0, right=2)
 ax.axes.set_ylim3d(bottom=-2, top=2)
 ax.axes.set_zlim3d(bottom=-2, top=2)
 
-transf_camera_to_base = np.array([[0,0,1,0],\
-                                 [0,-1,0,0],\
-                                 [1,0,0,0],\
-                                 [0,0,0,1]])
+transf_camera_to_base = np.array([[0, 0,1,   0.017],\
+                                  [0,-1,0,   0.050],\
+                                  [1, 0,0,-0.08285],\
+                                  [0, 0,0,      1]])
+
+test_transf = np.array([[1,0,0,0],\
+                        [0,1,0,-0.5],\
+                        [0,0,1,1],\
+                        [0,0,0,1]])
+
+print(np.dot(transf_camera_to_base, test_transf))
 
 trajectories = []
 old_trajectories = []
@@ -115,7 +122,10 @@ try:
         # remove old trajectories
         for traj in trajectories:
             if (len(traj.times) > 3):
-                traj.checkSphereIntersection([0,0.180212,0], 0.4087037)
+                possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.4087037)
+                print(f"point: {intersection_point} time: {time_until_intersection}")
+                intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)
+                mc.transfMatrixPublish(intersection_transf, time_until_intersection)
 
             if (current_time - traj.init_time) >= 3:
                 trajectories.pop(trajectories.index(traj))
