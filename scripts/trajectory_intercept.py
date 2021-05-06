@@ -51,10 +51,13 @@ ax.axes.set_xlim3d(left=0, right=2)
 ax.axes.set_ylim3d(bottom=-2, top=2)
 ax.axes.set_zlim3d(bottom=-2, top=2)
 
-transf_camera_to_base = np.array([[0, 0,1,   0.017],\
-                                  [0,-1,0,   0.050],\
-                                  [1, 0,0,-0.08285],\
-                                  [0, 0,0,      1]])
+rot_camera_to_90 = mr.RollPitchYawToRot(-1*np.pi/4,0,0)
+transf_camera_to_90 = mr.RpToTrans(rot_camera_to_90, [0,0,0])
+
+transf_camera_to_base = np.dot(np.array([[0, 0,1,  0.0175],\
+                                         [0,-1,0, 0.06474],\
+                                         [1, 0,0,-0.07274],\
+                                         [0, 0,0,       1]]), transf_camera_to_90)
 
 test_transf = np.array([[1,0,0,0],\
                         [0,1,0,-0.5],\
