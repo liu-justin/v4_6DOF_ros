@@ -54,22 +54,26 @@ ax.axes.set_zlim3d(bottom=-2, top=2)
 rot_camera_to_90 = mr.RollPitchYawToRot(-1*np.pi/4,0,0)
 transf_camera_to_90 = mr.RpToTrans(rot_camera_to_90, [0,0,0])
 
-transf_camera_to_base = np.dot(np.array([[0, 0,1,  0.0175],\
+print(transf_camera_to_90)
+
+transf_camera_to_base = np.array([[0, 0,1,  0.0175],\
                                          [0,-1,0, 0.06474],\
                                          [1, 0,0,-0.07274],\
-                                         [0, 0,0,       1]]), transf_camera_to_90)
+                                         [0, 0,0,       1]])
 
 test_transf = np.array([[1,0,0,0],\
-                        [0,1,0,-0.5],\
+                        [0,1,0,0.5],\
                         [0,0,1,1],\
                         [0,0,0,1]])
 
-print(np.dot(transf_camera_to_base, test_transf))
+print(np.dot(transf_camera_to_90, test_transf))
+
+print(np.dot(transf_camera_to_base, np.dot(transf_camera_to_90, test_transf)))
 
 trajectories = []
 old_trajectories = []
 
-betas = np.load("/home/brigs/catkin_ws/src/v4_6dof/scripts/constants/betas.npy")
+betas = np.load("/home/brigs/catkin_ws/src/v4_6dof/scripts/constants/betas.np")
 
 mc = MotorController()
 rospy.init_node('talker', anonymous=True)
