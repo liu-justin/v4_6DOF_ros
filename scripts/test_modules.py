@@ -1,5 +1,4 @@
 from modules.Trajectory import Trajectory
-from modules.MotorController import MotorController
 import modules.modern_robotics as mr
 
 import numpy as np
@@ -14,12 +13,19 @@ test_transf = np.array([[1,0,0,0],\
                         [0,0,1,1],\
                         [0,0,0,1]])
 
-print(transf_camera_to_90 @ test_transf)
+test_point = np.array([0,0.1,0.3,1])
 
-transf_camera_to_base = np.array([[0, 0,1,  0.0175],\
+print(transf_camera_to_90)
+
+print(transf_camera_to_90 @ test_point)
+
+# transf_camera_to_base = np.array([[0, 0,1,  0.0175],\
+#                                   [0,-1,0, 0.06474],\
+#                                   [1, 0,0,-0.07274],\
+#                                   [0, 0,0,       1]])
+transf_camera_to_base = np.array([[0, 0,1, 0.07274],\
                                   [0,-1,0, 0.06474],\
-                                  [1, 0,0,-0.07274],\
+                                  [1, 0,0, -0.0175],\
                                   [0, 0,0,       1]])
 
-print(np.dot(transf_camera_to_base, np.dot(transf_camera_to_90, test_transf)))
-print(transf_camera_to_base @ test_transf)
+print(transf_camera_to_base @ (transf_camera_to_90 @ test_point))
