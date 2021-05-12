@@ -8,6 +8,8 @@ from Trajectory import Trajectory
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+# main tester
+
 # Configure depth and color streams
 pipeline = rs.pipeline()
 config = rs.config()

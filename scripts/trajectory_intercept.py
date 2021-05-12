@@ -51,29 +51,20 @@ ax.axes.set_xlim3d(left=0, right=2)
 ax.axes.set_ylim3d(bottom=-2, top=2)
 ax.axes.set_zlim3d(bottom=-2, top=2)
 
-rot_camera_to_90 = mr.RollPitchYawToRot(-1*np.pi/4,0,0)
+rot_camera_to_90 = mr.RollPitchYawToRot(0,0,np.pi/4)
 transf_camera_to_90 = mr.RpToTrans(rot_camera_to_90, [0,0,0])
 
-print(transf_camera_to_90)
+transf_90_to_base = np.array([[0, 0,1, 0.07274],\
+                                  [0,-1,0, 0.06474],\
+                                  [1, 0,0, -0.0175],\
+                                  [0, 0,0,       1]])
 
-transf_camera_to_base = np.array([[0, 0,1,  0.0175],\
-                                         [0,-1,0, 0.06474],\
-                                         [1, 0,0,-0.07274],\
-                                         [0, 0,0,       1]])
-
-test_transf = np.array([[1,0,0,0],\
-                        [0,1,0,0.5],\
-                        [0,0,1,1],\
-                        [0,0,0,1]])
-
-print(np.dot(transf_camera_to_90, test_transf))
-
-print(np.dot(transf_camera_to_base, np.dot(transf_camera_to_90, test_transf)))
+transf_camera_to_base = transf_90_to_base @ transf_camera_to_90
 
 trajectories = []
 old_trajectories = []
 
-betas = np.load("/home/brigs/catkin_ws/src/v4_6dof/scripts/constants/betas.np")
+betas_depth_to_dia = np.load("/home/brigs/catkin_ws/src/v4_6dof/scripts/constants/betas.npy")
 
 mc = MotorController()
 rospy.init_node('talker', anonymous=True)
@@ -170,7 +161,7 @@ try:
             if x*y*diameter <= 0: continue
 
             # if contour_area < 30: continue
-            calculated_diameter = betas[0] + betas[1]*depth + betas[2]*(depth**2)
+            calculated_diameter = betas_depth_to_dia[0] + betas_depth_to_dia[1]*depth + betas_depth_to_dia[2]*(depth**2)
             if ((diameter-calculated_diameter)/calculated_diameter) > 0.25: continue
 
             #checking perecentage of contour filled

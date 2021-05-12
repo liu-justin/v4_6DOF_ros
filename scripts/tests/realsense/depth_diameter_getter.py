@@ -8,6 +8,8 @@ from Trajectory import Trajectory
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+# gets values for the different depths/ perceived diameters, and saves them to a npy file
+
 # Configure depth and color streams
 pipeline = rs.pipeline()
 config = rs.config()

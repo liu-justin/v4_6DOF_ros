@@ -8,6 +8,8 @@ from Trajectory import Trajectory
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+# saves a set of frames in which a ball appears, should probably record all frames btwn first and last frame where it appears
+
 # Configure depth and color streams
 pipeline = rs.pipeline()
 config = rs.config()

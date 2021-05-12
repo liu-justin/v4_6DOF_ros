@@ -1,7 +1,7 @@
-# use a set of numpy array saves to adjust values for bilateralFilter and canny
-
 import numpy as np
 import cv2
+
+# use a set of numpy array saves to adjust values for bilateralFilter and canny
 
 depth_scale = 0.0010000000474974513
 

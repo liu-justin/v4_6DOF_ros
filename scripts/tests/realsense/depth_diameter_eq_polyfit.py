@@ -3,6 +3,8 @@ from mpl_toolkits.mplot3d import Axes3D
 
 import numpy as np
 
+# obtains the relationship btwn depth and the perceived diameter in the camera
+
 depths = np.load("depths.npy")
 diameters = np.load("diameters.npy")
 
