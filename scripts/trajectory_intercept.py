@@ -47,7 +47,7 @@ ax = fig.add_subplot(111, projection="3d")
 ax.set_xlabel("X")
 ax.set_ylabel("Y")
 ax.set_zlabel("Z")
-ax.axes.set_xlim3d(left=0, right=2)
+ax.axes.set_xlim3d(left=-2, right=2)
 ax.axes.set_ylim3d(bottom=-2, top=2)
 ax.axes.set_zlim3d(bottom=-2, top=2)
 
@@ -119,11 +119,25 @@ try:
 
         # remove old trajectories
         for traj in trajectories:
-            if (len(traj.times) > 3):
-                possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.4087037)
-                print(f"point: {intersection_point} time: {time_until_intersection}")
-                intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)
-                mc.transfMatrixPublish(intersection_transf, time_until_intersection)
+            if (len(traj.times) > 3): # 0.180212
+                possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0,0], 0.4087037)
+                if possible:
+                    print(f"point: {intersection_point} time: {time_until_intersection}")
+                    intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)
+                    ax.scatter(0,0.180212,0)
+                    ax.scatter(intersection_point[0], intersection_point[1], intersection_point[2])
+                    u,v = np.mgrid[0:2*np.pi:40j, 0:np.pi:20j]
+                    x = np.cos(u)*np.sin(v)*0.4087037
+                    y = np.sin(u)*np.sin(v)*0.4087037
+                    z = np.cos(v)*0.4087037
+                    ax.plot_wireframe(x, y, z, color="y")
+                    t = np.arange(0,2,0.01)
+                    x_traj = traj.betas["x"][0] + traj.betas["x"][1]*t + traj.betas["x"][2]*(t**2)
+                    y_traj = traj.betas["y"][0] + traj.betas["y"][1]*t + traj.betas["y"][2]*(t**2)
+                    z_traj = traj.betas["z"][0] + traj.betas["z"][1]*t + traj.betas["z"][2]*(t**2)
+                    ax.plot3D(x_traj, y_traj, z_traj, color="r")
+                    plt.show()
+                # mc.transfMatrixPublish(intersection_transf, time_until_intersection)
 
             if (current_time - traj.init_time) >= 3:
                 trajectories.pop(trajectories.index(traj))
@@ -175,7 +189,7 @@ try:
             if (point[0]*point[1]*point[2] == 0): continue
 
             # rotation coords to x away, y up, z right
-            point = np.dot(transf_camera_to_base, np.r_[point,1])
+            point = transf_camera_to_base @ np.r_[point,1]
 
             added = False
             for t in trajectories:
@@ -196,11 +210,11 @@ try:
 
         if key & 0xFF == ord('q') or key == 27:
             cv2.destroyAllWindows()
-            for t in old_trajectories:
-                for i in range(len(t.points)):
-                    ax.scatter(t.points[i][0], t.points[i][1], t.points[i][2])
-                    # plt.pause(0.01)
-            cv2.waitKey()            
+            # for t in old_trajectories:
+            #     for i in range(len(t.points)):
+            #         ax.scatter(t.points[i][0], t.points[i][1], t.points[i][2])
+            #         plt.pause(0.01)
+            # cv2.waitKey()            
             break
 
     plt.show()

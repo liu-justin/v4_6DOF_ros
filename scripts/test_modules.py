@@ -3,7 +3,7 @@ import modules.modern_robotics as mr
 
 import numpy as np
 
-a = Trajectory(1,[4,5,6])
+a = Trajectory(0,[2,0.5,0])
 
 test_transf = np.array([[1,0,0,0],\
                         [0,1,0,0.5],\
