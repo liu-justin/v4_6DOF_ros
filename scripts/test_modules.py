@@ -18,15 +18,16 @@ traj = Trajectory(0,[1.5,0.5,0])
 traj.append(0.1, [1,0.5019, 0.1 ])
 traj.append(0.2, [0.5,0.30706, 0.2 ])
 
-possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0,0], 0.4087037)
+possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.4087037)
 if possible:
     print(f"point: {intersection_point} time: {time_until_intersection}")
     intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)
+    ax.scatter(1.5, 0.5, 0)
     ax.scatter(0,0.180212,0)
     ax.scatter(intersection_point[0], intersection_point[1], intersection_point[2])
     u,v = np.mgrid[0:2*np.pi:40j, 0:np.pi:20j]
     x = np.cos(u)*np.sin(v)*0.4087037
-    y = np.sin(u)*np.sin(v)*0.4087037
+    y = np.sin(u)*np.sin(v)*0.4087037 + 0.180212
     z = np.cos(v)*0.4087037
     ax.plot_wireframe(x, y, z, color="y")
     t = np.arange(0,2,0.01)
