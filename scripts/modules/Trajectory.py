@@ -189,7 +189,8 @@ class Trajectory():
             a[3] += 2*self.betas[dim][2]*self.betas[dim][1]
             a[2] += 2*self.betas[dim][2]*self.betas[dim][0] + self.betas[dim][1]**2 - 2*center[i]*self.betas[dim][2]
             a[1] += 2*self.betas[dim][1]*self.betas[dim][0] - 2*center[i]*self.betas[dim][1]
-            a[0] += self.betas[dim][0]**2 - 2*center[i]*self.betas[dim][0] - (radius**2)
+            a[0] += self.betas[dim][0]**2 - 2*center[i]*self.betas[dim][0] + center[i]**2
+        a[0] +=  -1*(radius**2)
 
         # now using the quartic formula (Ax^4 + Bx^3 +Cx^2 + Dx + E = 0)
         # look into Bairstow's Method, or use Newton Raphson
