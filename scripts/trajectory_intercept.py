@@ -76,16 +76,19 @@ at_rest = True if at_rest_str=="y" else False
 if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, 0, 0], 2, True)
 
 try:
-
+    # getting the background frame
     while True:
         frames = pipeline.wait_for_frames() 
         aligned_frames = align.process(frames)
         depth_frame = aligned_frames.get_depth_frame()
         if not depth_frame: continue
+
+        # extracting and cleaning image
         depth_image = np.asanyarray(depth_frame.get_data())
         depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
         depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
         depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
+        # numbers for bilateral filter tuned in tests/realsense/tune_cleaning
         depth_cleaned = cv2.bilateralFilter(depth_cleaned, 9, 50, 50)
 
         cv2.namedWindow('Main', cv2.WINDOW_AUTOSIZE)
@@ -94,9 +97,9 @@ try:
 
         if key & 0xFF == ord('q') or key == 27:
             # save this depth_image as the background, but need to remove those 0s
-            depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
-            depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
-            depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
+            # depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
+            # depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
+            # depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
             thresh, depth_mask = cv2.threshold(depth_cleaned,1,255,cv2.THRESH_BINARY_INV)
             depth_background = cv2.inpaint(depth_cleaned, depth_mask, 3, cv2.INPAINT_TELEA)
 
@@ -113,32 +116,20 @@ try:
         depth_frame = aligned_frames.get_depth_frame()
         current_time = depth_frame.get_timestamp()/1000
         
-        if not depth_frame:
-            continue
+        if not depth_frame: continue
         depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
 
-        # remove old trajectories
+        # move thru all registered trajectories
         for traj in trajectories:
             if (len(traj.times) > 3): # 0.180212
                 possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0,0], 0.4087037)
                 if possible:
                     print(f"point: {intersection_point} time: {time_until_intersection}")
                     intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)
-                    ax.scatter(0,0.180212,0)
-                    ax.scatter(intersection_point[0], intersection_point[1], intersection_point[2])
-                    u,v = np.mgrid[0:2*np.pi:40j, 0:np.pi:20j]
-                    x = np.cos(u)*np.sin(v)*0.4087037
-                    y = np.sin(u)*np.sin(v)*0.4087037
-                    z = np.cos(v)*0.4087037
-                    ax.plot_wireframe(x, y, z, color="y")
-                    t = np.arange(0,2,0.01)
-                    x_traj = traj.betas["x"][0] + traj.betas["x"][1]*t + traj.betas["x"][2]*(t**2)
-                    y_traj = traj.betas["y"][0] + traj.betas["y"][1]*t + traj.betas["y"][2]*(t**2)
-                    z_traj = traj.betas["z"][0] + traj.betas["z"][1]*t + traj.betas["z"][2]*(t**2)
-                    ax.plot3D(x_traj, y_traj, z_traj, color="r")
-                    plt.show()
+
                 # mc.transfMatrixPublish(intersection_transf, time_until_intersection)
 
+            # if total time is longer than 3 seconds, kill the trajectory
             if (current_time - traj.init_time) >= 3:
                 trajectories.pop(trajectories.index(traj))
                 if (len(traj.times) > 3):
@@ -152,6 +143,8 @@ try:
         depth_cleaned = cv2.bilateralFilter(depth_cleaned, 5, 42, 42) # tune these numbers in tune_cleaning
         depth_cleaned_3d = np.dstack((depth_cleaned,depth_cleaned,depth_cleaned))
 
+        # create an canny edge picture, and rip data from it
+        # values tuned in tests/realsense/tune_cleaning
         sigma = 0.38
         v = np.median(depth_cleaned)
         lower = int(max(0, (1.0 - sigma) * v))
@@ -160,23 +153,16 @@ try:
         depth_canny_3d = np.dstack((depth_canny,depth_canny,depth_canny))
 
         contours, hierarchy = cv2.findContours(depth_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
         for c in contours:
             try:
-                # (x,y), radius = cv2.minEnclosingCircle(c)
+                # rectangle, not circle; slow shutter speed/motion blur elongates the circle into oval, need the shorter height
                 (x,y), (width, height), angle = cv2.minAreaRect(c)
                 diameter = min(width, height)
-                depth = depth_frame.get_distance(int(x),int(y))
-                
+                depth = depth_frame.get_distance(int(x),int(y))            
             except: continue
-            cv2.circle(depth_canny_3d, (int(x),int(y)), 3, (0,0,255), 1)
                 
             # removing weird edge cases
             if x*y*diameter <= 0: continue
-
-            # if contour_area < 30: continue
-            calculated_diameter = betas_depth_to_dia[0] + betas_depth_to_dia[1]*depth + betas_depth_to_dia[2]*(depth**2)
-            if ((diameter-calculated_diameter)/calculated_diameter) > 0.25: continue
 
             #checking perecentage of contour filled
             contour_area = cv2.contourArea(c)
@@ -184,11 +170,16 @@ try:
             ellipse_area = np.pi*(diameter/2)**2
             if (contour_area/ellipse_area) < 0.5: continue
 
+            # if depth/diameter relationship does not follow the trend in tests/realsense/depth_daimeter_eq-polyfit, then continue
+            calculated_diameter = betas_depth_to_dia[0] + betas_depth_to_dia[1]*depth + betas_depth_to_dia[2]*(depth**2)
+            if ((diameter-calculated_diameter)/calculated_diameter) > 0.25: continue
+
             # grabbing from original depth image, without the cleanup
+            # there was a way to grab from the cleaned array, I would do it
             point = rs.rs2_deproject_pixel_to_point(depth_intrin, [x,y], depth)
             if (point[0]*point[1]*point[2] == 0): continue
 
-            # rotation coords to x away, y up, z right
+            # transf matrix established at the top
             point = transf_camera_to_base @ np.r_[point,1]
 
             added = False
@@ -199,6 +190,8 @@ try:
             if not added:
                 trajectories.append(Trajectory(current_time, point))
 
+            # paint circles onto canny and cleaned
+            cv2.circle(depth_canny_3d, (int(x),int(y)), 3, (0,0,255), 1)
             cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(diameter/2), (0,255,0),2)  
 
         images = np.hstack((depth_canny_3d, depth_cleaned_3d))
@@ -220,6 +213,5 @@ try:
     plt.show()
 
 finally:
-
     # Stop streaming
     pipeline.stop()
