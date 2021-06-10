@@ -36,11 +36,8 @@ config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 profile = pipeline.start(config)
 depth_sensor = profile.get_device().first_depth_sensor()
 depth_scale = depth_sensor.get_depth_scale() # 0.0010000000474974513
-
 align_to = rs.stream.color
 align = rs.align(align_to)
-
-depth_background = np.array([])
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection="3d")
@@ -51,19 +48,19 @@ ax.axes.set_xlim3d(left=-2, right=2)
 ax.axes.set_ylim3d(bottom=-2, top=2)
 ax.axes.set_zlim3d(bottom=-2, top=2)
 
+# getting transf matrix from camera to robot origin
 rot_camera_to_90 = mr.RollPitchYawToRot(0,0,np.pi/4)
 transf_camera_to_90 = mr.RpToTrans(rot_camera_to_90, [0,0,0])
-
 transf_90_to_base = np.array([[0, 0,1, 0.07274],\
-                                  [0,-1,0, 0.06474],\
-                                  [1, 0,0, -0.0175],\
-                                  [0, 0,0,       1]])
-
+                              [0,-1,0, 0.06474],\
+                              [1, 0,0, -0.0175],\
+                              [0, 0,0,       1]])
 transf_camera_to_base = transf_90_to_base @ transf_camera_to_90
 
+# initializing globals
 trajectories = []
 old_trajectories = []
-
+depth_background = np.array([])
 betas_depth_to_dia = np.load("/home/brigs/catkin_ws/src/v4_6dof/scripts/constants/betas.npy")
 
 mc = MotorController()
@@ -175,18 +172,20 @@ try:
             if ((diameter-calculated_diameter)/calculated_diameter) > 0.25: continue
 
             # grabbing from original depth image, without the cleanup
-            # there was a way to grab from the cleaned array, I would do it
+            # if there was a way to grab from the cleaned array, I would do it
             point = rs.rs2_deproject_pixel_to_point(depth_intrin, [x,y], depth)
             if (point[0]*point[1]*point[2] == 0): continue
 
             # transf matrix established at the top
             point = transf_camera_to_base @ np.r_[point,1]
 
+            # go thru all trajectories and see if this point fits in the projected path
             added = False
             for t in trajectories:
                 success = t.append(current_time, point)
                 if success: added = True
-                    
+            
+            # if the point was not in the projected path, then create a new trajectory
             if not added:
                 trajectories.append(Trajectory(current_time, point))
 
@@ -194,13 +193,12 @@ try:
             cv2.circle(depth_canny_3d, (int(x),int(y)), 3, (0,0,255), 1)
             cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(diameter/2), (0,255,0),2)  
 
+        # show images
         images = np.hstack((depth_canny_3d, depth_cleaned_3d))
-        # Show images
         cv2.namedWindow('Main', cv2.WINDOW_AUTOSIZE)
         cv2.imshow('Main', images)
 
         key = cv2.waitKey(1)
-
         if key & 0xFF == ord('q') or key == 27:
             cv2.destroyAllWindows()
             # for t in old_trajectories:
