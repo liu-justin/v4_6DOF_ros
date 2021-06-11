@@ -33,12 +33,13 @@ class MotorController():
         arg.gap = time
         self.pub.publish(arg)
 
+    # sending the specified list of angle_six at the specified timing
     def trajectoryPublish(self, angle_six_list, time_gap):
         # publishing to Teensy, need time in micros
         time_gap_micros = int(1000000*time_gap)
         previousTime = time.perf_counter()
 
-        # sending two right here to try and fill the buffer at the Arduino
+        # sending two right here to fill the buffer at the Arduino
         self.updateVelGap(angle_six_list[1]-angle_six_list[0], time_gap_micros)
         self.updateVelGap(angle_six_list[2]-angle_six_list[1], time_gap_micros)
         i = 3
@@ -51,6 +52,7 @@ class MotorController():
                 i += 1
         self.updateVelGap([0,0,0,0,0,0], time_gap_micros)
 
+    # publish a move to a new transformation matrix
     def transfMatrixPublish(self, new_transf, total_time):
         sample_rate = 10
         total_points = sample_rate*total_time
@@ -68,6 +70,7 @@ class MotorController():
         self.trajectoryPublish(point_pos_list, gap_btwn_points)
         self.updatePos(point_pos_list[-1])
 
+    # publish a move to a new set of angles
     def anglePublish(self, final_pos_six, total_time, useAbs):
         sample_rate = 10
         total_points = sample_rate*total_time

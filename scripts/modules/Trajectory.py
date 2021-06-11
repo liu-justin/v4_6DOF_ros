@@ -53,7 +53,7 @@ class Trajectory():
             print("MISS")
             return False
 
-
+    # plot least_squares line, low_error, high_error, and all the points
     def plotErrors(self, dim, new_time, new_point):
         time_delta = new_time - self.init_time
         int_dim = dimToInt(dim)
