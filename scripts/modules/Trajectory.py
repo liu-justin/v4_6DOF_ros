@@ -209,13 +209,14 @@ class Trajectory():
 
     # problem with newton Raphson is there is a max in the parabola before the intersection, but distance from the center shouldn't be a problem
     def newtonRaphsonQuartic(self, a, estimate, threshold):
-        counter=0
+        counter = 0
         x = estimate
-        while counter<20:
+        while counter < 20:
             f = a[0] + a[1]*x + a[2]*(x**2) + a[3]*(x**3) + a[4]*(x**4)
             if abs(f) <= threshold: return x, True
             f_prime = a[1] + 2*a[2]*(x) + 3*a[3]*(x**2) + 4*a[4]*(x**3)
             x = x - f/f_prime
+            counter += 1
         return estimate, False
 
 

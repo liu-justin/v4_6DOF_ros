@@ -61,7 +61,7 @@ transf_camera_to_base = transf_90_to_base @ transf_camera_to_90
 trajectories = []
 old_trajectories = []
 depth_background = np.array([])
-betas_depth_to_dia = np.load("/home/brigs/catkin_ws/src/v4_6dof/scripts/constants/betas.npy")
+betas_depth_to_dia = np.load("/home/justin/catkin_ws/src/v4_6dof/scripts/constants/betas.npy")
 
 mc = MotorController()
 rospy.init_node('talker', anonymous=True)
@@ -119,6 +119,7 @@ try:
         # move thru all registered trajectories
         for traj in trajectories:
             if (len(traj.times) > 3): # 0.180212
+                print("right before checkSphereIntersection")
                 possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0,0], 0.4087037)
                 if possible:
                     print(f"point: {intersection_point} time: {time_until_intersection}")
