@@ -70,7 +70,7 @@ at_rest_str = input("is arm at rest position y/n?")
 at_rest = True if at_rest_str=="y" else False
 
 # if at rest, go to cobra position
-if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, 0, 0], 2, True)
+if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, -np.pi/2, 0], 2, True)
 
 try:
     # getting the background frame
@@ -121,9 +121,26 @@ try:
             if (len(traj.times) > 3): # 0.180212
                 print("right before checkSphereIntersection")
                 possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0,0], 0.4087037)
+                print(f"point: {intersection_point} time: {time_until_intersection}")
                 if possible:
-                    print(f"point: {intersection_point} time: {time_until_intersection}")
+                    print("possible")
                     intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)
+                    ax.scatter(0,0,0.180212)
+                    ax.scatter(intersection_point[0], -1*intersection_point[2], intersection_point[1])
+                    
+                    t = np.arange(0,2,0.01)
+                    x_traj = traj.betas["x"][0] + traj.betas["x"][1]*t + traj.betas["x"][2]*(t**2)
+                    y_traj = traj.betas["y"][0] + traj.betas["y"][1]*t + traj.betas["y"][2]*(t**2)
+                    z_traj = traj.betas["z"][0] + traj.betas["z"][1]*t + traj.betas["z"][2]*(t**2)
+                    ax.plot3D(x_traj, -1*z_traj, y_traj, color="r")
+                    plt.show()
+                    slow_move = input(f"move slowly to this intersection point? y/n")
+                    if slow_move =="y":
+                        mc.transfMatrixPublish(intersection_transf, 5)
+
+                else:
+                    print("not possible")
+
 
                 # mc.transfMatrixPublish(intersection_transf, time_until_intersection)
 
@@ -208,8 +225,6 @@ try:
             #         plt.pause(0.01)
             # cv2.waitKey()            
             break
-
-    plt.show()
 
 finally:
     # Stop streaming
