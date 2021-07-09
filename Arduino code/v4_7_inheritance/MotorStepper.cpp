@@ -3,9 +3,6 @@
 
 #include <ros.h>
 
-// this value is being shared across all the instances of the class, need to fix
-//std_msgs::Float32 posMsg;
-
 MotorStepper::MotorStepper(int pulse, int direct, int lower, int upper, float step_size, float multi)
 : MotorStepper::MotorAxis(lower, upper)
 {

@@ -4,6 +4,7 @@
 #include <ros.h>
 
 // velocity value in queue is the transformed input velocity needed to generate the output velocity
+// base model for MotorStepper and MotorDifferential
 
 MotorAxis::MotorAxis(int lower, int upper)
   : vel_queue(sizeof(float), 5, FIFO)

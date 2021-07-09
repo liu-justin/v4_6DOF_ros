@@ -196,11 +196,53 @@ class Trajectory():
         # look into Bairstow's Method, or use Newton Raphson
 
         # using Netwon Raphson, good estimate for first collision is time0, will always be closest to the first intersection
-        collision_time, possible = self.newtonRaphsonQuartic(a, 0, 0.001)
+        collision_time, possible, new_estimates = self.newtonRaphsonQuartic(a, 0, 0.001)
 
         if possible:
-            # plug in collision_time into trajectory and record the x,y,z
+            # plug in collision_time into trajectory and record the x,y,z            
+            fig = plt.figure(figsize=plt.figaspect(0.5))
+            ax = fig.add_subplot(1,2,1, projection="3d")
+            ax.set_xlabel("X")
+            ax.set_ylabel("Y")
+            ax.set_zlabel("Z")
+            ax.axes.set_xlim3d(left=-2, right=2)
+            ax.axes.set_ylim3d(bottom=-2, top=2)
+            ax.axes.set_zlim3d(bottom=-2, top=2)
+            ax.scatter(0,0,0.180212)
+            ax.text(0,0,0.180212, "center")
+            for i in range(len(new_estimates)):
+                point = [self.getCoord("x", new_estimates[i]), self.getCoord("y", new_estimates[i]), self.getCoord("z", new_estimates[i])]
+                ax.scatter(point[0], -1*point[2], point[1])
+                ax.text(point[0], -1*point[2], point[1], i)
+
             point = [self.getCoord("x", collision_time), self.getCoord("y", collision_time), self.getCoord("z", collision_time)]
+            ax.scatter(point[0], -1*point[2], point[1])
+            ax.text(point[0], -1*point[2], point[1], "final_point")
+            
+            u,v = np.mgrid[0:2*np.pi:40j, 0:np.pi:20j]
+            x = np.cos(u)*np.sin(v)*0.4087037
+            y = np.sin(u)*np.sin(v)*0.4087037 + 0.180212
+            z = np.cos(v)*0.4087037
+            ax.plot_wireframe(x, -1*z, y, color="y")
+
+            t = np.arange(0,2,0.01)
+            x_traj = self.betas["x"][0] + self.betas["x"][1]*t + self.betas["x"][2]*(t**2)
+            y_traj = self.betas["y"][0] + self.betas["y"][1]*t + self.betas["y"][2]*(t**2)
+            z_traj = self.betas["z"][0] + self.betas["z"][1]*t + self.betas["z"][2]*(t**2)
+            ax.plot3D(x_traj, -1*z_traj, y_traj, color="r")
+
+            bx = fig.add_subplot(1,2,2)
+            bx.set_ylim([-1,1])
+            distance_to_zero = a[0] + a[1]*t + a[2]*(t**2) + a[3]*(t**3) + a[4]*(t**4)
+            bx.plot(t,distance_to_zero)
+            bx.plot(t,0*t)
+            for i in range(len(new_estimates)):
+                distance = a[0] + a[1]*new_estimates[i] + a[2]*(new_estimates[i]**2) + a[3]*(new_estimates[i]**3) + a[4]*(new_estimates[i]**4)
+                bx.scatter(new_estimates[i], distance)
+                bx.text(new_estimates[i], distance, i)
+
+            plt.show()
+
             return True, point, collision_time - self.times[-1]
         else:
             # if false, return to cobra in 5 seconds
@@ -210,14 +252,17 @@ class Trajectory():
     # problem with newton Raphson is there is a max in the parabola before the intersection, but distance from the center shouldn't be a problem
     def newtonRaphsonQuartic(self, a, estimate, threshold):
         counter = 0
-        x = estimate
+        t = estimate
+        new_estimates = []
         while counter < 20:
-            f = a[0] + a[1]*x + a[2]*(x**2) + a[3]*(x**3) + a[4]*(x**4)
-            if abs(f) <= threshold: return x, True
-            f_prime = a[1] + 2*a[2]*(x) + 3*a[3]*(x**2) + 4*a[4]*(x**3)
-            x = x - f/f_prime
+            f = a[0] + a[1]*t + a[2]*(t**2) + a[3]*(t**3) + a[4]*(t**4)
+            new_estimates.append(t)
+            if abs(f) <= threshold: 
+                return t, True, new_estimates
+            f_prime = a[1] + 2*a[2]*(t) + 3*a[3]*(t**2) + 4*a[4]*(t**3)
+            t = t - f/f_prime
             counter += 1
-        return estimate, False
+        return estimate, False, new_estimates
 
 
 """ 

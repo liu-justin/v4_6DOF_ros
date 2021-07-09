@@ -16,8 +16,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import v4_6dof.msg as msg
 
 import os
-print(os.getcwd())
-
 
 # Configure depth and color streams
 pipeline = rs.pipeline()
@@ -39,14 +37,14 @@ depth_scale = depth_sensor.get_depth_scale() # 0.0010000000474974513
 align_to = rs.stream.color
 align = rs.align(align_to)
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection="3d")
-ax.set_xlabel("X")
-ax.set_ylabel("Y")
-ax.set_zlabel("Z")
-ax.axes.set_xlim3d(left=-2, right=2)
-ax.axes.set_ylim3d(bottom=-2, top=2)
-ax.axes.set_zlim3d(bottom=-2, top=2)
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection="3d")
+# ax.set_xlabel("X")
+# ax.set_ylabel("Y")
+# ax.set_zlabel("Z")
+# ax.axes.set_xlim3d(left=-2, right=2)
+# ax.axes.set_ylim3d(bottom=-2, top=2)
+# ax.axes.set_zlim3d(bottom=-2, top=2)
 
 # getting transf matrix from camera to robot origin
 rot_camera_to_90 = mr.RollPitchYawToRot(0,0,np.pi/4)
@@ -66,11 +64,11 @@ betas_depth_to_dia = np.load("/home/justin/catkin_ws/src/v4_6dof/scripts/constan
 mc = MotorController()
 rospy.init_node('talker', anonymous=True)
 
-at_rest_str = input("is arm at rest position y/n?")
-at_rest = True if at_rest_str=="y" else False
+# at_rest_str = input("is arm at rest position y/n?")
+# at_rest = True if at_rest_str=="y" else False
 
-# if at rest, go to cobra position
-if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, -np.pi/2, 0], 2, True)
+# # if at rest, go to cobra position
+# if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, -np.pi/2, 0], 2, True)
 
 try:
     # getting the background frame
@@ -120,20 +118,11 @@ try:
         for traj in trajectories:
             if (len(traj.times) > 3): # 0.180212
                 print("right before checkSphereIntersection")
-                possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0,0], 0.4087037)
+                possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.4087037)
                 print(f"point: {intersection_point} time: {time_until_intersection}")
                 if possible:
                     print("possible")
                     intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)
-                    ax.scatter(0,0,0.180212)
-                    ax.scatter(intersection_point[0], -1*intersection_point[2], intersection_point[1])
-                    
-                    t = np.arange(0,2,0.01)
-                    x_traj = traj.betas["x"][0] + traj.betas["x"][1]*t + traj.betas["x"][2]*(t**2)
-                    y_traj = traj.betas["y"][0] + traj.betas["y"][1]*t + traj.betas["y"][2]*(t**2)
-                    z_traj = traj.betas["z"][0] + traj.betas["z"][1]*t + traj.betas["z"][2]*(t**2)
-                    ax.plot3D(x_traj, -1*z_traj, y_traj, color="r")
-                    plt.show()
                     slow_move = input(f"move slowly to this intersection point? y/n")
                     if slow_move =="y":
                         mc.transfMatrixPublish(intersection_transf, 5)
