@@ -180,6 +180,47 @@ class Trajectory():
     def getCoord(self, dim, time):
         return self.betas[dim][0] + self.betas[dim][1]*time + self.betas[dim][2]*(time**2)
 
+    def checkTrajShortestDist(self, current):
+        f = [0,0,0,0,0]
+        f_prime = [0,0,0,0,0]
+        f_primeprime = [0,0,0,0,0]
+        for i in range(3):
+            dim = intToDim(i)
+            f[4] += self.betas[dim][2]**2
+            f[3] += 2*self.betas[dim][2]*self.betas[dim][1]
+            f[2] += 2*self.betas[dim][2]*(self.betas[dim][0]-current[i]) + self.betas[dim][1]**2
+            f[1] += 2*self.betas[dim][1]*(self.betas[dim][0]-current[i])
+            f[0] += (self.betas[dim][0]-current[i])**2
+
+            f_prime[3] += 4*self.betas[dim][2]**2
+            f_prime[2] += 6*self.betas[dim][2]*self.betas[dim][1]
+            f_prime[1] += 4*self.betas[dim][2]*(self.betas[dim][0]-current[i]) + 2*self.betas[dim][1]**2
+            f_prime[0] += 2*self.betas[dim][1]*(self.betas[dim][0]-current[i])
+
+            f_primeprime[2] += 12*self.betas[dim][2]**2
+            f_primeprime[1] += 12*self.betas[dim][2]*self.betas[dim][1]
+            f_primeprime[0] += 4*self.betas[dim][2]*(self.betas[dim][0]-current[i]) + 2*self.betas[dim][1]**2
+
+        # Newton Raphson
+        counter = 0
+        t = 0
+        threshold = 0.001
+        new_estimates = []
+        while counter < 20:
+            dist_prime = 0.5*(f[0] + f[1]*t + f[2]*(t**2) + f[3]*(t**3) + f[4]*(t**4))**(-0.5)* \
+                         (f_prime[0] + f_prime[1]*t + f_prime[2]*t**2 + f_prime[3]*t**3)
+            new_estimates.append(t)
+            if abs(dist_prime) <= threshold: 
+                return t, True, new_estimates
+            dist_primeprime = -0.25*(f[0] + f[1]*t + f[2]*(t**2) + f[3]*(t**3) + f[4]*(t**4))**(-1.5)* \
+                              (f_prime[0] + f_prime[1]*t + f_prime[2]*t**2 + f_prime[3]*t**3) + \
+                              0.5*(f[0] + f[1]*t + f[2]*(t**2) + f[3]*(t**3) + f[4]*(t**4))**(-0.5)* \
+                              (f_primeprime[0] + f_primeprime[1]*t + f_primeprime[2]*t**2 + f_primeprime[3]*t**3)
+            t = t - dist_prime/dist_primeprime
+            counter += 1
+        return 0, False, new_estimates
+
+
     def checkSphereIntersection(self, center, radius):
         # plugging in the equation of the parabola into mag(x - center) = radius^2
         a = [0,0,0,0,0]
@@ -263,6 +304,7 @@ class Trajectory():
             t = t - f/f_prime
             counter += 1
         return estimate, False, new_estimates
+
 
 
 """ 
