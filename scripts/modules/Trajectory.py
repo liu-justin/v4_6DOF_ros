@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from . import fits as f
 from collections import OrderedDict
+from . import modern_robotics as mr
 
 def dimToInt(dim):
     return ord(dim)-120 #ASCII for "x" is 120
@@ -180,46 +181,55 @@ class Trajectory():
     def getCoord(self, dim, time):
         return self.betas[dim][0] + self.betas[dim][1]*time + self.betas[dim][2]*(time**2)
 
-    def checkTrajShortestDist(self, current):
+    # current position of the hand
+    def checkTrajShortestDist(self, M_current):
         f = [0,0,0,0,0]
         f_prime = [0,0,0,0,0]
         f_primeprime = [0,0,0,0,0]
+        R_current, p_current = mr.TransToRp(M_current)
+
         for i in range(3):
             dim = intToDim(i)
             f[4] += self.betas[dim][2]**2
             f[3] += 2*self.betas[dim][2]*self.betas[dim][1]
-            f[2] += 2*self.betas[dim][2]*(self.betas[dim][0]-current[i]) + self.betas[dim][1]**2
-            f[1] += 2*self.betas[dim][1]*(self.betas[dim][0]-current[i])
-            f[0] += (self.betas[dim][0]-current[i])**2
+            f[2] += 2*self.betas[dim][2]*(self.betas[dim][0]-p_current[i]) + self.betas[dim][1]**2
+            f[1] += 2*self.betas[dim][1]*(self.betas[dim][0]-p_current[i])
+            f[0] += (self.betas[dim][0]-p_current[i])**2
 
             f_prime[3] += 4*self.betas[dim][2]**2
             f_prime[2] += 6*self.betas[dim][2]*self.betas[dim][1]
-            f_prime[1] += 4*self.betas[dim][2]*(self.betas[dim][0]-current[i]) + 2*self.betas[dim][1]**2
-            f_prime[0] += 2*self.betas[dim][1]*(self.betas[dim][0]-current[i])
+            f_prime[1] += 4*self.betas[dim][2]*(self.betas[dim][0]-p_current[i]) + 2*self.betas[dim][1]**2
+            f_prime[0] += 2*self.betas[dim][1]*(self.betas[dim][0]-p_current[i])
 
             f_primeprime[2] += 12*self.betas[dim][2]**2
             f_primeprime[1] += 12*self.betas[dim][2]*self.betas[dim][1]
-            f_primeprime[0] += 4*self.betas[dim][2]*(self.betas[dim][0]-current[i]) + 2*self.betas[dim][1]**2
+            f_primeprime[0] += 4*self.betas[dim][2]*(self.betas[dim][0]-p_current[i]) + 2*self.betas[dim][1]**2
 
         # Newton Raphson
+        possible, collision_time, new_estimates = self.NetwonRaphsonMinimizeDistanceBtwnPointTraj(f, f_prime, f_primeprime, 0, 0.001)
+        if possible:
+            point = [self.getCoord("x", collision_time), self.getCoord("y", collision_time), self.getCoord("z", collision_time)]
+            return True, point, collision_time - self.times[-1]
+        else:
+            return False
+
+    # f is the coefficients of the 4th polynomial under the square root
+    def NetwonRaphsonMinimizeDistanceBtwnPointTraj(self, f, f_prime, f_primeprime, estimate, threshold):
         counter = 0
-        t = 0
-        threshold = 0.001
+        t = estimate
         new_estimates = []
         while counter < 20:
             dist_prime = 0.5*(f[0] + f[1]*t + f[2]*(t**2) + f[3]*(t**3) + f[4]*(t**4))**(-0.5)* \
                          (f_prime[0] + f_prime[1]*t + f_prime[2]*t**2 + f_prime[3]*t**3)
             new_estimates.append(t)
             if abs(dist_prime) <= threshold: 
-                return t, True, new_estimates
-            dist_primeprime = -0.25*(f[0] + f[1]*t + f[2]*(t**2) + f[3]*(t**3) + f[4]*(t**4))**(-1.5)* \
+                break
+            dist_primeprime = -0.25*(f[0] + f[1]*t + f[2]*(t**2) + f[3]*(t**3) + f[4]*(t**4))**(-1.5) * \
                               (f_prime[0] + f_prime[1]*t + f_prime[2]*t**2 + f_prime[3]*t**3) + \
-                              0.5*(f[0] + f[1]*t + f[2]*(t**2) + f[3]*(t**3) + f[4]*(t**4))**(-0.5)* \
+                              0.5*(f[0] + f[1]*t + f[2]*(t**2) + f[3]*(t**3) + f[4]*(t**4))**(-0.5) * \
                               (f_primeprime[0] + f_primeprime[1]*t + f_primeprime[2]*t**2 + f_primeprime[3]*t**3)
             t = t - dist_prime/dist_primeprime
             counter += 1
-        return 0, False, new_estimates
-
 
     def checkSphereIntersection(self, center, radius):
         # plugging in the equation of the parabola into mag(x - center) = radius^2
@@ -237,7 +247,7 @@ class Trajectory():
         # look into Bairstow's Method, or use Newton Raphson
 
         # using Netwon Raphson, good estimate for first collision is time0, will always be closest to the first intersection
-        collision_time, possible, new_estimates = self.newtonRaphsonQuartic(a, 0, 0.001)
+        possible, collision_time, new_estimates = self.newtonRaphsonQuartic(a, 0, 0.001)
 
         if possible:
             # plug in collision_time into trajectory and record the x,y,z            
@@ -299,11 +309,11 @@ class Trajectory():
             f = a[0] + a[1]*t + a[2]*(t**2) + a[3]*(t**3) + a[4]*(t**4)
             new_estimates.append(t)
             if abs(f) <= threshold: 
-                return t, True, new_estimates
+                return True, t, new_estimates
             f_prime = a[1] + 2*a[2]*(t) + 3*a[3]*(t**2) + 4*a[4]*(t**3)
             t = t - f/f_prime
             counter += 1
-        return estimate, False, new_estimates
+        return False, estimate, new_estimates
 
 
 
