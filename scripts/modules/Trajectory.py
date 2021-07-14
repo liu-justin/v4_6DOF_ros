@@ -205,6 +205,11 @@ class Trajectory():
             f_primeprime[1] += 12*self.betas[dim][2]*self.betas[dim][1]
             f_primeprime[0] += 4*self.betas[dim][2]*(self.betas[dim][0]-p_current[i]) + 2*self.betas[dim][1]**2
 
+        f_prime_after = [f[1], 2*f[2], 3*f[3], 4*f[4], 0]
+        f_prime2_after = [f_prime_after[1], 2*f_prime_after[2], 3*f_prime_after[3], 0, 0]
+
+        x =0
+
         # Newton Raphson
         possible, collision_time, new_estimates = self.NetwonRaphsonMinimizeDistanceBtwnPointTraj(f, f_prime, f_primeprime, 0, 0.001)
         if possible:
