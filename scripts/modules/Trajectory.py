@@ -196,17 +196,8 @@ class Trajectory():
             f[1] += 2*self.betas[dim][1]*(self.betas[dim][0]-p_current[i])
             f[0] += (self.betas[dim][0]-p_current[i])**2
 
-            f_prime[3] += 4*self.betas[dim][2]**2
-            f_prime[2] += 6*self.betas[dim][2]*self.betas[dim][1]
-            f_prime[1] += 4*self.betas[dim][2]*(self.betas[dim][0]-p_current[i]) + 2*self.betas[dim][1]**2
-            f_prime[0] += 2*self.betas[dim][1]*(self.betas[dim][0]-p_current[i])
-
-            f_primeprime[2] += 12*self.betas[dim][2]**2
-            f_primeprime[1] += 12*self.betas[dim][2]*self.betas[dim][1]
-            f_primeprime[0] += 4*self.betas[dim][2]*(self.betas[dim][0]-p_current[i]) + 2*self.betas[dim][1]**2
-
         # Newton Raphson
-        possible, collision_time, new_estimates = self.NetwonRaphsonMinimizeDistanceBtwnPointTraj(f, f_prime, f_primeprime, 0, 0.001)
+        possible, collision_time, new_estimates = self.NetwonRaphsonMinimizeDistanceBtwnPointTraj(f, 0, 0.001)
         if possible:
             point = [self.getCoord("x", collision_time), self.getCoord("y", collision_time), self.getCoord("z", collision_time)]
             return True, point, collision_time - self.times[-1]
@@ -214,7 +205,9 @@ class Trajectory():
             return False
 
     # f is the coefficients of the 4th polynomial under the square root
-    def NetwonRaphsonMinimizeDistanceBtwnPointTraj(self, f, f_prime, f_primeprime, estimate, threshold):
+    def NetwonRaphsonMinimizeDistanceBtwnPointTraj(self, f, estimate, threshold):
+        f_prime = [f[1],2*f[2],3*f[3],4*f[4],0]
+        f_prime2 =[f_prime[1], 2*f_prime[2], 3*f_prime[3], 0, 0]
         counter = 0
         t = estimate
         new_estimates = []
@@ -223,13 +216,15 @@ class Trajectory():
                          (f_prime[0] + f_prime[1]*t + f_prime[2]*t**2 + f_prime[3]*t**3)
             new_estimates.append(t)
             if abs(dist_prime) <= threshold: 
-                break
-            dist_primeprime = -0.25*(f[0] + f[1]*t + f[2]*(t**2) + f[3]*(t**3) + f[4]*(t**4))**(-1.5) * \
+                return True, estimate, new_estimates
+            dist_prime2 = -0.25*(f[0] + f[1]*t + f[2]*(t**2) + f[3]*(t**3) + f[4]*(t**4))**(-1.5) * \
                               (f_prime[0] + f_prime[1]*t + f_prime[2]*t**2 + f_prime[3]*t**3) + \
                               0.5*(f[0] + f[1]*t + f[2]*(t**2) + f[3]*(t**3) + f[4]*(t**4))**(-0.5) * \
-                              (f_primeprime[0] + f_primeprime[1]*t + f_primeprime[2]*t**2 + f_primeprime[3]*t**3)
-            t = t - dist_prime/dist_primeprime
+                              (f_prime2[0] + f_prime2[1]*t + f_prime2[2]*t**2 + f_prime2[3]*t**3)
+            t = t - dist_prime/dist_prime2
             counter += 1
+
+        return False
 
     def checkSphereIntersection(self, center, radius):
         # plugging in the equation of the parabola into mag(x - center) = radius^2
