@@ -120,7 +120,7 @@ try:
                 print("right before checkSphereIntersection")
                 # possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.4087037)
                 
-                possible, intersection_point, time_until_intersection = traj.checkTrajShortestDist(mc.M_current)
+                possible, intersection_point, time_until_intersection = traj.findClosestPointToM(mc.M_current)
                 print(f"point: {intersection_point} time: {time_until_intersection}")
                 if possible:
                     print("possible")

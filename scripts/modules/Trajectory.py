@@ -136,7 +136,8 @@ class Trajectory():
         predicted_high = self.predicted(self.betas_high[dim], time_delta)
         error = 0.05 if dim=="y" else 0.02
         # if the point falls btwn the upper and lower bounds
-        if (predicted_low - ERRORS[dimToInt(dim)]) < new_point[dimToInt(dim)] < (predicted_high + ERRORS[dimToInt(dim)]): return True
+        if (predicted_low - ERRORS[dimToInt(dim)]) < new_point[dimToInt(dim)] < (predicted_high + ERRORS[dimToInt(dim)]): 
+            return True
         else:
             # print(f"{dim} failed: {predicted_low - error},{new_point[dimToInt(dim)]},{predicted_high + error}")
             return False
@@ -148,18 +149,32 @@ class Trajectory():
         predicted_low = predicted - error
         predicted_high = predicted + error
         # if the new_point falls within a percentage of the predicted
-        if (predicted_low - ERRORS[dimToInt(dim)]) < new_point[dimToInt(dim)] < (predicted_high + ERRORS[dimToInt(dim)]): return True
+        if (predicted_low - ERRORS[dimToInt(dim)]) < new_point[dimToInt(dim)] < (predicted_high + ERRORS[dimToInt(dim)]): 
+            return True
         else:
             # print(f"{dim} failed: predicted{predicted} new_point{new_point[dimToInt(dim)]}")
             return False
 
     def findBetasErrored(self, dim):
-        if dim == "y": self.betas_low["y"], self.betas_high["y"] = f.poly_errored(  self.points[-1][dimToInt(dim)], self.times[-1],  self.points[0][dimToInt(dim)], self.times[0], 0.03, 0.001)
-        else:          self.betas_low[dim], self.betas_high[dim] = f.linear_errored(self.points[-1][dimToInt(dim)], self.times[-1],  self.points[0][dimToInt(dim)], self.times[0], 0.01, 0.001)
+        if dim == "y":
+            self.betas_low["y"], self.betas_high["y"] = f.poly_errored(self.points[-1][dimToInt(dim)], \
+                                                                       self.times[-1],  \
+                                                                       self.points[0][dimToInt(dim)], \
+                                                                       self.times[0], 0.03, 0.001)
+        else: 
+            self.betas_low[dim], self.betas_high[dim] = f.linear_errored(self.points[-1][dimToInt(dim)], \
+                                                                         self.times[-1], \
+                                                                         self.points[0][dimToInt(dim)], \
+                                                                         self.times[0], 0.01, 0.001)
 
     def findBetasLeastSquared(self, dim):
-        if dim == "y": self.betas["y"], self.avg_residuals["y"] = f.poly_least_squares_beta0const(self.times, [p[1] for p in self.points], self.betas["y"][0])
-        else:          self.betas[dim], self.avg_residuals[dim] = f.linear_least_squares(self.times, [p[dimToInt(dim)] for p in self.points])
+        if dim == "y":
+            self.betas["y"], self.avg_residuals["y"] = f.poly_least_squares_beta0const(self.times, \
+                                                                                       [p[1] for p in self.points], \
+                                                                                       self.betas["y"][0])
+        else:
+            self.betas[dim], self.avg_residuals[dim] = f.linear_least_squares(self.times, \
+                                                                              [p[dimToInt(dim)] for p in self.points])
 
     def determineFit(self, dim):
         self.findBetasLeastSquared(dim)
@@ -178,11 +193,11 @@ class Trajectory():
             self.findBetasErrored(dim) 
             # print(f"staying with errored: R2 was {R2}")
 
-    def getCoord(self, dim, time):
+    def getCoordFromTime(self, dim, time):
         return self.betas[dim][0] + self.betas[dim][1]*time + self.betas[dim][2]*(time**2)
 
     # current position of the hand
-    def checkTrajShortestDist(self, M_current):
+    def findClosestPointToM(self, M_current):
         f = [0,0,0,0,0]
         f_prime = [0,0,0,0,0]
         f_primeprime = [0,0,0,0,0]
@@ -197,15 +212,17 @@ class Trajectory():
             f[0] += (self.betas[dim][0]-p_current[i])**2
 
         # Newton Raphson
-        possible, collision_time, new_estimates = self.NetwonRaphsonMinimizeDistanceBtwnPointTraj(f, 0, 0.001)
+        possible, collision_time, new_estimates = self.NRM_Mininum_Dist_btwn_Traj_Point(f, 0, 0.001)
         if possible:
-            point = [self.getCoord("x", collision_time), self.getCoord("y", collision_time), self.getCoord("z", collision_time)]
+            point = [self.getCoordFromTime("x", collision_time), \
+                     self.getCoordFromTime("y", collision_time), \
+                     self.getCoordFromTime("z", collision_time)]
             return True, point, collision_time - self.times[-1]
         else:
             return False
 
     # f is the coefficients of the 4th polynomial under the square root
-    def NetwonRaphsonMinimizeDistanceBtwnPointTraj(self, f, estimate, threshold):
+    def NRM_Mininum_Dist_btwn_Traj_Point(self, f, estimate, threshold):
         f_prime = [f[1],2*f[2],3*f[3],4*f[4],0]
         f_prime2 =[f_prime[1], 2*f_prime[2], 3*f_prime[3], 0, 0]
         counter = 0
@@ -218,9 +235,9 @@ class Trajectory():
             if abs(dist_prime) <= threshold: 
                 return True, estimate, new_estimates
             dist_prime2 = -0.25*(f[0] + f[1]*t + f[2]*(t**2) + f[3]*(t**3) + f[4]*(t**4))**(-1.5) * \
-                              (f_prime[0] + f_prime[1]*t + f_prime[2]*t**2 + f_prime[3]*t**3) + \
-                              0.5*(f[0] + f[1]*t + f[2]*(t**2) + f[3]*(t**3) + f[4]*(t**4))**(-0.5) * \
-                              (f_prime2[0] + f_prime2[1]*t + f_prime2[2]*t**2 + f_prime2[3]*t**3)
+                          (f_prime[0] + f_prime[1]*t + f_prime[2]*t**2 + f_prime[3]*t**3) + \
+                          0.5*(f[0] + f[1]*t + f[2]*(t**2) + f[3]*(t**3) + f[4]*(t**4))**(-0.5) * \
+                          (f_prime2[0] + f_prime2[1]*t + f_prime2[2]*t**2 + f_prime2[3]*t**3)
             t = t - dist_prime/dist_prime2
             counter += 1
 
@@ -257,11 +274,15 @@ class Trajectory():
             ax.scatter(0,0,0.180212)
             ax.text(0,0,0.180212, "center")
             for i in range(len(new_estimates)):
-                point = [self.getCoord("x", new_estimates[i]), self.getCoord("y", new_estimates[i]), self.getCoord("z", new_estimates[i])]
+                point = [self.getCoordFromTime("x", new_estimates[i]), \
+                         self.getCoordFromTime("y", new_estimates[i]), \
+                         self.getCoordFromTime("z", new_estimates[i])]
                 ax.scatter(point[0], -1*point[2], point[1])
                 ax.text(point[0], -1*point[2], point[1], i)
 
-            point = [self.getCoord("x", collision_time), self.getCoord("y", collision_time), self.getCoord("z", collision_time)]
+            point = [self.getCoordFromTime("x", collision_time), \
+                     self.getCoordFromTime("y", collision_time), \
+                     self.getCoordFromTime("z", collision_time)]
             ax.scatter(point[0], -1*point[2], point[1])
             ax.text(point[0], -1*point[2], point[1], "final_point")
             
