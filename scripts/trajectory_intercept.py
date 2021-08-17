@@ -80,11 +80,11 @@ try:
 
         # extracting and cleaning image
         depth_image = np.asanyarray(depth_frame.get_data())
-        depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
+        depth_cleaned = (depth_image*(255/(5/depth_scale))).astype(np.uint8)
         depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
         depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
         # numbers for bilateral filter tuned in tests/realsense/tune_cleaning
-        depth_cleaned = cv2.bilateralFilter(depth_cleaned, 9, 50, 50)
+        depth_cleaned = cv2.bilateralFilter(depth_cleaned, 5, 42, 42)
 
         cv2.namedWindow('Main', cv2.WINDOW_AUTOSIZE)
         cv2.imshow('Main', depth_cleaned)
@@ -95,11 +95,13 @@ try:
             # depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
             # depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
             # depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
-            thresh, depth_mask = cv2.threshold(depth_cleaned,1,255,cv2.THRESH_BINARY_INV)
+            thresh, depth_mask = cv2.threshold(depth_cleaned,30,255,cv2.THRESH_BINARY_INV)
             depth_background = cv2.inpaint(depth_cleaned, depth_mask, 3, cv2.INPAINT_TELEA)
 
+            images = np.hstack((depth_cleaned, depth_mask, depth_background))
+
             cv2.namedWindow('New', cv2.WINDOW_AUTOSIZE)
-            cv2.imshow('New', depth_background)
+            cv2.imshow('New', images)
             cv2.waitKey(100000)
             cv2.destroyAllWindows()
             break
