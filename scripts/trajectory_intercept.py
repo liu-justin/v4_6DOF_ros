@@ -128,9 +128,9 @@ try:
                 if possible:
                     print("possible")
                     intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)
-                    slow_move = input(f"move slowly to this intersection point? y/n")
-                    if slow_move =="y":
-                        mc.transfMatrixPublish(intersection_transf, 5)
+                    # slow_move = input(f"move slowly to this intersection point? y/n")
+                    # if slow_move =="y":
+                    #     mc.transfMatrixPublish(intersection_transf, 5)
 
                 else:
                     print("not possible")

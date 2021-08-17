@@ -198,6 +198,20 @@ class Trajectory():
 
     # current position of the hand
     def findClosestPointToM(self, M_current):
+        """finds a point on the trajectory the minimum distance from the current location
+        :param M_current: the current position of the robot head
+        :return: success, the point where intersection occurs, the time it occurs
+        Example Input:
+            R = np.array([[1, 0,  0],
+                        [0, 0, -1],
+                        [0, 1,  0]])
+            p = np.array([1, 2, 5])
+        Output:
+            np.array([[1, 0,  0, 1],
+                    [0, 0, -1, 2],
+                    [0, 1,  0, 5],
+                    [0, 0,  0, 1]])
+        """
         f = [0,0,0,0,0]
         f_prime = [0,0,0,0,0]
         f_primeprime = [0,0,0,0,0]
@@ -217,12 +231,28 @@ class Trajectory():
             point = [self.getCoordFromTime("x", collision_time), \
                      self.getCoordFromTime("y", collision_time), \
                      self.getCoordFromTime("z", collision_time)]
-            return True, point, collision_time - self.times[-1]
+            # return (True, point, collision_time - self.times[-1])
+            return (True, point, collision_time - self.times[-1])
         else:
-            return False
+            return (False, None, None)
 
     # f is the coefficients of the 4th polynomial under the square root
     def NRM_Mininum_Dist_btwn_Traj_Point(self, f, estimate, threshold):
+        """ Newton Raphson to solve the quartic equation in the drive
+        :param f: polynomial coefficients for the equation 0,1,2,3,4
+        :param estimate: where to start
+        :return: success, the time from now that the intersection occurs, a list of estimates for troubleshooting
+        Example Input:
+            R = np.array([[1, 0,  0],
+                        [0, 0, -1],
+                        [0, 1,  0]])
+            p = np.array([1, 2, 5])
+        Output:
+            np.array([[1, 0,  0, 1],
+                    [0, 0, -1, 2],
+                    [0, 1,  0, 5],
+                    [0, 0,  0, 1]])
+        """
         f_prime = [f[1],2*f[2],3*f[3],4*f[4],0]
         f_prime2 =[f_prime[1], 2*f_prime[2], 3*f_prime[3], 0, 0]
         counter = 0
@@ -233,7 +263,7 @@ class Trajectory():
                          (f_prime[0] + f_prime[1]*t + f_prime[2]*t**2 + f_prime[3]*t**3)
             new_estimates.append(t)
             if abs(dist_prime) <= threshold: 
-                return True, estimate, new_estimates
+                return (True, t, new_estimates)
             dist_prime2 = -0.25*(f[0] + f[1]*t + f[2]*(t**2) + f[3]*(t**3) + f[4]*(t**4))**(-1.5) * \
                           (f_prime[0] + f_prime[1]*t + f_prime[2]*t**2 + f_prime[3]*t**3) + \
                           0.5*(f[0] + f[1]*t + f[2]*(t**2) + f[3]*(t**3) + f[4]*(t**4))**(-0.5) * \
@@ -241,7 +271,7 @@ class Trajectory():
             t = t - dist_prime/dist_prime2
             counter += 1
 
-        return False
+        return (False, None, None)
 
     def checkSphereIntersection(self, center, radius):
         # plugging in the equation of the parabola into mag(x - center) = radius^2
