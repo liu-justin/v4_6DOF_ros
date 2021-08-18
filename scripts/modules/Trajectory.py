@@ -38,6 +38,12 @@ class Trajectory():
         self.betas_high["y"] = [self.points[0][1],0,-9.81]
         self.betas_high["z"] = [0,5,0]
 
+        self.checked = False
+
+    def isChecked(self):
+        self.checked = True
+        return False
+
     def detectHit(self):
         # detecting if ball hits a board at x=0, y=(-0.16, 0.05), z=(-0.284,-0.06)
 
@@ -95,8 +101,10 @@ class Trajectory():
                 time_delta = new_time - self.init_time
                 self.times.append(time_delta)
                 self.points.append(new_point)
+                if len(self.times) >= 3:
+                    self.checked = False
 
-                # check thru all dimensions leastsquares R2
+                # check thru all dimensions and choose the fit: leastsquares, R2
                 for dim in self.betas.keys():
                         self.determineFit(dim)        
                 return True
@@ -232,6 +240,7 @@ class Trajectory():
                      self.getCoordFromTime("y", collision_time), \
                      self.getCoordFromTime("z", collision_time)]
             # return (True, point, collision_time - self.times[-1])
+            
             return (True, point, collision_time - self.times[-1])
         else:
             return (False, None, None)

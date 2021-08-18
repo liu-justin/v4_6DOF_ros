@@ -118,11 +118,10 @@ try:
 
         # move thru all registered trajectories
         for traj in trajectories:
-            if (len(traj.times) > 3): # 0.180212
+            # if the trajectory is somewhat defined, perform a check to see if robot can move there
+            if (not traj.isChecked()):
                 print("right before checkSphereIntersection")
                 # possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.4087037)
-                
-                # if not possible, I dont need these two, wonder how to do that
                 possible, intersection_point, time_until_intersection = traj.findClosestPointToM(mc.M_current)
                 print(f"point: {intersection_point} time: {time_until_intersection}")
                 if possible:
