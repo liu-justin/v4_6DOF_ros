@@ -64,25 +64,26 @@ betas_depth_to_dia = np.load("/home/justin/catkin_ws/src/v4_6dof/scripts/constan
 mc = MotorController()
 rospy.init_node('talker', anonymous=True)
 
-# at_rest_str = input("is arm at rest position y/n?")
-# at_rest = True if at_rest_str=="y" else False
-
+at_rest_str = input("is arm at rest position y/n?")
+at_rest = True if at_rest_str=="y" else False
 # # if at rest, go to cobra position
-# if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, -np.pi/2, 0], 2, True)
+if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, -np.pi/2, 0], 5, True)
 
 try:
     # getting the background frame
     while True:
         frames = pipeline.wait_for_frames() 
         aligned_frames = align.process(frames)
+        # aligned_frames = rs.decimation_filter.process(aligned_frames)
         depth_frame = aligned_frames.get_depth_frame()
         if not depth_frame: continue
 
         # extracting and cleaning image
+        # look into cleaning arrays from intel, like decimate and hole filling
         depth_image = np.asanyarray(depth_frame.get_data())
         depth_cleaned = (depth_image*(255/(5/depth_scale))).astype(np.uint8)
-        depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
-        depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
+        # depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
+        # depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
         # numbers for bilateral filter tuned in tests/realsense/tune_cleaning
         depth_cleaned = cv2.bilateralFilter(depth_cleaned, 5, 42, 42)
 
@@ -91,10 +92,6 @@ try:
         key = cv2.waitKey(1)
 
         if key & 0xFF == ord('q') or key == 27:
-            # save this depth_image as the background, but need to remove those 0s
-            # depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
-            # depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
-            # depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
             thresh, depth_mask = cv2.threshold(depth_cleaned,30,255,cv2.THRESH_BINARY_INV)
             depth_background = cv2.inpaint(depth_cleaned, depth_mask, 3, cv2.INPAINT_TELEA)
 
@@ -120,7 +117,6 @@ try:
         for traj in trajectories:
             # if the trajectory is somewhat defined, perform a check to see if robot can move there
             if (not traj.isChecked()):
-                print("right before checkSphereIntersection")
                 # possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.4087037)
                 possible, intersection_point, time_until_intersection = traj.findClosestPointToM(mc.M_current)
                 print(f"point: {intersection_point} time: {time_until_intersection}")

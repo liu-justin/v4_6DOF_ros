@@ -38,7 +38,7 @@ class Trajectory():
         self.betas_high["y"] = [self.points[0][1],0,-9.81]
         self.betas_high["z"] = [0,5,0]
 
-        self.checked = False
+        self.checked = True
 
     def isChecked(self):
         self.checked = True

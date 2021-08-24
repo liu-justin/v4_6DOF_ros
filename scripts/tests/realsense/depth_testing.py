@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 from collections import deque
 
-from Trajectory import Trajectory
+# from Trajectory import Trajectory
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -93,6 +93,7 @@ try:
         depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
 
         # Convert images to numpy arrays
+        # look into cleaning arrays from intel, like decimate and hole filling
         depth_image = np.asanyarray(depth_frame.get_data())
         depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
         depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
@@ -111,13 +112,9 @@ try:
 
         for c in contours:
             try:
-                # (x,y), radius = cv2.minEnclosingCircle(c)
                 (x,y), (width, height), angle = cv2.minAreaRect(c)
                 diameter = min(width, height)
                 depth = depth_frame.get_distance(int(x),int(y))
-
-                other_depth = depth_image[int(x)][int(y)]
-                # print(f"depth: {depth}, other_depth: {other_depth}")
                 
             except: continue
             cv2.circle(depth_canny_3d, (int(x),int(y)), 3, (0,0,255), 1)
