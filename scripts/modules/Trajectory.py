@@ -41,8 +41,7 @@ class Trajectory():
         self.checked = True
 
     def isChecked(self):
-        self.checked = True
-        return False
+        return self.checked
 
     def detectHit(self):
         # detecting if ball hits a board at x=0, y=(-0.16, 0.05), z=(-0.284,-0.06)
@@ -79,13 +78,14 @@ class Trajectory():
         ax.plot(x,high_errored, "g-" if self.use_errored[int_dim] else "r-")
         plt.show()
 
-    def predicted(self, betas, time):
+    def getPredictedPosition(self, betas, time):
         return betas[0] + betas[1]*time + betas[2]*(time**2)
 
     def append(self, new_time, new_point):
         if len(self.times) == 1:
             return self.appendFirst(new_time, new_point)
         else:
+            # setting up success bools to see if the new_point fits this traj in xyz
             success = [False, False, False]
 
             # for all dimensions, use the appropriate fit to check the new_point
@@ -109,18 +109,14 @@ class Trajectory():
                         self.determineFit(dim)        
                 return True
 
-            # name and blame
+            # name and blame, and show the graph
             else:
                 # for i in range(len(success)):
                 #     if not success[i]:
                 #         self.plotErrors(intToDim(i), new_time, new_point)
                 return False
 
-            # check thru all dimensions, look at coefficient of determination on least squares to determine correct fit
-            for dim in self.betas.keys():
-                self.determineFit(dim)
-
-    # # sets the linear betas
+    # sets the linear betas
     def appendFirst(self, new_time, new_point):
         time_delta = new_time - self.init_time
         if (time_delta == 0): return False
@@ -140,8 +136,8 @@ class Trajectory():
 
     def checkWithErrored(self, new_time, new_point, dim):
         time_delta = new_time - self.init_time
-        predicted_low = self.predicted(self.betas_low[dim], time_delta)
-        predicted_high = self.predicted(self.betas_high[dim], time_delta)
+        predicted_low = self.getPredictedPosition(self.betas_low[dim], time_delta)
+        predicted_high = self.getPredictedPosition(self.betas_high[dim], time_delta)
         error = 0.05 if dim=="y" else 0.02
         # if the point falls btwn the upper and lower bounds
         if (predicted_low - ERRORS[dimToInt(dim)]) < new_point[dimToInt(dim)] < (predicted_high + ERRORS[dimToInt(dim)]): 
@@ -152,7 +148,7 @@ class Trajectory():
 
     def checkWithLeastSquares(self, new_time, new_point, dim):
         time_delta = new_time - self.init_time
-        predicted = self.predicted(self.betas[dim], time_delta)
+        predicted = self.getPredictedPosition(self.betas[dim], time_delta)
         error = self.avg_residuals[dim]
         predicted_low = predicted - error
         predicted_high = predicted + error
@@ -164,6 +160,9 @@ class Trajectory():
             return False
 
     def findBetasErrored(self, dim):
+        """finds the betas of this dimension using the square crisscross method
+        :param dim: the current dim
+        """
         if dim == "y":
             self.betas_low["y"], self.betas_high["y"] = f.poly_errored(self.points[-1][dimToInt(dim)], \
                                                                        self.times[-1],  \
@@ -176,6 +175,9 @@ class Trajectory():
                                                                          self.times[0], 0.01, 0.001)
 
     def findBetasLeastSquared(self, dim):
+        """finds the betas of this dimension using the least squares regression method
+        :param dim: the current dim
+        """
         if dim == "y":
             self.betas["y"], self.avg_residuals["y"] = f.poly_least_squares_beta0const(self.times, \
                                                                                        [p[1] for p in self.points], \
@@ -188,7 +190,7 @@ class Trajectory():
         self.findBetasLeastSquared(dim)
 
         # https://stats.stackexchange.com/questions/219810/r-squared-and-higher-order-polynomial-regression
-        RSS = sum([(p[dimToInt(dim)] - self.predicted(self.betas[dim], t))**2 for p,t in zip(self.points, self.times)])
+        RSS = sum([(p[dimToInt(dim)] - self.getPredictedPosition(self.betas[dim], t))**2 for p,t in zip(self.points, self.times)])
         bar = sum([p[dimToInt(dim)] for p in self.points])/len(self.points)
         TSS = sum([(p[dimToInt(dim)] - bar)**2 for p in self.points])
         R2 = 1 - RSS/TSS
@@ -399,12 +401,12 @@ class Trajectory():
     # sets the y betas and resets linear betas
     def appendSecond(self,new_time, new_point):
         time_delta = new_time - self.init_time
-        predicted_x_low = self.predicted(self.betas_low["x"], time_delta)
-        predicted_x_high = self.predicted(self.betas_high["x"], time_delta)
-        predicted_y_low = self.predicted(self.betas_low["y"], time_delta)
-        predicted_y_high = self.predicted(self.betas_high["y"], time_delta)
-        predicted_z_low = self.predicted(self.betas_low["z"], time_delta)
-        predicted_z_high = self.predicted(self.betas_high["z"], time_delta)
+        predicted_x_low = self.getPredictedPosition(self.betas_low["x"], time_delta)
+        predicted_x_high = self.getPredictedPosition(self.betas_high["x"], time_delta)
+        predicted_y_low = self.getPredictedPosition(self.betas_low["y"], time_delta)
+        predicted_y_high = self.getPredictedPosition(self.betas_high["y"], time_delta)
+        predicted_z_low = self.getPredictedPosition(self.betas_low["z"], time_delta)
+        predicted_z_high = self.getPredictedPosition(self.betas_high["z"], time_delta)
         print(f"appending into length 2: predicted x {predicted_x_low},{predicted_x_high}: actual {new_point[0]}")
         print(f"appending into length 2: predicted y {predicted_y_low},{predicted_y_high}: actual {new_point[1]}")
         print(f"appending into length 2: predicted z {predicted_z_low},{predicted_z_high}: actual {new_point[2]}")
