@@ -28,14 +28,14 @@ device = pipeline_profile.get_device()
 device_product_line = str(device.get_info(rs.camera_info.product_line))
 
 config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+# config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 
 # Start streaming
 profile = pipeline.start(config)
 depth_sensor = profile.get_device().first_depth_sensor()
 depth_scale = depth_sensor.get_depth_scale() # 0.0010000000474974513
-align_to = rs.stream.color
-align = rs.align(align_to)
+# align_to = rs.stream.color
+# align = rs.align(align_to)
 
 # fig = plt.figure()
 # ax = fig.add_subplot(111, projection="3d")
@@ -59,7 +59,7 @@ transf_camera_to_base = transf_90_to_base @ transf_camera_to_90
 trajectories = []
 old_trajectories = []
 depth_background = np.array([])
-betas_depth_to_dia = np.load("/home/justin/catkin_ws/src/v4_6dof/scripts/constants/betas.npy")
+betas_depth_to_dia = np.load("/home/pi/catkin_ws/src/v4_6dof/scripts/constants/betas.npy")
 
 mc = MotorController()
 rospy.init_node('talker', anonymous=True)
@@ -73,9 +73,9 @@ try:
     # getting the background frame
     while True:
         frames = pipeline.wait_for_frames() 
-        aligned_frames = align.process(frames)
+        # aligned_frames = align.process(frames)
         # aligned_frames = rs.decimation_filter.process(aligned_frames)
-        depth_frame = aligned_frames.get_depth_frame()
+        depth_frame = frames.get_depth_frame()
         if not depth_frame: continue
 
         # extracting and cleaning image
@@ -106,8 +106,8 @@ try:
     while True:
         # returns a composite frame
         frames = pipeline.wait_for_frames() 
-        aligned_frames = align.process(frames)
-        depth_frame = aligned_frames.get_depth_frame()
+        # aligned_frames = align.process(frames)
+        depth_frame = frames.get_depth_frame()
         current_time = depth_frame.get_timestamp()/1000
         
         if not depth_frame: continue
@@ -156,7 +156,7 @@ try:
         depth_canny = cv2.Canny(depth_cleaned, lower, upper)
         depth_canny_3d = np.dstack((depth_canny,depth_canny,depth_canny))
 
-        contours, hierarchy = cv2.findContours(depth_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        img, contours, hierarchy = cv2.findContours(depth_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for c in contours:
             try:
                 # rectangle, not circle; slow shutter speed/motion blur elongates the circle into oval, need the shorter height
