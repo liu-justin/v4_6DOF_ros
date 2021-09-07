@@ -15,7 +15,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 import v4_6dof.msg as msg
 
-import os
+import sys, os
 
 # Configure depth and color streams
 pipeline = rs.pipeline()
@@ -64,17 +64,24 @@ betas_depth_to_dia = np.load("/home/pi/catkin_ws/src/v4_6dof/scripts/constants/b
 mc = MotorController()
 rospy.init_node('talker', anonymous=True)
 
-at_rest_str = input("is arm at rest position y/n?")
-at_rest = True if at_rest_str=="y" else False
-# # if at rest, go to cobra position
-if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, -np.pi/2, 0], 5, True)
+# at_rest_str = input("is arm at rest position y/n?")
+# at_rest = True if at_rest_str=="y" else False
+# # # if at rest, go to cobra position
+# if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, -np.pi/2, 0], 5, True)
+
+decimate = rs.decimation_filter(2)
+hole_filling = rs.hole_filling_filter()
+spatial = rs.spatial_filter()
+temporal = rs.temporal_filter()
 
 try:
     # getting the background frame
     while True:
         frames = pipeline.wait_for_frames() 
-        # aligned_frames = align.process(frames)
-        # aligned_frames = rs.decimation_filter.process(aligned_frames)
+        # # aligned_frames = align.process(frames)
+        # frames = spatial.process(frames).as_frameset()
+        # frames = temporal.process(frames).as_frameset()
+        frames = hole_filling.process(frames).as_frameset()
         depth_frame = frames.get_depth_frame()
         if not depth_frame: continue
 
@@ -106,7 +113,7 @@ try:
     while True:
         # returns a composite frame
         frames = pipeline.wait_for_frames() 
-        # aligned_frames = align.process(frames)
+        frames = hole_filling.process(frames).as_frameset()
         depth_frame = frames.get_depth_frame()
         current_time = depth_frame.get_timestamp()/1000
         
@@ -142,9 +149,9 @@ try:
         # Convert images to numpy arrays
         depth_image = np.asanyarray(depth_frame.get_data())
         depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
-        depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
-        depth_cleaned = np.where((depth_cleaned <= 0), depth_background, depth_cleaned)
-        depth_cleaned = cv2.bilateralFilter(depth_cleaned, 5, 42, 42) # tune these numbers in tune_cleaning
+        # depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
+        # depth_cleaned = np.where((depth_cleaned <= 0), depth_background, depth_cleaned)
+        # depth_cleaned = cv2.bilateralFilter(depth_cleaned, 5, 42, 42) # tune these numbers in tune_cleaning
         depth_cleaned_3d = np.dstack((depth_cleaned,depth_cleaned,depth_cleaned))
 
         # create an canny edge picture, and rip data from it
