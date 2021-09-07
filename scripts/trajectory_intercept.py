@@ -34,17 +34,8 @@ config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
 profile = pipeline.start(config)
 depth_sensor = profile.get_device().first_depth_sensor()
 depth_scale = depth_sensor.get_depth_scale() # 0.0010000000474974513
-# align_to = rs.stream.color
-# align = rs.align(align_to)
-
-# fig = plt.figure()
-# ax = fig.add_subplot(111, projection="3d")
-# ax.set_xlabel("X")
-# ax.set_ylabel("Y")
-# ax.set_zlabel("Z")
-# ax.axes.set_xlim3d(left=-2, right=2)
-# ax.axes.set_ylim3d(bottom=-2, top=2)
-# ax.axes.set_zlim3d(bottom=-2, top=2)
+max_depth = 6
+max_depth_scaled = max_depth/depth_scale
 
 # getting transf matrix from camera to robot origin
 rot_camera_to_90 = mr.RollPitchYawToRot(0,0,np.pi/4)
@@ -64,11 +55,6 @@ betas_depth_to_dia = np.load("/home/pi/catkin_ws/src/v4_6dof/scripts/constants/b
 mc = MotorController()
 rospy.init_node('talker', anonymous=True)
 
-# at_rest_str = input("is arm at rest position y/n?")
-# at_rest = True if at_rest_str=="y" else False
-# # # if at rest, go to cobra position
-# if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, -np.pi/2, 0], 5, True)
-
 decimate = rs.decimation_filter(2)
 hole_filling = rs.hole_filling_filter()
 spatial = rs.spatial_filter()
@@ -79,16 +65,16 @@ try:
     while True:
         frames = pipeline.wait_for_frames() 
         # # aligned_frames = align.process(frames)
-        # frames = spatial.process(frames).as_frameset()
+        frames = spatial.process(frames).as_frameset()
         # frames = temporal.process(frames).as_frameset()
-        frames = hole_filling.process(frames).as_frameset()
+        # frames = hole_filling.process(frames).as_frameset()
         depth_frame = frames.get_depth_frame()
         if not depth_frame: continue
 
         # extracting and cleaning image
         # look into cleaning arrays from intel, like decimate and hole filling
         depth_image = np.asanyarray(depth_frame.get_data())
-        depth_cleaned = (depth_image*(255/(5/depth_scale))).astype(np.uint8)
+        depth_cleaned = (depth_image*(255/(max_depth_scaled))).astype(np.uint8)
         # depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
         # depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
         # numbers for bilateral filter tuned in tests/realsense/tune_cleaning
@@ -99,7 +85,7 @@ try:
         key = cv2.waitKey(1)
 
         if key & 0xFF == ord('q') or key == 27:
-            thresh, depth_mask = cv2.threshold(depth_cleaned,30,255,cv2.THRESH_BINARY_INV)
+            thresh, depth_mask = cv2.threshold(depth_cleaned,50,255,cv2.THRESH_BINARY_INV)
             depth_background = cv2.inpaint(depth_cleaned, depth_mask, 3, cv2.INPAINT_TELEA)
 
             images = np.hstack((depth_cleaned, depth_mask, depth_background))
@@ -110,35 +96,29 @@ try:
             cv2.destroyAllWindows()
             break
 
-    while True:
-        # returns a composite frame
-        frames = pipeline.wait_for_frames() 
-        frames = hole_filling.process(frames).as_frameset()
-        depth_frame = frames.get_depth_frame()
-        current_time = depth_frame.get_timestamp()/1000
-        
-        if not depth_frame: continue
-        depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
+    at_rest_str = input("is arm at rest position y/n?")
+    at_rest = True if at_rest_str=="y" else False
+    # # if at rest, go to cobra position
+    if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, -np.pi/2, 0], 4, True)
 
+    while True:
         # move thru all registered trajectories
         for traj in trajectories:
             # if the trajectory is somewhat defined, perform a check to see if robot can move there
-            if (not traj.isChecked()):
+            if (not traj.checked):
+                print(f"length of traj is {len(traj.times)}")
                 # possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.4087037)
                 possible, intersection_point, time_until_intersection = traj.findClosestPointToM(mc.M_current)
                 print(f"point: {intersection_point} time: {time_until_intersection}")
                 if possible:
                     print("possible")
                     intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)
-                    # slow_move = input(f"move slowly to this intersection point? y/n")
-                    # if slow_move =="y":
-                    #     mc.transfMatrixPublish(intersection_transf, 5)
-
+                    slow_move = input(f"move slowly to this intersection point? y/n")
+                    if slow_move =="y":
+                        mc.transfMatrixPublish(intersection_transf, 5)
                 else:
                     print("not possible")
-
-
-                # mc.transfMatrixPublish(intersection_transf, time_until_intersection)
+                traj.checked = True
 
             # if total time is longer than 3 seconds, kill the trajectory
             if (current_time - traj.init_time) >= 3:
@@ -146,12 +126,21 @@ try:
                 if (len(traj.times) > 3):
                     old_trajectories.append(traj)
 
+        # returns a composite frame
+        frames = pipeline.wait_for_frames() 
+        # frames = hole_filling.process(frames).as_frameset()
+        depth_frame = frames.get_depth_frame()
+        current_time = depth_frame.get_timestamp()/1000
+        
+        if not depth_frame: continue
+        depth_intrin = depth_frame.profile.as_video_stream_profile().intrinsics
+
         # Convert images to numpy arrays
         depth_image = np.asanyarray(depth_frame.get_data())
-        depth_cleaned = (depth_image*(255/(6/depth_scale))).astype(np.uint8)
-        # depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
-        # depth_cleaned = np.where((depth_cleaned <= 0), depth_background, depth_cleaned)
-        # depth_cleaned = cv2.bilateralFilter(depth_cleaned, 5, 42, 42) # tune these numbers in tune_cleaning
+        depth_cleaned = (depth_image*(255/(max_depth_scaled))).astype(np.uint8)
+        depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
+        depth_cleaned = np.where((depth_cleaned <= 5), depth_background, depth_cleaned)
+        depth_cleaned = cv2.bilateralFilter(depth_cleaned, 5, 42, 42) # tune these numbers in tune_cleaning
         depth_cleaned_3d = np.dstack((depth_cleaned,depth_cleaned,depth_cleaned))
 
         # create an canny edge picture, and rip data from it

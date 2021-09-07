@@ -38,10 +38,16 @@ class Trajectory():
         self.betas_high["y"] = [self.points[0][1],0,-9.81]
         self.betas_high["z"] = [0,5,0]
 
-        self.checked = True
+        self.__checked = True
+        self.ttl = 5
 
-    def isChecked(self):
-        return self.checked
+    @property
+    def checked(self):
+        return self.__checked
+    
+    @checked.setter
+    def checked(self, incoming_bool):
+        self.__checked = incoming_bool
 
     def detectHit(self):
         # detecting if ball hits a board at x=0, y=(-0.16, 0.05), z=(-0.284,-0.06)
@@ -101,12 +107,11 @@ class Trajectory():
                 time_delta = new_time - self.init_time
                 self.times.append(time_delta)
                 self.points.append(new_point)
-                if len(self.times) >= 3:
-                    self.checked = False
+                self.checked = False
 
                 # check thru all dimensions and choose the fit: leastsquares, R2
                 for dim in self.betas.keys():
-                        self.determineFit(dim)        
+                    self.determineFit(dim)        
                 return True
 
             # name and blame, and show the graph
@@ -128,10 +133,8 @@ class Trajectory():
             self.points.append(new_point)
             for dim in self.betas.keys():
                 self.findBetasErrored(dim)
-            print("suceeded in first append")
             return True
         else:
-            print("failed in first append")
             return False
 
     def checkWithErrored(self, new_time, new_point, dim):
@@ -269,7 +272,7 @@ class Trajectory():
         counter = 0
         t = estimate
         new_estimates = []
-        while counter < 20:
+        while counter < 10:
             dist_prime = 0.5*(f[0] + f[1]*t + f[2]*(t**2) + f[3]*(t**3) + f[4]*(t**4))**(-0.5)* \
                          (f_prime[0] + f_prime[1]*t + f_prime[2]*t**2 + f_prime[3]*t**3)
             new_estimates.append(t)
@@ -362,7 +365,7 @@ class Trajectory():
         counter = 0
         t = estimate
         new_estimates = []
-        while counter < 20:
+        while counter < 10:
             f = a[0] + a[1]*t + a[2]*(t**2) + a[3]*(t**3) + a[4]*(t**4)
             new_estimates.append(t)
             if abs(f) <= threshold: 
