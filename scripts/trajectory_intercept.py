@@ -26,9 +26,7 @@ pipeline_wrapper = rs.pipeline_wrapper(pipeline)
 pipeline_profile = config.resolve(pipeline_wrapper)
 device = pipeline_profile.get_device()
 device_product_line = str(device.get_info(rs.camera_info.product_line))
-
 config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-# config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 
 # Start streaming
 profile = pipeline.start(config)
@@ -55,6 +53,7 @@ betas_depth_to_dia = np.load("/home/pi/catkin_ws/src/v4_6dof/scripts/constants/b
 mc = MotorController()
 rospy.init_node('talker', anonymous=True)
 
+# testing realsense filters comparing to mine
 decimate = rs.decimation_filter(2)
 hole_filling = rs.hole_filling_filter()
 spatial = rs.spatial_filter()
@@ -64,7 +63,6 @@ try:
     # getting the background frame
     while True:
         frames = pipeline.wait_for_frames() 
-        # # aligned_frames = align.process(frames)
         frames = spatial.process(frames).as_frameset()
         # frames = temporal.process(frames).as_frameset()
         # frames = hole_filling.process(frames).as_frameset()
@@ -75,8 +73,8 @@ try:
         # look into cleaning arrays from intel, like decimate and hole filling
         depth_image = np.asanyarray(depth_frame.get_data())
         depth_cleaned = (depth_image*(255/(max_depth_scaled))).astype(np.uint8)
-        # depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
-        # depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
+        depth_cleaned = np.where((depth_cleaned > 255), 255, depth_cleaned)
+        depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
         # numbers for bilateral filter tuned in tests/realsense/tune_cleaning
         depth_cleaned = cv2.bilateralFilter(depth_cleaned, 5, 42, 42)
 
@@ -85,6 +83,7 @@ try:
         key = cv2.waitKey(1)
 
         if key & 0xFF == ord('q') or key == 27:
+            # hole filling filter
             thresh, depth_mask = cv2.threshold(depth_cleaned,50,255,cv2.THRESH_BINARY_INV)
             depth_background = cv2.inpaint(depth_cleaned, depth_mask, 3, cv2.INPAINT_TELEA)
 
@@ -97,36 +96,12 @@ try:
             break
 
     at_rest_str = input("is arm at rest position y/n?")
-    at_rest = True if at_rest_str=="y" else False
+    at_rest = at_rest_str=="y"
     # # if at rest, go to cobra position
     if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, -np.pi/2, 0], 4, True)
 
+    # trying to find a ping pong ball now
     while True:
-        # move thru all registered trajectories
-        for traj in trajectories:
-            # if the trajectory is somewhat defined, perform a check to see if robot can move there
-            if (not traj.checked):
-                print(f"length of traj is {len(traj.times)}")
-                # possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.4087037)
-                possible, intersection_point, time_until_intersection = traj.findClosestPointToM(mc.M_current)
-                print(f"point: {intersection_point} time: {time_until_intersection}")
-                if possible:
-                    print("possible")
-                    intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)
-                    slow_move = input(f"move slowly to this intersection point? y/n")
-                    if slow_move =="y":
-                        mc.transfMatrixPublish(intersection_transf, 5)
-                else:
-                    print("not possible")
-                traj.checked = True
-
-            # if total time is longer than 3 seconds, kill the trajectory
-            if (current_time - traj.init_time) >= 3:
-                trajectories.pop(trajectories.index(traj))
-                if (len(traj.times) > 3):
-                    old_trajectories.append(traj)
-
-        # returns a composite frame
         frames = pipeline.wait_for_frames() 
         # frames = hole_filling.process(frames).as_frameset()
         depth_frame = frames.get_depth_frame()
@@ -143,7 +118,7 @@ try:
         depth_cleaned = cv2.bilateralFilter(depth_cleaned, 5, 42, 42) # tune these numbers in tune_cleaning
         depth_cleaned_3d = np.dstack((depth_cleaned,depth_cleaned,depth_cleaned))
 
-        # create an canny edge picture, and rip data from it
+        # create an canny edge picture
         # values tuned in tests/realsense/tune_cleaning
         sigma = 0.38
         v = np.median(depth_cleaned)
@@ -153,6 +128,8 @@ try:
         depth_canny_3d = np.dstack((depth_canny,depth_canny,depth_canny))
 
         img, contours, hierarchy = cv2.findContours(depth_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        # sift thru all the contours to find anything that looks like a ping pong ball
         for c in contours:
             try:
                 # rectangle, not circle; slow shutter speed/motion blur elongates the circle into oval, need the shorter height
@@ -164,14 +141,16 @@ try:
             # removing weird edge cases
             if x*y*diameter <= 0: continue
 
-            #checking perecentage of contour filled
+            # if contour area smaller than this number, it is most likely noise
             contour_area = cv2.contourArea(c)
             if (contour_area < 50): continue
-            ellipse_area = np.pi*(diameter/2)**2
+
+            # checking area of contour to area of ellipse
+            ellipse_area = np.pi*(diameter/2)*(diameter/2)
             if (contour_area/ellipse_area) < 0.5: continue
 
-            # if depth/diameter relationship does not follow the trend in tests/realsense/depth_daimeter_eq-polyfit, then continue
-            calculated_diameter = betas_depth_to_dia[0] + betas_depth_to_dia[1]*depth + betas_depth_to_dia[2]*(depth**2)
+            # if depth/diameter relationship does not follow the trend in tests/realsense/depth_diameter_eq-polyfit, then continue
+            calculated_diameter = betas_depth_to_dia[0] + betas_depth_to_dia[1]*depth + betas_depth_to_dia[2]*(depth*depth)
             if ((diameter-calculated_diameter)/calculated_diameter) > 0.25: continue
 
             # grabbing from original depth image, without the cleanup
@@ -194,12 +173,37 @@ try:
 
             # paint circles onto canny and cleaned
             cv2.circle(depth_canny_3d, (int(x),int(y)), 3, (0,0,255), 1)
-            cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(diameter/2), (0,255,0),2)  
+            cv2.circle(depth_cleaned_3d, (int(x),int(y)), diameter//2, (0,255,0),2)  
 
         # show images
         images = np.hstack((depth_canny_3d, depth_cleaned_3d))
         cv2.namedWindow('Main', cv2.WINDOW_AUTOSIZE)
         cv2.imshow('Main', images)
+
+        # move thru all registered trajectories
+        for traj in trajectories:
+            # if the trajectory is somewhat defined, perform a check to see if robot can move there
+            if (not traj.checked):
+                print(f"length of traj is {len(traj.times)}")
+                # possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.4087037)
+                possible, intersection_point, time_until_intersection = traj.findClosestPointToM(mc.M_current)
+                print(f"point: {intersection_point} time: {time_until_intersection}")
+                if possible:
+                    print("possible")
+                    intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)
+                    slow_move = input(f"move slowly to this intersection point? y/n")
+                    if slow_move =="y":
+                        mc.transfMatrixPublish(intersection_transf, 5)
+                else:
+                    print("not possible")
+                traj.checked = True
+
+            # if total time is longer than 2 seconds, kill the trajectory
+            if (current_time - traj.init_time) >= 2:
+                # trajectories.pop(trajectories.index(traj))
+                trajectories.remove(traj)
+                if (len(traj.times) > 3):
+                    old_trajectories.append(traj)
 
         key = cv2.waitKey(1)
         if key & 0xFF == ord('q') or key == 27:

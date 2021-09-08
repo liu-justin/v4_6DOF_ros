@@ -71,12 +71,12 @@ class MotorController():
         self.updatePos(point_pos_list[-1])
 
     # publish a move to a new set of angles
-    def anglePublish(self, final_pos_six, total_time, useAbs):
+    def anglePublish(self, final_pos_six, total_time, use_absolute):
         sample_rate = 10
         total_points = sample_rate*total_time
         gap_btwn_points = total_time/(total_points-1)
 
-        starting_pos_six = self.pos_six if useAbs else [0,0,0,0,0,0]
+        starting_pos_six = self.pos_six if use_absolute else [0,0,0,0,0,0]
 
         points_pos_list = mr.JointTrajectory(starting_pos_six, final_pos_six, total_time, total_points, 3)
         
