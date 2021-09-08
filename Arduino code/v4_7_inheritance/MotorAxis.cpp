@@ -7,8 +7,8 @@
 // base model for MotorStepper and MotorDifferential
 
 MotorAxis::MotorAxis(int lower, int upper)
-  : vel_queue(sizeof(float), 5, FIFO)
-  , gap_queue(sizeof(unsigned long), 5, FIFO)
+  : vel_queue(sizeof(float), 10, FIFO)
+  , gap_queue(sizeof(unsigned long), 10, FIFO)
 {
 
   lower_limit = lower;
