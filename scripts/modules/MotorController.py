@@ -15,7 +15,7 @@ class MotorController():
 
         self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six)
 
-        self.pub = rospy.Publisher('vel_six_chatter',msg.VelGap,queue_size=1)
+        self.pub = rospy.Publisher('vel_six_chatter',msg.VelGap,queue_size=10)
         self.sub = rospy.Subscriber('pos_six_chatter',msg.VelGap,self.updatePos)
 
     def updatePos(self, new_pos_six):
