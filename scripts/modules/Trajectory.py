@@ -38,16 +38,16 @@ class Trajectory():
         self.betas_high["y"] = [self.points[0][1],0,-9.81]
         self.betas_high["z"] = [0,5,0]
 
-        self.__checked = True
+        self.__developed = False
         self.ttl = 5
 
     @property
-    def checked(self):
-        return self.__checked
+    def developed(self):
+        return self.__developed
     
-    @checked.setter
-    def checked(self, incoming_bool):
-        self.__checked = incoming_bool
+    @developed.setter
+    def developed(self, incoming_bool):
+        self.__developed = incoming_bool
 
     def detectHit(self):
         # detecting if ball hits a board at x=0, y=(-0.16, 0.05), z=(-0.284,-0.06)
@@ -107,7 +107,8 @@ class Trajectory():
                 time_delta = new_time - self.init_time
                 self.times.append(time_delta)
                 self.points.append(new_point)
-                self.checked = False
+
+                if len(self.times) >= 4: self.developed = True
 
                 # check thru all dimensions and choose the fit: leastsquares, R2
                 for dim in self.betas.keys():
@@ -299,11 +300,9 @@ class Trajectory():
             a[0] += self.betas[dim][0]**2 - 2*center[i]*self.betas[dim][0] + center[i]**2
         a[0] +=  -1*(radius**2)
 
-        # now using the quartic formula (Ax^4 + Bx^3 +Cx^2 + Dx + E = 0)
-        # look into Bairstow's Method, or use Newton Raphson
-
-        # using Netwon Raphson, good estimate for first collision is time0, will always be closest to the first intersection
-        possible, collision_time, new_estimates = self.newtonRaphsonQuartic(a, 0, 0.001)
+        # using Netwon Raphson, good estimate for first collision is last known time
+        # using a starting guess of 0 is close to a flat slope, which is really bad for NR
+        possible, collision_time, new_estimates = self.newtonRaphsonQuartic(a, self.times[-1], 0.001)
 
         if possible:
             # plug in collision_time into trajectory and record the x,y,z            

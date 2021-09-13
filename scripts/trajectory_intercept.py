@@ -183,8 +183,7 @@ try:
         # move thru all registered trajectories
         for traj in trajectories:
             # if the trajectory is somewhat defined, perform a check to see if robot can move there
-            if (not traj.checked):
-                print(f"length of traj is {len(traj.times)}")
+            if (traj.developed):
                 # possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.4087037)
                 possible, intersection_point, time_until_intersection = traj.findClosestPointToM(mc.M_current)
                 print(f"point: {intersection_point} time: {time_until_intersection}")
@@ -196,7 +195,7 @@ try:
                         mc.transfMatrixPublish(intersection_transf, 5)
                 else:
                     print("not possible")
-                traj.checked = True
+                trajectories.remove(traj)
 
             # if total time is longer than 2 seconds, kill the trajectory
             if (current_time - traj.init_time) >= 2:
