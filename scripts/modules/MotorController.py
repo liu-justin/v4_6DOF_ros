@@ -53,7 +53,7 @@ class MotorController():
         self.updateVelGap([0,0,0,0,0,0], time_gap_micros)
 
     # publish a move to a new transformation matrix
-    def transfMatrixPublish(self, new_transf, total_time):
+    def transfMatrixCartesianPublish(self, new_transf, total_time):
         sample_rate = 10
         total_points = sample_rate*total_time
         gap_btwn_points = total_time/(total_points-1)
@@ -63,12 +63,22 @@ class MotorController():
         point_pos_list = []
         previous_point_pos = self.pos_six
         for point_transf in point_transf_list[1:]:
-            current_point_pos, success = mr.IKinBody(self.body_list, self.M_rest, point_transf, previous_point_pos, 0.01, 0.001)
+            current_point_pos, success = mr.IKinBody(self.body_list, self.M_current, point_transf, previous_point_pos, 0.01, 0.001)
             point_pos_list.append(current_point_pos)
             previous_point_pos = current_point_pos
         
         self.trajectoryPublish(point_pos_list, gap_btwn_points)
         self.updatePos(point_pos_list[-1])
+        
+    def transfMatrixJointPublish(self, new_transf, total_time):
+        ending_pos_six, success = mr.IKinBody(self.body_list, self.M_current, new_transf,self.pos_six, 0.01, 0.001) 
+        for start, end in zip(self.pos_six, ending_pos_six):
+            if abs((start - end)/total_time) > 0.8:
+                print(f"this move is too fast! fastest speed is {(start - end)/total_time}")
+                return
+        
+        self.anglePublish(ending_pos_six, total_time, True)
+
 
     # publish a move to a new set of angles
     def anglePublish(self, final_pos_six, total_time, use_absolute):

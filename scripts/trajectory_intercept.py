@@ -184,15 +184,12 @@ try:
         for traj in trajectories:
             # if the trajectory is somewhat defined, perform a check to see if robot can move there
             if (traj.developed):
-                # possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.4087037)
-                possible, intersection_point, time_until_intersection = traj.findClosestPointToM(mc.M_current)
+                possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.4087037)
+                # possible, intersection_point, time_until_intersection = traj.findClosestPointToM(mc.M_current)
                 print(f"point: {intersection_point} time: {time_until_intersection}")
                 if possible:
-                    print("possible")
                     intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)
-                    slow_move = input(f"move slowly to this intersection point? y/n")
-                    if slow_move =="y":
-                        mc.transfMatrixPublish(intersection_transf, 5)
+                    mc.transfMatrixJointPublish(intersection_transf, time_until_intersection)
                 else:
                     print("not possible")
                 trajectories.remove(traj)
