@@ -184,7 +184,7 @@ try:
         for traj in trajectories:
             # if the trajectory is somewhat defined, perform a check to see if robot can move there
             if (traj.developed):
-                possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.4087037)
+                possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.278515)
                 # possible, intersection_point, time_until_intersection = traj.findClosestPointToM(mc.M_current)
                 print(f"point: {intersection_point} time: {time_until_intersection}")
                 if possible:
