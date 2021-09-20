@@ -15,8 +15,9 @@ if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, -np.pi/2, 0], 4, True)
 
 # [float(x) for x in a])
 while True:
-    angles_str = input("input 6 angles: ")
-    angles = [float(x) for x in (angles_str.split(" "))]
+    angle_str = input("input 1 angles: ")
+    angle = float(angle_str)
+    angles = [angle, angle, angle, angle, angle, angle]
     print(angles)
     time_str = input("input the time: ")
     time = float(time_str)
