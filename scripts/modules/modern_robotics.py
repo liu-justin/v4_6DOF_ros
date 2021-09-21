@@ -201,6 +201,11 @@ def RpToTrans(R, p):
     return np.r_[np.c_[R, p], [[0, 0, 0, 1]]]
 
 def rpyxyzToTrans(rpyxyz):
+    """Converts a roll-pitch-yaw and a position vector into homogeneous
+    transformation matrix
+    :param rpyxyz: a list with roll, pitch, yaw, x, y, z
+    :return: A homogeneous transformation matrix corresponding to the inputs
+    """
     roll = rpyxyz[0]
     pitch = rpyxyz[1]
     yaw = rpyxyz[2]
