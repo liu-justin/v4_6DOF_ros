@@ -151,7 +151,7 @@ try:
 
             # if depth/diameter relationship does not follow the trend in tests/realsense/depth_diameter_eq-polyfit, then continue
             calculated_diameter = betas_depth_to_dia[0] + betas_depth_to_dia[1]*depth + betas_depth_to_dia[2]*(depth*depth)
-            if ((diameter-calculated_diameter)/calculated_diameter) > 0.25: continue
+            if ((diameter-calculated_diameter)/calculated_diameter) > 0.15: continue
 
             # grabbing from original depth image, without the cleanup
             # if there was a way to grab from the cleaned array, I would do it
@@ -182,24 +182,21 @@ try:
 
         # move thru all registered trajectories
         for traj in trajectories:
-            # if the trajectory is somewhat defined, perform a check to see if robot can move there
+            # if the trajectory is developed (5 points), perform a check to see if robot can move there
             if (traj.developed):
-                possible, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.278515)
-                # possible, intersection_point, time_until_intersection = traj.findClosestPointToM(mc.M_current)
-                print(f"point: {intersection_point} time: {time_until_intersection}")
-                if possible:
+                reachable, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.278515)
+                if reachable:
+                    print(f"point: {intersection_point} time: {time_until_intersection} reachable")
                     intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)
                     mc.transfMatrixJointPublish(intersection_transf, time_until_intersection)
+                    old_trajectories.append(traj)
                 else:
-                    print("not possible")
+                    print(f"point: {intersection_point} not reachable")
                 trajectories.remove(traj)
 
             # if total time is longer than 2 seconds, kill the trajectory
             if (current_time - traj.init_time) >= 2:
-                # trajectories.pop(trajectories.index(traj))
                 trajectories.remove(traj)
-                if (len(traj.times) > 3):
-                    old_trajectories.append(traj)
 
         key = cv2.waitKey(1)
         if key & 0xFF == ord('q') or key == 27:

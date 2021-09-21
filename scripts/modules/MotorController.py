@@ -72,12 +72,14 @@ class MotorController():
         
     def transfMatrixJointPublish(self, new_transf, total_time):
         ending_pos_six, success = mr.IKinBody(self.body_list, self.M_current, new_transf,self.pos_six, 0.01, 0.001) 
-        for start, end in zip(self.pos_six, ending_pos_six):
-            if abs((start - end)/total_time) > 0.8:
-                print(f"this move is too fast! fastest speed is {(start - end)/total_time}")
-                return
+        if success:
+            for start, end in zip(self.pos_six, ending_pos_six):
+                if abs((start - end)/total_time) > 0.8:
+                    print(f"this move is too fast! fastest speed is {abs(start - end)/total_time}")
+                    return
         
-        self.anglePublish(ending_pos_six, total_time, True)
+        # safety, change time to 5
+        self.anglePublish(ending_pos_six, 5, True)
 
 
     # publish a move to a new set of angles
