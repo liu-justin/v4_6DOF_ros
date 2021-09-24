@@ -48,7 +48,7 @@ transf_camera_to_base = transf_90_to_base @ transf_camera_to_90
 trajectories = []
 old_trajectories = []
 depth_background = np.array([])
-betas_depth_to_dia = np.load("/home/pi/catkin_ws/src/v4_6dof/scripts/constants/betas.npy")
+betas_depth_to_dia = np.load("/home/justin/catkin_ws/src/v4_6dof/scripts/constants/betas.npy")
 
 mc = MotorController()
 rospy.init_node('talker', anonymous=True)
@@ -63,7 +63,7 @@ try:
     # getting the background frame
     while True:
         frames = pipeline.wait_for_frames() 
-        frames = spatial.process(frames).as_frameset()
+        # frames = spatial.process(frames).as_frameset()
         # frames = temporal.process(frames).as_frameset()
         # frames = hole_filling.process(frames).as_frameset()
         depth_frame = frames.get_depth_frame()
@@ -98,7 +98,7 @@ try:
     at_rest_str = input("is arm at rest position y/n?")
     at_rest = at_rest_str=="y"
     # # if at rest, go to cobra position
-    if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, -np.pi/2, 0], 4, True)
+    if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, -np.pi/2, 0], 0.4, True)
 
     # trying to find a ping pong ball now
     while True:
@@ -127,7 +127,7 @@ try:
         depth_canny = cv2.Canny(depth_cleaned, lower, upper)
         depth_canny_3d = np.dstack((depth_canny,depth_canny,depth_canny))
 
-        img, contours, hierarchy = cv2.findContours(depth_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy = cv2.findContours(depth_canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         # sift thru all the contours to find anything that looks like a ping pong ball
         for c in contours:
@@ -140,6 +140,7 @@ try:
                 
             # removing weird edge cases
             if x*y*diameter <= 0: continue
+            if x < 20: continue
 
             # if contour area smaller than this number, it is most likely noise
             contour_area = cv2.contourArea(c)
@@ -151,7 +152,7 @@ try:
 
             # if depth/diameter relationship does not follow the trend in tests/realsense/depth_diameter_eq-polyfit, then continue
             calculated_diameter = betas_depth_to_dia[0] + betas_depth_to_dia[1]*depth + betas_depth_to_dia[2]*(depth*depth)
-            if ((diameter-calculated_diameter)/calculated_diameter) > 0.15: continue
+            if ((diameter-calculated_diameter)/calculated_diameter) > 0.05: continue
 
             # grabbing from original depth image, without the cleanup
             # if there was a way to grab from the cleaned array, I would do it

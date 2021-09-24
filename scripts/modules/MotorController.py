@@ -11,7 +11,7 @@ class MotorController():
         self.vel_six = [0.0,0.0,0.0,0.0,0.0,0.0]
         self.pos_six = [0.0,0.0,0.0,0.0,0.0,0.0]
 
-        self.M_rest, self.T_list, self.body_list, self.G_list = unp.unpack_XML("/home/pi/catkin_ws/src/v4_6dof/scripts/constants/6DoF_URDF.xml")
+        self.M_rest, self.T_list, self.body_list, self.G_list = unp.unpack_XML("/home/justin/catkin_ws/src/v4_6dof/scripts/constants/6DoF_URDF.xml")
 
         self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six)
 
