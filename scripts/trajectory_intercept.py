@@ -173,7 +173,7 @@ try:
 
             # paint circles onto canny and cleaned
             cv2.circle(depth_canny_3d, (int(x),int(y)), 3, (0,0,255), 1)
-            cv2.circle(depth_cleaned_3d, (int(x),int(y)), diameter//2, (0,255,0),2)  
+            cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(diameter/2), (0,255,0),2)  
 
         # show images
         images = np.hstack((depth_canny_3d, depth_cleaned_3d))

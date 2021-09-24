@@ -88,6 +88,9 @@ class Trajectory():
         return betas[0] + betas[1]*time + betas[2]*(time**2)
 
     def append(self, new_time, new_point):
+        time_delta = new_time - self.init_time
+        if (time_delta == self.times[-1]): return False
+
         if len(self.times) == 1:
             return self.appendFirst(new_time, new_point)
         else:
@@ -108,7 +111,7 @@ class Trajectory():
                 self.times.append(time_delta)
                 self.points.append(new_point)
 
-                if len(self.times) >= 4: self.developed = True
+                if len(self.times) >= 5: self.developed = True
 
                 # check thru all dimensions and choose the fit: leastsquares, R2
                 for dim in self.betas.keys():
@@ -125,7 +128,6 @@ class Trajectory():
     # sets the linear betas
     def appendFirst(self, new_time, new_point):
         time_delta = new_time - self.init_time
-        if (time_delta == 0): return False
         self.betas["x"] = f.linear_simple(new_point[0], time_delta,  self.points[0][0], self.times[0])
         self.betas["z"] = f.linear_simple(new_point[2], time_delta,  self.points[0][2], self.times[0])
 
