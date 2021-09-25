@@ -54,8 +54,9 @@ class MotorController():
 
     # publish a move to a new transformation matrix
     def transfMatrixCartesianPublish(self, new_transf, total_time):
-        sample_rate = 10
-        total_points = sample_rate*total_time
+        if total_time < 0.5: total_points = 10
+        elif total_time < 1: total_points = int(20*total_time)
+        else: total_points = 20
         gap_btwn_points = total_time/(total_points-1)
         point_transf_list = mr.CartesianTrajectory(self.M_current, new_transf, total_time, total_points, 3)
 
@@ -64,22 +65,34 @@ class MotorController():
         previous_point_pos = self.pos_six
         for point_transf in point_transf_list[1:]:
             current_point_pos, success = mr.IKinBody(self.body_list, self.M_current, point_transf, previous_point_pos, 0.01, 0.001)
+            if not success:
+                print("IK failed, returning")
+                return
             point_pos_list.append(current_point_pos)
             previous_point_pos = current_point_pos
         
-        self.trajectoryPublish(point_pos_list, gap_btwn_points)
+        print(self.pos_six)
+        print(point_pos_list)
+        self.trajectoryPublish(point_pos_list, 10*gap_btwn_points)
         self.updatePos(point_pos_list[-1])
         
     def transfMatrixJointPublish(self, new_transf, total_time):
         ending_pos_six, success = mr.IKinBody(self.body_list, self.M_current, new_transf,self.pos_six, 0.01, 0.001) 
-        if success:
-            for start, end in zip(self.pos_six, ending_pos_six):
-                if abs((start - end)/total_time) > 0.8:
-                    print(f"this move is too fast! fastest speed is {abs(start - end)/total_time}")
-                    return
+        print(f"starting angles: {self.pos_six}, ending angles: {ending_pos_six}")
         
-        # safety, change time to 5
-        self.anglePublish(ending_pos_six, 5, True)
+        if success:
+            speeds = [abs((start - end)/total_time) for start, end in zip(self.pos_six, ending_pos_six)]
+            if max(speeds) > 0.8:
+                print(f"this move is too fast!: the fastest move is {max(speeds)}")
+                return
+            else:
+                print(f"this move is all good! speeds are {speeds}")
+                print(f"moving slowly to the intersection point")
+                # safety, change time to 5
+                self.anglePublish(ending_pos_six, 5, True)
+        else:
+            print("failed to find IK")
+        
 
 
     # publish a move to a new set of angles
