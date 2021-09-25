@@ -98,7 +98,7 @@ try:
     at_rest_str = input("is arm at rest position y/n?")
     at_rest = at_rest_str=="y"
     # # if at rest, go to cobra position
-    if at_rest: mc.anglePublish([0, -np.pi/2, np.pi/2, 0, -np.pi/2, 0], 0.4, True)
+    if at_rest: mc.anglePublish([0, -np.pi/2, 2*np.pi/3, 0, -np.pi/2, 0], 3, True)
 
     # trying to find a ping pong ball now
     while True:
@@ -189,7 +189,7 @@ try:
                 if reachable:
                     print(f"point: {intersection_point} time: {time_until_intersection} reachable")
                     intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)
-                    mc.transfMatrixJointPublish(intersection_transf, time_until_intersection)
+                    mc.transfMatrixCartesianPublish(intersection_transf, time_until_intersection)
                     old_trajectories.append(traj)
                 else:
                     print(f"point: {intersection_point} not reachable")
