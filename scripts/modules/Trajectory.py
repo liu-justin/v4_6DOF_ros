@@ -312,7 +312,11 @@ class Trajectory():
                     self.getCoordFromTime("y", collision_time), \
                     self.getCoordFromTime("z", collision_time)]
 
-            return True, point, collision_time - self.times[-1]
+            if (point[0] >= 0 and point[1] >= 0.181212 and collision_time > self.times[-1]):
+                return True, point, collision_time - self.times[-1]
+            else:
+                print(f"failed sphere intersection")
+                return False, point, collision_time - self.times[-1]
         else:
             # if false, return to cobra in 5 seconds
             return False, [0.201582, 0.498462, 0], 5
