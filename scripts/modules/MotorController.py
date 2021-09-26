@@ -15,18 +15,18 @@ class MotorController():
 
         self.unpack_XML("/home/justin/catkin_ws/src/v4_6dof/scripts/constants/6DoF_URDF.xml")
 
-        self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six)
+        self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six[:-1])
 
         self.pub = rospy.Publisher('vel_six_chatter',msg.VelGap,queue_size=10)
         self.sub = rospy.Subscriber('pos_six_chatter',msg.VelGap,self.updatePos)
 
     def updatePos(self, new_pos_six):
         self.pos_six = new_pos_six
-        self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six)
+        self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six[:-1])
 
     def addPos(self, new_pos_six):
         self.pos_six = [a + b for a, b in zip(new_pos_six, self.pos_six)]
-        self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six)
+        self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six[:-1])
 
     def updateVelGap(self, new_vel_six, time):       
         self.vel_six = new_vel_six
@@ -62,16 +62,21 @@ class MotorController():
         gap_btwn_points = total_time/(total_points-1)
         point_transf_list = mr.CartesianTrajectory(self.M_current, new_transf, total_time, total_points, 3)
 
+        print(point_transf_list)
+
         # transforming set of transformations matrices to set of pos 6vectors
         point_pos_list = []
-        previous_point_pos = self.pos_six
+        previous_point_pos = self.pos_six[:-1]
+        print(f"starting angle list IK: {previous_point_pos}")
         for point_transf in point_transf_list[1:]:
-            current_point_pos, success = mr.IKinBody(self.body_list, self.M_current, point_transf, previous_point_pos, 0.01, 0.001)
+            current_point_pos, success = mr.IKinBody(self.body_list, self.M_rest, point_transf, previous_point_pos, 0.01, 0.01)
+            print(f"this angle list is {current_point_pos}")
             if not success:
                 print("IK failed, returning")
                 return
-            point_pos_list.append(current_point_pos)
-            previous_point_pos = current_point_pos
+            else:
+                point_pos_list.append(np.append(current_point_pos,0))
+                previous_point_pos = current_point_pos
         
         print(self.pos_six)
         print(point_pos_list)
@@ -79,7 +84,7 @@ class MotorController():
         self.updatePos(point_pos_list[-1])
         
     def transfMatrixJointPublish(self, new_transf, total_time):
-        ending_pos_six, success = mr.IKinBody(self.body_list, self.M_current, new_transf,self.pos_six, 0.01, 0.001) 
+        ending_pos_six, success = mr.IKinBody(self.body_list, self.M_rest, new_transf,self.pos_six, 0.01, 0.001) 
         print(f"starting angles: {self.pos_six}, ending angles: {ending_pos_six}")
         
         if success:
@@ -108,7 +113,7 @@ class MotorController():
         self.trajectoryPublish(points_pos_list, gap_btwn_points)
         self.updatePos(final_pos_six)
 
-    def unpack(self, xml):
+    def unpack_XML(self, xml):
         obj = untangle.parse(xml)
 
         # initialize T_list, body_list
@@ -155,8 +160,9 @@ class MotorController():
 
             # combine w,v into body_axis, then insert into body_list
             body_axis = np.r_[current_omega, current_v]
-            self.body_list = np.c_[body_axis, self.body_list]
             print(f"bodyaxis: {body_axis}")
+            self.body_list = np.c_[body_axis, self.body_list]
+            
 
             # update T_ee to be relative to current link T_56 * T_6ee = T_5ee
             T_ee = np.dot(T, T_ee)

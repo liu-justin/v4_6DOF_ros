@@ -184,8 +184,8 @@ try:
         # move thru all registered trajectories
         for traj in trajectories:
             # if the trajectory is developed (5 points), perform a check to see if robot can move there
-            if (traj.developed):
-                reachable, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.278515)
+            if (traj.developed): # 0.116114 - 0.278515 - 0.440916
+                reachable, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.3)
                 if reachable:
                     print(f"point: {intersection_point} time: {time_until_intersection} reachable")
                     intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)

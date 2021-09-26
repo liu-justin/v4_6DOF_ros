@@ -54,17 +54,8 @@
     <limit effort="1000.0" lower="-0.79" upper="0.79" velocity="0.8" />
 </joint>
 
-<!-- R3 -->
-<joint name="joint6" type="revolute">
-    <parent link="link5"/>
-    <child link="link6"/>
-    <origin rpy="0.0 0.0 0.0" xyz="0.023282 0.0 0.0"/>
-    <axis xyz="0 1 0"/>
-    <limit effort="1000.0" lower="-1.57" upper="1.57" velocity="0.8" />
-</joint>
-
 <joint name="ee_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+    <origin rpy="0 0 0" xyz="0.023282 0.0 0.0"/>
     <parent link="link6"/>
     <child link="ee_link"/>
 </joint>
