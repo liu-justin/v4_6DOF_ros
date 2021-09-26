@@ -56,9 +56,9 @@ class MotorController():
 
     # publish a move to a new transformation matrix
     def transfMatrixCartesianPublish(self, new_transf, total_time):
-        if total_time < 0.5: total_points = 10
-        elif total_time < 1: total_points = int(20*total_time)
-        else: total_points = 20
+        if total_time < 0.5: total_points = 20
+        elif total_time < 1: total_points = int(30*total_time)
+        else: total_points = 30
         gap_btwn_points = total_time/(total_points-1)
         point_transf_list = mr.CartesianTrajectory(self.M_current, new_transf, total_time, total_points, 3)
 
@@ -66,12 +66,14 @@ class MotorController():
         point_pos_list = []
         previous_point_pos = self.pos_six
         for point_transf in point_transf_list[1:]:
-            current_point_pos, success = mr.IKinBody(self.body_list, self.M_current, point_transf, previous_point_pos, 0.01, 0.001)
+            current_point_pos, success = mr.IKinBody(self.body_list, self.M_rest, point_transf, previous_point_pos, 0.01, 0.001)
+            print(f"this is the current anglelist {current_point_pos}")
             if not success:
                 print("IK failed, returning")
                 return
-            point_pos_list.append(current_point_pos)
-            previous_point_pos = current_point_pos
+            else:
+                point_pos_list.append(current_point_pos)
+                previous_point_pos = current_point_pos
         
         print(self.pos_six)
         print(point_pos_list)
@@ -79,7 +81,7 @@ class MotorController():
         self.updatePos(point_pos_list[-1])
         
     def transfMatrixJointPublish(self, new_transf, total_time):
-        ending_pos_six, success = mr.IKinBody(self.body_list, self.M_current, new_transf,self.pos_six, 0.01, 0.001) 
+        ending_pos_six, success = mr.IKinBody(self.body_list, self.M_rest, new_transf,self.pos_six, 0.01, 0.001) 
         print(f"starting angles: {self.pos_six}, ending angles: {ending_pos_six}")
         
         if success:
@@ -108,7 +110,7 @@ class MotorController():
         self.trajectoryPublish(points_pos_list, gap_btwn_points)
         self.updatePos(final_pos_six)
 
-    def unpack(self, xml):
+    def unpack_XML(self, xml):
         obj = untangle.parse(xml)
 
         # initialize T_list, body_list
