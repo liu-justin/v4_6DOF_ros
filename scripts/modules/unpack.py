@@ -8,11 +8,11 @@ import time
 
 def unpack_XML(xml):
     obj = untangle.parse(xml)
-    # [child["name"] for child in o.root.child]
 
     # initialize T_list, body_list 
     T_list = []
     body_list = np.array([0,0,0,0,0,0])
+    limit_list = []
 
     np.set_printoptions(precision=7, suppress=True)
 
@@ -32,6 +32,10 @@ def unpack_XML(xml):
 
         # find the distance from previous joint to current joint
         p = np.array([float(n) for n in joint.origin["xyz"].split()])
+
+        lower_limit = float(joint.limit["lower"])
+        upper_limit = float(joint.limit["upper"])
+        limit_list.insert(0,(lower_limit, upper_limit))
 
         # this T takes previous joint to current joint, or is current joint relative to prev joint
         # T_56, T_lower_higher
@@ -116,60 +120,3 @@ def unpack_XML(xml):
 
     return T_ee, T_list, body_list, G_list
 
-def rest_to_home_angle_list():
-    theta_rest = np.array([0,0,0,0,0,0])
-    theta_home = np.array([0,-1*np.pi/2, np.pi/2, 0,0,0])
-
-    # parameters for joint trajectory
-    T_final = 3
-    N = 50
-    method = 5
-
-    # create the trajectory, N x n matrix where each row is  n-vector of joint variables at an instant in time
-    trajectory = mr.JointTrajectory(theta_rest, theta_home, T_final, N, method)
-
-# use a cartesian trajectory to get other places
-def movement_to_angleList(M_start, theta_start, M_end, T_final, N, body_list, T_ee):
-
-    # picking a new config in SE(3), this can be anything
-    M_new = np.array([[1,0,0,0.5],
-                    [0,1,0,0.1],
-                    [0,0,1,0],
-                    [0,0,0,1]])
-
-    trajectory_SE3 = mr.CartesianTrajectory(M_start, M_end, T_final, N, 5)
-    print(trajectory_SE3)
-
-    angle_list = [theta_start]
-    for traj in trajectory_SE3:
-        current_solution, feasible = mr.IKinBody(body_list, T_ee, traj, angle_list[-1], 0.01, 0.001)
-        if feasible:
-            angle_list.append(current_solution)
-
-    return angle_list
-
-def angle_list_push(master, angle_list, total_time, motors):
-
-    # get number of divisions to get from first angles to last angles
-    divisions = len(angle_list)
-    division_time = total_time/divisions
-
-    # get number of motors
-    num_motors = len(angle_list[0])
-
-    # run thru angleList without first one
-    for i in range(1, divisions):
-        for j in range(num_motors):
-            # get the angular velocity from the previous_angles
-            angular_velocity = (angle_list[i][j] - angle_list[i-1][j])/division_time
-            
-            # send the crap
-            motors[j].velocity = angular_velocity
-
-        # wait for the divisionTime (in ms)
-        # master.after(division_time*1000)
-        time.sleep(division_time)
-
-    # after running thru this entire angle_list, send a zero velocity to stop the machine
-    for motor in motors:
-        motor.pub.publish(0)
