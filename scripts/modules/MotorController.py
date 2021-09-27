@@ -74,9 +74,7 @@ class MotorController():
             else:
                 point_pos_list.append(current_point_pos)
                 previous_point_pos = current_point_pos
-        
-        print(self.pos_six)
-        print(point_pos_list)
+                
         self.trajectoryPublish(point_pos_list, 10*gap_btwn_points)
         self.updatePos(point_pos_list[-1])
         

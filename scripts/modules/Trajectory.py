@@ -306,7 +306,7 @@ class Trajectory():
         # using a starting guess of 0 is close to a flat slope, which is really bad for NR
         possible, collision_time, new_estimates = self.newtonRaphsonQuartic(a, self.times[-1], 0.001)
 
-        self.plotNewtonRaphson(collision_time, new_estimates)
+        self.plotNewtonRaphson(collision_time, new_estimates, a)
         
         if possible:
             # check if the collision_time is feasible to get to, but need MC stuff: have to get out      
@@ -324,9 +324,9 @@ class Trajectory():
             return False, [0.201582, 0.498462, 0], 5
 
     # problem with newton Raphson is there is a max in the parabola before the intersection, but distance from the center shouldn't be a problem
-    def newtonRaphsonQuartic(self, a, estimate, threshold):
+    def newtonRaphsonQuartic(self, a, initial_estimate, threshold):
         counter = 0
-        t = estimate
+        t = initial_estimate
         new_estimates = []
         while counter < 10:
             f = a[0] + a[1]*t + a[2]*(t**2) + a[3]*(t**3) + a[4]*(t**4)
@@ -336,9 +336,9 @@ class Trajectory():
             f_prime = a[1] + 2*a[2]*(t) + 3*a[3]*(t**2) + 4*a[4]*(t**3)
             t = t - f/f_prime
             counter += 1
-        return False, estimate, new_estimates
+        return False, initial_estimate, new_estimates
 
-    def plotNewtonRaphson(self, collision_time, new_estimates):
+    def plotNewtonRaphson(self, collision_time, new_estimates, a):
         fig = plt.figure(figsize=plt.figaspect(0.5))
         ax = fig.add_subplot(1,2,1, projection="3d")
         ax.set_xlabel("X")
