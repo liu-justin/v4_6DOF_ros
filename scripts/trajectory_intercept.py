@@ -144,7 +144,7 @@ try:
 
             # if contour area smaller than this number, it is most likely noise
             contour_area = cv2.contourArea(c)
-            if (contour_area < 50): continue
+            # if (contour_area < 50): continue
 
             # checking area of contour to area of ellipse
             ellipse_area = np.pi*(diameter/2)*(diameter/2)
