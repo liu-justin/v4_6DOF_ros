@@ -67,29 +67,29 @@ class MotorController():
         previous_point_pos = self.pos_six
         for point_transf in point_transf_list[1:]:
             current_point_pos, success = mr.IKinBody(self.body_list, self.M_rest, point_transf, previous_point_pos, 0.01, 0.001)
-            print(f"this is the current anglelist {current_point_pos}")
             if not success:
-                print("IK failed, returning")
+                rospy.loginfo("IK failed, returning")
                 return
             else:
                 point_pos_list.append(current_point_pos)
                 previous_point_pos = current_point_pos
-                
+        
+        a = input("Move slowly to the point")
         self.trajectoryPublish(point_pos_list, 10*gap_btwn_points)
         self.updatePos(point_pos_list[-1])
         
     def transfMatrixJointPublish(self, new_transf, total_time):
         ending_pos_six, success = mr.IKinBody(self.body_list, self.M_rest, new_transf,self.pos_six, 0.01, 0.001) 
-        print(f"starting angles: {self.pos_six}, ending angles: {ending_pos_six}")
+        rospy.loginfo("starting angles: {self.pos_six}, ending angles: {ending_pos_six}")
         
         if success:
             speeds = [abs((start - end)/total_time) for start, end in zip(self.pos_six, ending_pos_six)]
             if max(speeds) > 0.8:
-                print(f"this move is too fast!: the fastest move is {max(speeds)}")
+                rospy.loginfo("this move is too fast!: the fastest move is {max(speeds)}")
                 return
             else:
-                print(f"this move is all good! speeds are {speeds}")
-                print(f"moving slowly to the intersection point")
+                rospy.loginfo("this move is all good! speeds are {speeds}")
+                rospy.loginfo("moving slowly to the intersection point")
                 # safety, change time to 5
                 self.anglePublish(ending_pos_six, 5, True)
         else:
@@ -156,7 +156,7 @@ class MotorController():
             # combine w,v into body_axis, then insert into body_list
             body_axis = np.r_[current_omega, current_v]
             self.body_list = np.c_[body_axis, self.body_list]
-            print(f"bodyaxis: {body_axis}")
+            rospy.loginfo("bodyaxis: {body_axis}")
 
             # update T_ee to be relative to current link T_56 * T_6ee = T_5ee
             T_ee = np.dot(T, T_ee)
