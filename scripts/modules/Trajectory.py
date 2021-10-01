@@ -306,7 +306,7 @@ class Trajectory():
         # using a starting guess of 0 is close to a flat slope, which is really bad for NR
         possible, collision_time, new_estimates = self.newtonRaphsonQuartic(a, self.times[-1], 0.001)
 
-        self.plotNewtonRaphson(collision_time, new_estimates, a)
+        # self.plotNewtonRaphson(collision_time, new_estimates, a)
         
         if possible:
             # check if the collision_time is feasible to get to, but need MC stuff: have to get out      

@@ -98,7 +98,7 @@ try:
     at_rest_str = input("is arm at rest position y/n?")
     at_rest = at_rest_str=="y"
     # # if at rest, go to cobra position
-    if at_rest: mc.anglePublish([0, -np.pi/2, 2*np.pi/3, 0, -np.pi/2, 0], 3, True)
+    if at_rest: mc.anglePublish([0, -7*np.pi/12, 9*np.pi/12, 0, -7*np.pi/12, 0], 3, True)
 
     # trying to find a ping pong ball now
     while True:
@@ -144,7 +144,7 @@ try:
 
             # if contour area smaller than this number, it is most likely noise
             contour_area = cv2.contourArea(c)
-            # if (contour_area < 50): continue
+            if (contour_area < 40): continue
 
             # checking area of contour to area of ellipse
             ellipse_area = np.pi*(diameter/2)*(diameter/2)
@@ -185,14 +185,14 @@ try:
         for traj in trajectories:
             # if the trajectory is developed (5 points), perform a check to see if robot can move there
             if (traj.developed): # 0.116114 - 0.278515 - 0.440916
-                reachable, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.278515)
+                reachable, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.35)
                 if reachable:
-                    rospy.loginfo("point: {intersection_point} time: {time_until_intersection} reachable")
+                    print(f"point: {intersection_point} time: {time_until_intersection} reachable")
                     intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)
-                    mc.transfMatrixCartesianPublish(intersection_transf, time_until_intersection)
+                    mc.transfMatrixJointPublish(intersection_transf, time_until_intersection)
                     old_trajectories.append(traj)
                 else:
-                    rospy.loginfo("point: {intersection_point} not reachable")
+                    print(f"point: {intersection_point} not reachable")
                 trajectories.remove(traj)
 
             # if total time is longer than 2 seconds, kill the trajectory
