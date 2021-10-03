@@ -6,6 +6,7 @@ import untangle
 from . import modern_robotics as mr
 from . import unpack as unp
 import time
+import math
 
 class MotorController():
     def __init__(self):
@@ -53,6 +54,46 @@ class MotorController():
                 self.updateVelGap(angular_velocity_six, time_gap_micros)
                 i += 1
         self.updateVelGap([0,0,0,0,0,0], time_gap_micros)
+
+    def transfMatrixAnalyticalPublish(self,new_transf, total_time):
+        R,p = mr.TransToRp(new_transf)
+        R1_angle = -math.atan(p[2], p[0])
+
+        # analytical inverse kinematics https://robotacademy.net.au/lesson/inverse-kinematics-for-a-2-joint-robot-arm-using-geometry/
+        a1 = 0.25
+        a2 = 0.1909 #math.sqrt(0.06825**2 +0.1783**2)
+        x = math.sqrt(p[2]**2 +p[0]**2)
+        y = p[1]
+        q2 = -1*math.acos((x^2 +y^2 -a1**2 -a2**2)/(2*a1*a2))
+        q1 = math.atan(y/x) + math.atan(a2*math.sin(q2)/(a1+a2*math.cos(q2)))
+
+        T1_angle = -1*math.pi + q1
+        T2_angle = math.pi - math.atan(0.06825/0.1783) - q1
+        
+        current_guess = [R1_angle, T1_angle, T2_angle] + self.pos_six[3:]
+
+        ending_pos_six, success = mr.IKinBody(self.body_list, self.M_rest, new_transf,current_guess, 0.01, 0.001) 
+        print(f"starting angles: {self.pos_six}, ending angles: {ending_pos_six}")
+
+        if not all([current_angle > lower and current_angle < upper for current_angle, lower, upper in \
+            zip(ending_pos_six, self.limit_list_lower, self.limit_list_upper)]):
+            print(f"one of the angles is past the angle limits")
+            print(ending_pos_six)
+            print(f"{self.limit_list_lower}\n{self.limit_list_upper}")
+            return
+        
+        elif success:
+            speeds = [abs((start - end)/total_time) for start, end in zip(self.pos_six, ending_pos_six)]
+            if max(speeds) > 1.1:
+                print(f"this move is too fast!: the speeds are {speeds}")
+                return
+            else:
+                print(f"this move is all good! speeds are {speeds}")
+                print(f"moving slowly to the intersection point")
+                # safety, change time to 5
+                self.anglePublish(ending_pos_six, total_time*3, True)
+        else:
+            print("failed to find IK")
 
     # publish a move to a new transformation matrix
     def transfMatrixCartesianPublish(self, new_transf, total_time):
