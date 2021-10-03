@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from . import fits as f
 from collections import OrderedDict
 from . import modern_robotics as mr
+import math
 
 def dimToInt(dim):
     return ord(dim)-120 #ASCII for "x" is 120
@@ -211,6 +212,17 @@ class Trajectory():
 
     def getCoordFromTime(self, dim, time):
         return self.betas[dim][0] + self.betas[dim][1]*time + self.betas[dim][2]*(time**2)
+
+    def getVelocity3VecFromTime(self, time):
+        velocity = np.array([0,0,0])
+        total_magnitude = 0
+        for i in range(0,3):
+            velocity[i] = self.betas[intToDim(i)][1] + self.betas[intToDim(i)][2]*time
+            total_magnitude += velocity[i]**2
+        total_magnitude = math.sqrt(total_magnitude)
+        velocity = velocity/total_magnitude
+
+        return velocity
 
     # current position of the hand
     def findClosestPointToM(self, M_current):
