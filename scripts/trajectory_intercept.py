@@ -144,7 +144,7 @@ try:
 
             # if contour area smaller than this number, it is most likely noise
             contour_area = cv2.contourArea(c)
-            if (contour_area < 40): continue
+            # if (contour_area < 40): continue
 
             # checking area of contour to area of ellipse
             ellipse_area = np.pi*(diameter/2)*(diameter/2)
@@ -152,7 +152,7 @@ try:
 
             # if depth/diameter relationship does not follow the trend in tests/realsense/depth_diameter_eq-polyfit, then continue
             calculated_diameter = betas_depth_to_dia[0] + betas_depth_to_dia[1]*depth + betas_depth_to_dia[2]*(depth*depth)
-            if ((diameter-calculated_diameter)/calculated_diameter) > 0.05: continue
+            if ((diameter-calculated_diameter)/calculated_diameter) > 0.45: continue
 
             # grabbing from original depth image, without the cleanup
             # if there was a way to grab from the cleaned array, I would do it
@@ -185,14 +185,15 @@ try:
         for traj in trajectories:
             # if the trajectory is developed (5 points), perform a check to see if robot can move there
             if (traj.developed): # 0.116114 - 0.278515 - 0.440916
-                reachable, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.35)
+                reachable, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.42)
                 if reachable:
                     print(f"point: {intersection_point} time: {time_until_intersection} reachable")
                     intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)
-                    mc.transfMatrixJointPublish(intersection_transf, time_until_intersection)
+                    mc.transfMatrixAnalyticalPublish(intersection_transf, time_until_intersection)
                     old_trajectories.append(traj)
                 else:
-                    print(f"point: {intersection_point} not reachable")
+                    # print(f"trajectory failed sphere intersection, not reachable")
+                    pass
                 trajectories.remove(traj)
 
             # if total time is longer than 2 seconds, kill the trajectory

@@ -55,9 +55,13 @@ class MotorController():
                 i += 1
         self.updateVelGap([0,0,0,0,0,0], time_gap_micros)
 
-    def transfMatrixAnalyticalPublish(self,new_transf, velocity_vec, total_time):
+    def transfMatrixAnalyticalPublish(self,new_transf, total_time):
+        """
+        Uses an analytical approach to get first 3 angles to line up center of differential gears to point, 
+        then use IK to finish up the rest of angles
+        """
         R,p = mr.TransToRp(new_transf)
-        R1_angle = -math.atan(p[2]/p[0])
+        R1_angle = -1*math.atan(p[2]/p[0])
 
         # analytical inverse kinematics https://robotacademy.net.au/lesson/inverse-kinematics-for-a-2-joint-robot-arm-using-geometry/
         a1 = 0.25
@@ -70,26 +74,26 @@ class MotorController():
         T1_angle = -1*math.pi + q1
         T2_angle = math.pi - math.atan(0.06825/0.1783) + q2
         
-        # this current guess doesn't help IK at all for some reason
-        # need to get trajectory velocity vector and set up R2 T3 R3  
         current_guess = [R1_angle, T1_angle, T2_angle] + self.pos_six[3:]
-        print(f"current guess: {current_guess}")
-        current_transf = mr.FKinBody(self.M_rest, self.body_list, current_guess)
-        current_R, current_p = mr.TransToRp(current_transf)
-        print(f"current transf: \n{current_transf}")
+        # current_transf = mr.FKinBody(self.M_rest, self.body_list, current_guess)
+        # current_R, current_p = mr.TransToRp(current_transf)
+        print(f"before IK, then angle are: {current_guess}")
 
         # trying to align xaxis of end effector with inverse of velocity vector
         # ending_pos_six = current_guess
         ending_pos_six, success = mr.IKinBody(self.body_list, self.M_rest, new_transf, current_guess, 0.01, 0.001) 
 
         print(f"after IK, the angles are: {ending_pos_six}")
-        if not all([current_angle > lower and current_angle < upper for current_angle, lower, upper in \
+        
+        if not success:
+            print(f"failed IK")
+            
+        elif not all([current_angle > lower and current_angle < upper for current_angle, lower, upper in \
             zip(ending_pos_six, self.limit_list_lower, self.limit_list_upper)]):
             print(f"one of the angles is past the angle limits, which are displayed here: \n")
             print(f"{self.limit_list_lower}\n{self.limit_list_upper}")
             return
-        
-        elif success:
+        else:
             speeds = [abs((start - end)/total_time) for start, end in zip(self.pos_six, ending_pos_six)]
             if max(speeds) > 1.1:
                 print(f"this move is too fast!: the speeds are {speeds}")
@@ -99,8 +103,7 @@ class MotorController():
                 print(f"moving slowly to the intersection point")
                 # safety, change time to 5
                 self.anglePublish(ending_pos_six, total_time*3, True)
-        else:
-            print(f"failed IK")
+            
 
     # publish a move to a new transformation matrix
     def transfMatrixCartesianPublish(self, new_transf, total_time):

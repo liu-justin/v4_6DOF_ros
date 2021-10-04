@@ -107,7 +107,7 @@ class Trajectory():
             
             # if new_point fits with all 3 dimensions, append it
             if all(success):
-                print(f"succeeded in appending to list length {len(self.times)}")
+                # print(f"succeeded in appending to list length {len(self.times)}")
                 time_delta = new_time - self.init_time
                 self.times.append(time_delta)
                 self.points.append(new_point)

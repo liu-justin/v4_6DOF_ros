@@ -26,10 +26,8 @@ while True:
     time_str = input("input the time: ")
     time = float(time_str)
     
-    velocity = np.array([-1,0,0])
-    
     # mc.transfMatrixCartesianPublish(transf, time)
     # mc.transfMatrixJointPublish(transf, time)
-    mc.transfMatrixAnalyticalPublish(transf, velocity, time)
+    mc.transfMatrixAnalyticalPublish(transf, time)
 
 #09-08-2021 max speed is 0.8rad/sec for all motors
