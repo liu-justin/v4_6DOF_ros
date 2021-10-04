@@ -65,30 +65,31 @@ class MotorController():
         x = math.sqrt(p[2]**2 +p[0]**2)
         y = p[1] - 0.02463 - 0.155582
         q2 = -1*math.acos((x**2 +y**2 -a1**2 -a2**2)/(2*a1*a2))
-        q1 = math.atan(y/x) + math.atan(a2*math.sin(q2)/(a1+a2*math.cos(q2)))
+        q1 = math.atan(y/x) - math.atan(a2*math.sin(q2)/(a1+a2*math.cos(q2)))
 
         T1_angle = -1*math.pi + q1
-        T2_angle = math.pi - math.atan(0.06825/0.1783) - q1
+        T2_angle = math.pi - math.atan(0.06825/0.1783) + q2
         
         # this current guess doesn't help IK at all for some reason
         # need to get trajectory velocity vector and set up R2 T3 R3  
         current_guess = [R1_angle, T1_angle, T2_angle] + self.pos_six[3:]
-        print(current_guess)
+        print(f"current guess: {current_guess}")
         current_transf = mr.FKinBody(self.M_rest, self.body_list, current_guess)
         current_R, current_p = mr.TransToRp(current_transf)
-        print(current_transf)
+        print(f"current transf: \n{current_transf}")
 
         # trying to align xaxis of end effector with inverse of velocity vector
-        ending_pos_six = current_guess
+        # ending_pos_six = current_guess
+        ending_pos_six, success = mr.IKinBody(self.body_list, self.M_rest, new_transf, current_guess, 0.01, 0.001) 
 
+        print(f"after IK, the angles are: {ending_pos_six}")
         if not all([current_angle > lower and current_angle < upper for current_angle, lower, upper in \
             zip(ending_pos_six, self.limit_list_lower, self.limit_list_upper)]):
-            print(f"one of the angles is past the angle limits")
-            print(ending_pos_six)
+            print(f"one of the angles is past the angle limits, which are displayed here: \n")
             print(f"{self.limit_list_lower}\n{self.limit_list_upper}")
             return
         
-        else:
+        elif success:
             speeds = [abs((start - end)/total_time) for start, end in zip(self.pos_six, ending_pos_six)]
             if max(speeds) > 1.1:
                 print(f"this move is too fast!: the speeds are {speeds}")
@@ -98,6 +99,8 @@ class MotorController():
                 print(f"moving slowly to the intersection point")
                 # safety, change time to 5
                 self.anglePublish(ending_pos_six, total_time*3, True)
+        else:
+            print(f"failed IK")
 
     # publish a move to a new transformation matrix
     def transfMatrixCartesianPublish(self, new_transf, total_time):
@@ -218,7 +221,6 @@ class MotorController():
             # combine w,v into body_axis, then insert into body_list
             body_axis = np.r_[current_omega, current_v]
             self.body_list = np.c_[body_axis, self.body_list]
-            print(f"bodyaxis: {body_axis}")
 
             # update T_ee to be relative to current link T_56 * T_6ee = T_5ee
             T_ee = np.dot(T, T_ee)

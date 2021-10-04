@@ -7,15 +7,16 @@ from modules import modern_robotics as mr
 
 mc = MotorController()
 rospy.init_node('talker', anonymous=True)
-print("starting")
 
 at_rest_str = input("is arm at rest position y/n?")
 at_rest = True if at_rest_str=="y" else False
 # # if at rest, go to cobra position
 # if at_rest: mc.anglePublish([0, -7*np.pi/12, 11*np.pi/12, 0, -3*np.pi/12, 0], 3, True)
 if at_rest: mc.anglePublish([0, -2*np.pi/3, 2*np.pi/3, 0, -7*np.pi/12, 0], 0.3, True)
+print(f"this is the anglelist before: {mc.pos_six}")
+#2.09
 
-print(f"this is the transf matrix right now: {mc.M_current}")
+print(f"this is the transf matrix right now: \n{mc.M_current}")
 while True:
     xyz_str = input("input xyz values: ")
     xyz = [float(xyz) for xyz in xyz_str.split(" ")]
