@@ -186,9 +186,9 @@ class MotorController():
         np.set_printoptions(precision=7, suppress=True)
 
         # grabbing the last joint (ee_joint) and its xyz
-        rpy_ee = [float(n) for n in obj.robot.joint[len(obj.robot.joint)-1].origin["rpy"].split()]
+        rpy_ee = [float(n) for n in obj.robot.joint[-1].origin["rpy"].split()]
         R_ee = mr.RollPitchYawToRot(rpy_ee[0],rpy_ee[1],rpy_ee[2])
-        p_ee = [float(n) for n in obj.robot.joint[len(obj.robot.joint)-1].origin["xyz"].split()]
+        p_ee = [float(n) for n in obj.robot.joint[-1].origin["xyz"].split()]
         T_ee = mr.RpToTrans(R_ee, p_ee)
 
         # skips all joints that are type fixed (like the base link and ee_link)
