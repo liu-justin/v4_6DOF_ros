@@ -176,6 +176,7 @@ class MotorController():
 
     def unpack_XML(self, xml):
         obj = untangle.parse(xml)
+        np.set_printoptions(precision=7, suppress=True)
 
         # initialize T_list, body_list
         self.T_list = []
@@ -183,20 +184,11 @@ class MotorController():
         self.space_list = np.array([0,0,0,0,0,0])
         self.limit_list_lower = []
         self.limit_list_upper = []
-
-        np.set_printoptions(precision=7, suppress=True)
-
-        # grabbing the last joint (ee_joint) and its xyz
-        rpy_ee = [float(n) for n in obj.robot.joint[-1].origin["rpy"].split()]
-        R_ee = mr.RollPitchYawToRot(rpy_ee[0],rpy_ee[1],rpy_ee[2])
-        p_ee = [float(n) for n in obj.robot.joint[-1].origin["xyz"].split()]
-        T_ee = mr.RpToTrans(R_ee, p_ee)
-
         # skips all joints that are type fixed (like the base link and ee_link)
         joint_list = [joint for joint in obj.robot.joint if joint["type"]!="fixed"]
 
+        # getting the space axes
         T_added = mr.rpyxyzToTrans([0,0,0,0,0,0])
-
         for joint in joint_list:
             rpy = [float(n) for n in joint.origin["rpy"].split()]
             R = mr.RollPitchYawToRot(rpy[0], rpy[1], rpy[2])
@@ -210,14 +202,20 @@ class MotorController():
             omega_0 = np.dot(R_added, omega_n)
             omega_0_skewed = mr.VecToso3(omega_0)
 
-            # negative one here just works somehow
-            v_n = -1*np.dot(omega_0_skewed, p_added)
+            # negative 1 to invert p_added(p_0n -> p_n0)
+            v_0 = -1*np.dot(omega_0_skewed, p_added)
 
             # combine w,v into body_axis, then insert into body_list
-            space_axis = np.r_[omega_n, v_n]
+            space_axis = np.r_[omega_0, v_0]
             self.space_list = np.c_[self.space_list, space_axis]
 
         self.space_list = np.delete(self.space_list, 0,1)
+
+        # grabbing the last joint (ee_joint) and its xyz
+        rpy_ee = [float(n) for n in obj.robot.joint[-1].origin["rpy"].split()]
+        R_ee = mr.RollPitchYawToRot(rpy_ee[0],rpy_ee[1],rpy_ee[2])
+        p_ee = [float(n) for n in obj.robot.joint[-1].origin["xyz"].split()]
+        T_ee = mr.RpToTrans(R_ee, p_ee)
 
         for joint in reversed(joint_list):
             # find the roll-pitch-yaw, about the z-y-x axes of the previous joint
@@ -256,13 +254,6 @@ class MotorController():
         # remove the filler column needed to start appending
         self.body_list = np.delete(self.body_list, len(self.body_list[0])-1,1)
         self.M_rest = T_ee
-
-        these_angles = [0*np.pi/2, -1*np.pi/2, 1*np.pi/2, 0*np.pi/2, 0*np.pi/2, -1*np.pi/2]
-        bodyM = mr.FKinBody(self.M_rest, self.body_list, these_angles)
-        spaceM = mr.FKinSpace(self.M_rest, self.space_list, these_angles)
-        print(spaceM)
-        print(bodyM)
-
 
 
         ##### inverse dynamics #####

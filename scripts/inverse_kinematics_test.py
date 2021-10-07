@@ -6,6 +6,13 @@ from modules import modern_robotics as mr
 # import v4_6dof.msg as msg
 
 mc = MotorController()
+these_angles = [0*np.pi/2, -1*np.pi/2, 1*np.pi/2, 0*np.pi/2, -1*np.pi/2, 1*np.pi/2]
+# these_angles = [0,0,0,0,0,np.pi/2]
+bodyM = mr.FKinBody(mc.M_rest, mc.body_list, these_angles)
+spaceM = mr.FKinSpace(mc.M_rest, mc.space_list, these_angles)
+print(spaceM)
+print(bodyM)
+
 # rospy.init_node('talker', anonymous=True)
 
 # at_rest_str = input("is arm at rest position y/n?")
