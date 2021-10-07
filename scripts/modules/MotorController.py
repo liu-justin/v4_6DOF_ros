@@ -180,6 +180,7 @@ class MotorController():
         # initialize T_list, body_list
         self.T_list = []
         self.body_list = np.array([0,0,0,0,0,0])
+        self.space_list = np.array([0,0,0,0,0,0])
         self.limit_list_lower = []
         self.limit_list_upper = []
 
@@ -193,6 +194,30 @@ class MotorController():
 
         # skips all joints that are type fixed (like the base link and ee_link)
         joint_list = [joint for joint in obj.robot.joint if joint["type"]!="fixed"]
+
+        T_added = mr.rpyxyzToTrans([0,0,0,0,0,0])
+
+        for joint in joint_list:
+            rpy = [float(n) for n in joint.origin["rpy"].split()]
+            R = mr.RollPitchYawToRot(rpy[0], rpy[1], rpy[2])
+            p = np.array([float(n) for n in joint.origin["xyz"].split()])
+            T = mr.RpToTrans(R,p)
+            T_added = T_added @ T
+            R_added, p_added = mr.TransToRp(T_added)
+
+            # find which axis the motor at this joint turns about
+            omega_n = [float(n) for n in joint.axis["xyz"].split()]
+            omega_0 = np.dot(R_added, omega_n)
+            omega_0_skewed = mr.VecToso3(omega_0)
+
+            # negative one here just works somehow
+            v_n = -1*np.dot(omega_0_skewed, p_added)
+
+            # combine w,v into body_axis, then insert into body_list
+            space_axis = np.r_[omega_n, v_n]
+            self.space_list = np.c_[self.space_list, space_axis]
+
+        self.space_list = np.delete(self.space_list, 0,1)
 
         for joint in reversed(joint_list):
             # find the roll-pitch-yaw, about the z-y-x axes of the previous joint
@@ -228,9 +253,17 @@ class MotorController():
             # update T_ee to be relative to current link T_56 * T_6ee = T_5ee
             T_ee = np.dot(T, T_ee)
 
-        # remove the filler column needed to sart appending
+        # remove the filler column needed to start appending
         self.body_list = np.delete(self.body_list, len(self.body_list[0])-1,1)
         self.M_rest = T_ee
+
+        these_angles = [0*np.pi/2, -1*np.pi/2, 1*np.pi/2, 0*np.pi/2, 0*np.pi/2, -1*np.pi/2]
+        bodyM = mr.FKinBody(self.M_rest, self.body_list, these_angles)
+        spaceM = mr.FKinSpace(self.M_rest, self.space_list, these_angles)
+        print(spaceM)
+        print(bodyM)
+
+
 
         ##### inverse dynamics #####
         # need G_list, or spatial inertai matrix list
