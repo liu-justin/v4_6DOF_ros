@@ -210,51 +210,63 @@ class MotorController():
             self.space_list = np.c_[self.space_list, space_axis]
 
         self.space_list = np.delete(self.space_list, 0,1)
+        
 
         # grabbing the last joint (ee_joint) and its xyz
         rpy_ee = [float(n) for n in obj.robot.joint[-1].origin["rpy"].split()]
         R_ee = mr.RollPitchYawToRot(rpy_ee[0],rpy_ee[1],rpy_ee[2])
         p_ee = [float(n) for n in obj.robot.joint[-1].origin["xyz"].split()]
         T_ee = mr.RpToTrans(R_ee, p_ee)
+        self.M_rest = T_added @ T_ee
+        T_subtracted = T_ee
 
         for joint in reversed(joint_list):
-            # find the roll-pitch-yaw, about the z-y-x axes of the previous joint
-            rpy = [float(n) for n in joint.origin["rpy"].split()]
-            R = mr.RollPitchYawToRot(rpy[0], rpy[1], rpy[2])
-            p = np.array([float(n) for n in joint.origin["xyz"].split()])
-
-            # this T takes previous joint to current joint, or is current joint relative to prev joint
-            # T_56, T_lower_higher
-            T = mr.RpToTrans(R,p)
-            self.T_list.insert(0,T)
-
             lower_limit = float(joint.limit["lower"])
             upper_limit = float(joint.limit["upper"])
             self.limit_list_lower.insert(0,lower_limit)
             self.limit_list_upper.insert(0,upper_limit)
 
-            # T_ee is end_effector joint relative to current joint, need inverse of that to get v
-            (R_ee, p_ee) = mr.TransToRp(mr.TransInv(T_ee))
+            # find the roll-pitch-yaw, about the z-y-x axes of the previous joint
+            rpy = [float(n) for n in joint.origin["rpy"].split()]
+            R = mr.RollPitchYawToRot(rpy[0], rpy[1], rpy[2])
+            p = np.array([float(n) for n in joint.origin["xyz"].split()])
+            T = mr.RpToTrans(R,p)
+            self.T_list.insert(0,T)
 
-            # find which axis the motor at this joint turns about
-            current_omega = [float(n) for n in joint.axis["xyz"].split()]
-            ee_omega = np.dot(R_ee, current_omega)
-            ee_omega_skewed = mr.VecToso3(ee_omega)
+            T_subtracted = T @ T_subtracted
+            R_subtracted, p_subtracted = mr.TransToRp(T_subtracted)
 
-            # negative one here just works somehow
-            current_v = -1*np.dot(ee_omega_skewed, p_ee)
+            omega_n = [float(n) for n in joint.axis["xyz"].split()]
+            omega_ee = np.dot(mr.RotInv(R_subtracted), omega_n)
+            omega_ee_skewed = mr.VecToso3(omega_ee)
 
-            # combine w,v into body_axis, then insert into body_list
-            body_axis = np.r_[current_omega, current_v]
+            v = -1 * np.dot(omega_ee_skewed, p_subtracted)
+
+            body_axis = np.r_[omega_ee, v]
             self.body_list = np.c_[body_axis, self.body_list]
 
-            # update T_ee to be relative to current link T_56 * T_6ee = T_5ee
-            T_ee = np.dot(T, T_ee)
+            # # T_ee is end_effector joint relative to current joint, need inverse of that to get v
+            # (R_ee, p_ee) = mr.TransToRp(mr.TransInv(T_ee))
+
+            # # find which axis the motor at this joint turns about
+            # current_omega = [float(n) for n in joint.axis["xyz"].split()]
+            # ee_omega = np.dot(R_ee, current_omega)
+            # ee_omega_skewed = mr.VecToso3(ee_omega)
+
+            # # negative one here just works somehow
+            # current_v = -1*np.dot(ee_omega_skewed, p_ee)
+
+            # # combine w,v into body_axis, then insert into body_list
+            # body_axis = np.r_[current_omega, current_v]
+            # self.body_list = np.c_[body_axis, self.body_list]
+
+            # # update T_ee to be relative to current link T_56 * T_6ee = T_5ee
+            # T_ee = np.dot(T, T_ee)
 
         # remove the filler column needed to start appending
         self.body_list = np.delete(self.body_list, len(self.body_list[0])-1,1)
-        self.M_rest = T_ee
-
+        print(self.body_list)
+        # self.M_rest = T_ee
 
         ##### inverse dynamics #####
         # need G_list, or spatial inertai matrix list
