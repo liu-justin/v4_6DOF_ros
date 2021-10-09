@@ -226,6 +226,16 @@ class MotorController():
             self.limit_list_lower.insert(0,lower_limit)
             self.limit_list_upper.insert(0,upper_limit)
 
+            R_subtracted, p_subtracted = mr.TransToRp(mr.TransInv(T_subtracted))
+
+            omega_n = [float(n) for n in joint.axis["xyz"].split()]
+            omega_ee = np.dot(mr.RotInv(R_subtracted), omega_n)
+            omega_ee_skewed = mr.VecToso3(omega_ee)
+            v = -1 * np.dot(omega_ee_skewed, p_subtracted)
+
+            body_axis = np.r_[omega_ee, v]
+            self.body_list = np.c_[body_axis, self.body_list]
+
             # find the roll-pitch-yaw, about the z-y-x axes of the previous joint
             rpy = [float(n) for n in joint.origin["rpy"].split()]
             R = mr.RollPitchYawToRot(rpy[0], rpy[1], rpy[2])
@@ -234,39 +244,9 @@ class MotorController():
             self.T_list.insert(0,T)
 
             T_subtracted = T @ T_subtracted
-            R_subtracted, p_subtracted = mr.TransToRp(T_subtracted)
-
-            omega_n = [float(n) for n in joint.axis["xyz"].split()]
-            omega_ee = np.dot(mr.RotInv(R_subtracted), omega_n)
-            omega_ee_skewed = mr.VecToso3(omega_ee)
-
-            v = -1 * np.dot(omega_ee_skewed, p_subtracted)
-
-            body_axis = np.r_[omega_ee, v]
-            self.body_list = np.c_[body_axis, self.body_list]
-
-            # # T_ee is end_effector joint relative to current joint, need inverse of that to get v
-            # (R_ee, p_ee) = mr.TransToRp(mr.TransInv(T_ee))
-
-            # # find which axis the motor at this joint turns about
-            # current_omega = [float(n) for n in joint.axis["xyz"].split()]
-            # ee_omega = np.dot(R_ee, current_omega)
-            # ee_omega_skewed = mr.VecToso3(ee_omega)
-
-            # # negative one here just works somehow
-            # current_v = -1*np.dot(ee_omega_skewed, p_ee)
-
-            # # combine w,v into body_axis, then insert into body_list
-            # body_axis = np.r_[current_omega, current_v]
-            # self.body_list = np.c_[body_axis, self.body_list]
-
-            # # update T_ee to be relative to current link T_56 * T_6ee = T_5ee
-            # T_ee = np.dot(T, T_ee)
 
         # remove the filler column needed to start appending
         self.body_list = np.delete(self.body_list, len(self.body_list[0])-1,1)
-        print(self.body_list)
-        # self.M_rest = T_ee
 
         ##### inverse dynamics #####
         # need G_list, or spatial inertai matrix list
