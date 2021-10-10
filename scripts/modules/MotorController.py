@@ -16,18 +16,18 @@ class MotorController():
 
         self.unpack_XML("/home/justin/catkin_ws/src/v4_6dof/scripts/constants/6DoF_URDF.xml")
 
-        self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six)
+        self.M_current = mr.FKinSpace(self.M_rest, self.space_list, self.pos_six)
 
         self.pub = rospy.Publisher('vel_six_chatter',msg.VelGap,queue_size=10)
         self.sub = rospy.Subscriber('pos_six_chatter',msg.VelGap,self.updatePos)
 
     def updatePos(self, new_pos_six):
         self.pos_six = new_pos_six
-        self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six)
+        self.M_current = mr.FKinSpace(self.M_rest, self.space_list, self.pos_six)
 
     def addPos(self, new_pos_six):
         self.pos_six = [a + b for a, b in zip(new_pos_six, self.pos_six)]
-        self.M_current = mr.FKinBody(self.M_rest, self.body_list, self.pos_six)
+        self.M_current = mr.FKinSpace(self.M_rest, self.space_list, self.pos_six)
 
     def updateVelGap(self, new_vel_six, time):       
         self.vel_six = new_vel_six
@@ -55,7 +55,7 @@ class MotorController():
                 i += 1
         self.updateVelGap([0,0,0,0,0,0], time_gap_micros)
 
-    def transfMatrixAnalyticalPublish(self,new_transf, total_time):
+    def transfMatrixAnalyticalPublish(self,new_transf, rot, total_time):
         """
         Uses an analytical approach to get first 3 angles to line up center of differential gears to point, 
         then use IK to finish up the rest of angles
@@ -74,14 +74,17 @@ class MotorController():
         T1_angle = -1*math.pi + q1
         T2_angle = math.pi - math.atan(0.06825/0.1783) + q2
         
-        current_guess = [R1_angle, T1_angle, T2_angle] + self.pos_six[3:]
+        current_guess = [R1_angle, T1_angle, T2_angle,0,0,0]
+        R_0ee, p_0ee = mr.TransToRp(mr.FKinSpace(self.M_rest, self.space_list, self.pos_six))
+        # 
+
+
         # current_transf = mr.FKinBody(self.M_rest, self.body_list, current_guess)
         # current_R, current_p = mr.TransToRp(current_transf)
         print(f"before IK, then angle are: {current_guess}")
 
         # trying to align xaxis of end effector with inverse of velocity vector
-        # ending_pos_six = current_guess
-        ending_pos_six, success = mr.IKinBody(self.body_list, self.M_rest, new_transf, current_guess, 0.01, 0.001) 
+        ending_pos_six, success = mr.IKinSpace(self.space_list, self.M_rest, new_transf, current_guess, 0.01, 0.001)
 
         print(f"after IK, the angles are: {ending_pos_six}")
         

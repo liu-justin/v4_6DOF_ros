@@ -11,6 +11,8 @@ def dimToInt(dim):
 def intToDim(num): # 0 -> "x"
     return chr(num+120)
 
+dims = ["x", "y", "z"]
+
 ERRORS = [0.04, 0.04, 0.04]
 
 class Trajectory():
@@ -50,43 +52,16 @@ class Trajectory():
     def developed(self, incoming_bool):
         self.__developed = incoming_bool
 
-    def detectHit(self):
-        # detecting if ball hits a board at x=0, y=(-0.16, 0.05), z=(-0.284,-0.06)
-
-        t = -1*self.betas["x"][0]/self.betas["x"][1]
-        hit_y = self.betas["y"][0] + self.betas["y"][1]*t + self.betas["y"][2]*(t**2)
-        hit_z = self.betas["z"][0] + self.betas["z"][1]*t + self.betas["z"][2]*(t**2)
-
-        print(f"hit: {hit_y}, {hit_z}")
-
-        if (-0.2 < hit_y < 0.09 and -0.324 < hit_z < -0.02):
-            print("HIT")
-            return True
-        else:
-            print("MISS")
-            return False
-
-    # plot least_squares line, low_error, high_error, and all the points
-    def plotErrors(self, dim, new_time, new_point):
-        time_delta = new_time - self.init_time
-        int_dim = dimToInt(dim)
-
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        for p,t in zip(self.points, self.times):
-            ax.scatter(t, p[int_dim])
-        ax.scatter(new_time, new_point[int_dim])
-        x = np.arange(0,time_delta,0.01)
-        least_squares = self.betas[dim][0] + self.betas[dim][1]*x + self.betas[dim][2]*(x**2)
-        low_errored = self.betas_low[dim][0] + self.betas_low[dim][1]*x + self.betas_low[dim][2]*(x**2)
-        high_errored = self.betas_high[dim][0] + self.betas_high[dim][1]*x + self.betas_high[dim][2]*(x**2)
-        ax.plot(x,least_squares, "r-" if self.use_errored[int_dim] else "g-")
-        ax.plot(x,low_errored, "g-" if self.use_errored[int_dim] else "r-")
-        ax.plot(x,high_errored, "g-" if self.use_errored[int_dim] else "r-")
-        plt.show()
-
-    def getPredictedPosition(self, betas, time):
+    def getCoordFromBetasTime(self, betas, time):
         return betas[0] + betas[1]*time + betas[2]*(time**2)
+
+    def getCoordFromTime(self, dim, time):
+        return self.betas[dim][0] + self.betas[dim][1]*time + self.betas[dim][2]*(time**2)
+
+    def getPointFromTime(self, time):
+        point = [self.betas[dim][0] + self.betas[dim][1]*time + self.betas[dim][2]*(time**2) for dim in dims]
+        # point = np.array(point)
+        return point
 
     def append(self, new_time, new_point):
         time_delta = new_time - self.init_time
@@ -143,8 +118,8 @@ class Trajectory():
 
     def checkWithErrored(self, new_time, new_point, dim):
         time_delta = new_time - self.init_time
-        predicted_low = self.getPredictedPosition(self.betas_low[dim], time_delta)
-        predicted_high = self.getPredictedPosition(self.betas_high[dim], time_delta)
+        predicted_low = self.getCoordFromBetasTime(self.betas_low[dim], time_delta)
+        predicted_high = self.getCoordFromBetasTime(self.betas_high[dim], time_delta)
         error = 0.05 if dim=="y" else 0.02
         # if the point falls btwn the upper and lower bounds
         if (predicted_low - ERRORS[dimToInt(dim)]) < new_point[dimToInt(dim)] < (predicted_high + ERRORS[dimToInt(dim)]): 
@@ -155,7 +130,7 @@ class Trajectory():
 
     def checkWithLeastSquares(self, new_time, new_point, dim):
         time_delta = new_time - self.init_time
-        predicted = self.getPredictedPosition(self.betas[dim], time_delta)
+        predicted = self.getCoordFromBetasTime(self.betas[dim], time_delta)
         error = self.avg_residuals[dim]
         predicted_low = predicted - error
         predicted_high = predicted + error
@@ -197,7 +172,7 @@ class Trajectory():
         self.findBetasLeastSquared(dim)
 
         # https://stats.stackexchange.com/questions/219810/r-squared-and-higher-order-polynomial-regression
-        RSS = sum([(p[dimToInt(dim)] - self.getPredictedPosition(self.betas[dim], t))**2 for p,t in zip(self.points, self.times)])
+        RSS = sum([(p[dimToInt(dim)] - self.getCoordFromBetasTime(self.betas[dim], t))**2 for p,t in zip(self.points, self.times)])
         bar = sum([p[dimToInt(dim)] for p in self.points])/len(self.points)
         TSS = sum([(p[dimToInt(dim)] - bar)**2 for p in self.points])
         R2 = 1 - RSS/TSS
@@ -210,19 +185,33 @@ class Trajectory():
             self.findBetasErrored(dim) 
             # print(f"staying with errored: R2 was {R2}")
 
-    def getCoordFromTime(self, dim, time):
-        return self.betas[dim][0] + self.betas[dim][1]*time + self.betas[dim][2]*(time**2)
+    def getNormalRFromTime(self, time):
+        # get a rotation matrix that is normal to the velocity vector of the ball
+        # at the intersection point
 
-    def getVelocity3VecFromTime(self, time):
+        # then find the vec of the velocity
         velocity = np.array([0,0,0])
         total_magnitude = 0
         for i in range(0,3):
             velocity[i] = self.betas[intToDim(i)][1] + self.betas[intToDim(i)][2]*time
             total_magnitude += velocity[i]**2
         total_magnitude = math.sqrt(total_magnitude)
-        velocity = velocity/total_magnitude
+        vec_velocity = -1*velocity/total_magnitude
 
-        return velocity
+        # then find the normal vec of the plane at the intersection point (the z)
+        point_a = np.array(self.getPointFromTime(time))
+        point_b = np.array(self.points[0])
+        point_c = np.array(self.points[-1])
+        vec_ab = point_b - point_a
+        vec_ac = point_c - point_a
+        vec_normal = np.cross(vec_ab, vec_ac)
+        if vec_normal[2] < 0: vec_normal = -1*vec_normal
+        vec_normal = vec_normal/np.linalg.norm(vec_normal)
+
+        # then find the cross product of the of the normal of the plane, and the velocity vector (the y)
+        vec_y = -1*np.cross(vec_velocity, vec_normal)
+
+        return np.c_[vec_velocity, vec_y, vec_normal]
 
     # current position of the hand
     def findClosestPointToM(self, M_current):
@@ -398,6 +387,24 @@ class Trajectory():
 
         plt.show()
 
+    # plot least_squares line, low_error, high_error, and all the points
+    def plotErrors(self, dim, new_time, new_point):
+        time_delta = new_time - self.init_time
+        int_dim = dimToInt(dim)
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        for p,t in zip(self.points, self.times):
+            ax.scatter(t, p[int_dim])
+        ax.scatter(new_time, new_point[int_dim])
+        x = np.arange(0,time_delta,0.01)
+        least_squares = self.betas[dim][0] + self.betas[dim][1]*x + self.betas[dim][2]*(x**2)
+        low_errored = self.betas_low[dim][0] + self.betas_low[dim][1]*x + self.betas_low[dim][2]*(x**2)
+        high_errored = self.betas_high[dim][0] + self.betas_high[dim][1]*x + self.betas_high[dim][2]*(x**2)
+        ax.plot(x,least_squares, "r-" if self.use_errored[int_dim] else "g-")
+        ax.plot(x,low_errored, "g-" if self.use_errored[int_dim] else "r-")
+        ax.plot(x,high_errored, "g-" if self.use_errored[int_dim] else "r-")
+        plt.show()
 """
     # for in plane coord errors, couldn't really think of a good value: some of the error will come from the image being off, some will come from deproject_pixel_to_point, some from canny
     # ended up going for half the size of the ball as total error (20mm), so 10mm on each side
