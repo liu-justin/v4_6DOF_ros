@@ -55,7 +55,7 @@ class MotorController():
                 i += 1
         self.updateVelGap([0,0,0,0,0,0], time_gap_micros)
 
-    def transfMatrixAnalyticalPublish(self,new_transf, rot, total_time):
+    def transfMatrixAnalyticalPublish(self,new_transf, R_0n, total_time):
         """
         Uses an analytical approach to get first 3 angles to line up center of differential gears to point, 
         then use IK to finish up the rest of angles
@@ -76,8 +76,24 @@ class MotorController():
         
         current_guess = [R1_angle, T1_angle, T2_angle,0,0,0]
         R_0ee, p_0ee = mr.TransToRp(mr.FKinSpace(self.M_rest, self.space_list, self.pos_six))
-        # 
+        R_ee_n = mr.RotInv(R_0ee) @ R_0n
 
+        # converting R_ee_n into XZX angles
+        if (R_ee_n[0][0] < 1):
+            if (R_ee_n[0][0] > -1):
+                thetaZ = math.acos(R_ee_n[0][0])
+                thetaX0 = math.atan2(R_ee_n[2][0],R_ee_n[1][0])
+                thetaX1 = math.atan2(R_ee_n[0][2],-1*R_ee_n[0][1])
+            else:
+                thetaZ = np.pi
+                thetaX0 = -1*math.atan2(R_ee_n[2][1],R_ee_n[2][2])
+                thetaX1 = 0
+        else:
+            thetaZ = 0
+            thetaX0 = math.atan2(R_ee_n[2][1],R_ee_n[2][2])
+            thetaX1 = 0
+        
+        current_guess = [R1_angle, T1_angle, T2_angle, thetaX0, thetaZ, thetaX1]
 
         # current_transf = mr.FKinBody(self.M_rest, self.body_list, current_guess)
         # current_R, current_p = mr.TransToRp(current_transf)
