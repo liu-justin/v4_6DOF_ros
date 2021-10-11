@@ -24,17 +24,16 @@ print(f"this is the anglelist before: {mc.pos_six}")
 #2.09
 
 print(f"this is the transf matrix right now: \n{mc.M_current}")
-while True:
-    xyz_str = input("input xyz values: ")
-    xyz = [float(xyz) for xyz in xyz_str.split(" ")]
-    rpy = [0,0,0]
-    rpyxyz = rpy+xyz
-    transf = mr.rpyxyzToTrans(rpyxyz)
-    time_str = input("input the time: ")
-    time = float(time_str)
-    
-    # mc.transfMatrixCartesianPublish(transf, time)
-    # mc.transfMatrixJointPublish(transf, time)
-    mc.transfMatrixAnalyticalPublish(transf, mr.RollPitchYawToRot(np.pi/4, -1*np.pi/7, np.pi/9), time)
+# while True:
+xyz_str = input("input xyz values: ")
+xyz = [float(xyz) for xyz in xyz_str.split(" ")]
+# R = mr.RollPitchYawToRot(np.pi/4, -1*np.pi/7, np.pi/9)
+R = mr.RollPitchYawToRot(0,0,0)
+transf = mr.RpToTrans(R, xyz)
+time_str = input("input the time: ")
+time = float(time_str)
+
+print(transf)
+mc.transfMatrixAnalyticalPublish(transf, time)
 
 #09-08-2021 max speed is 1.1rad/sec for all motors

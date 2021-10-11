@@ -188,9 +188,9 @@ try:
                 reachable, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.42)
                 if reachable:
                     print(f"point: {intersection_point} time: {time_until_intersection} reachable")
-                    intersection_transf = mr.RpToTrans(np.identity(3), intersection_point)
                     vel_norm = traj.getNormalRFromTime(time_until_intersection)
-                    mc.transfMatrixAnalyticalPublish(intersection_transf, vel, time_until_intersection)
+                    intersection_transf = mr.RpToTrans(vel_norm, intersection_point)
+                    mc.transfMatrixAnalyticalPublish(intersection_transf, time_until_intersection)
                     old_trajectories.append(traj)
                 else:
                     # print(f"trajectory failed sphere intersection, not reachable")

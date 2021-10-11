@@ -55,12 +55,12 @@ class MotorController():
                 i += 1
         self.updateVelGap([0,0,0,0,0,0], time_gap_micros)
 
-    def transfMatrixAnalyticalPublish(self,new_transf, R_0n, total_time):
+    def transfMatrixAnalyticalPublish(self, new_transf, total_time):
         """
         Uses an analytical approach to get first 3 angles to line up center of differential gears to point, 
         then use IK to finish up the rest of angles
         """
-        R,p = mr.TransToRp(new_transf)
+        R_0n,p = mr.TransToRp(new_transf)
         R1_angle = -1*math.atan(p[2]/p[0])
 
         # analytical inverse kinematics https://robotacademy.net.au/lesson/inverse-kinematics-for-a-2-joint-robot-arm-using-geometry/
@@ -75,8 +75,9 @@ class MotorController():
         T2_angle = math.pi - math.atan(0.06825/0.1783) + q2
         
         current_guess = [R1_angle, T1_angle, T2_angle,0,0,0]
-        R_0ee, p_0ee = mr.TransToRp(mr.FKinSpace(self.M_rest, self.space_list, self.pos_six))
+        R_0ee, p_0ee = mr.TransToRp(mr.FKinSpace(self.M_rest, self.space_list, current_guess))
         R_ee_n = mr.RotInv(R_0ee) @ R_0n
+        print(R_ee_n)
 
         # converting R_ee_n into XZX angles
         if (R_ee_n[0][0] < 1):
@@ -84,6 +85,7 @@ class MotorController():
                 thetaZ = math.acos(R_ee_n[0][0])
                 thetaX0 = math.atan2(R_ee_n[2][0],R_ee_n[1][0])
                 thetaX1 = math.atan2(R_ee_n[0][2],-1*R_ee_n[0][1])
+            
             else:
                 thetaZ = np.pi
                 thetaX0 = -1*math.atan2(R_ee_n[2][1],R_ee_n[2][2])
@@ -92,17 +94,21 @@ class MotorController():
             thetaZ = 0
             thetaX0 = math.atan2(R_ee_n[2][1],R_ee_n[2][2])
             thetaX1 = 0
+
+        print(mr.RollPitchYawToRot(0,0,thetaX0) @ mr.RollPitchYawToRot(thetaZ,0,0) @ mr.RollPitchYawToRot(0,0,thetaX1))
         
         current_guess = [R1_angle, T1_angle, T2_angle, thetaX0, thetaZ, thetaX1]
 
         # current_transf = mr.FKinBody(self.M_rest, self.body_list, current_guess)
         # current_R, current_p = mr.TransToRp(current_transf)
         print(f"before IK, then angle are: {current_guess}")
+        print(mr.FKinSpace(self.M_rest, self.space_list, current_guess))
 
         # trying to align xaxis of end effector with inverse of velocity vector
         ending_pos_six, success = mr.IKinSpace(self.space_list, self.M_rest, new_transf, current_guess, 0.01, 0.001)
 
         print(f"after IK, the angles are: {ending_pos_six}")
+        print(mr.FKinSpace(self.M_rest, self.space_list, ending_pos_six))
         
         if not success:
             print(f"failed IK")
