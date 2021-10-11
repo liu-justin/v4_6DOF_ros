@@ -82,9 +82,9 @@ class MotorController():
         # converting R_ee_n into XZX angles
         if (R_ee_n[0][0] < 1):
             if (R_ee_n[0][0] > -1):
-                thetaZ = math.acos(R_ee_n[0][0])
-                thetaX0 = math.atan2(R_ee_n[2][0],R_ee_n[1][0])
-                thetaX1 = math.atan2(R_ee_n[0][2],-1*R_ee_n[0][1])
+                thetaZ = -1*math.acos(R_ee_n[0][0])
+                thetaX0 = -1*math.atan2(-1*R_ee_n[2][0],-1*R_ee_n[1][0])
+                thetaX1 = -1*math.atan2(-1*R_ee_n[0][2],1*R_ee_n[0][1])
             
             else:
                 thetaZ = np.pi
