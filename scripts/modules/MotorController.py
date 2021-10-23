@@ -8,6 +8,9 @@ from . import unpack as unp
 import time
 import math
 
+def pi_wrap(x):
+    return (x-np.pi) % (2*np.pi) - np.pi
+
 class MotorController():
     def __init__(self):
 
@@ -77,7 +80,6 @@ class MotorController():
         current_guess = [R1_angle, T1_angle, T2_angle,0,0,0]
         R_0ee, p_0ee = mr.TransToRp(mr.FKinSpace(self.M_rest, self.space_list, current_guess))
         R_ee_n = mr.RotInv(R_0ee) @ R_0n
-        print(R_ee_n)
 
         # converting R_ee_n into XZX angles
         if (R_ee_n[0][0] < 1):
@@ -87,15 +89,15 @@ class MotorController():
                 thetaX1 = -1*math.atan2(-1*R_ee_n[0][2],1*R_ee_n[0][1])
             
             else:
+                print("irreuglar")
                 thetaZ = np.pi
                 thetaX0 = -1*math.atan2(R_ee_n[2][1],R_ee_n[2][2])
                 thetaX1 = 0
         else:
+            print("double irregular")
             thetaZ = 0
             thetaX0 = math.atan2(R_ee_n[2][1],R_ee_n[2][2])
             thetaX1 = 0
-
-        print(mr.RollPitchYawToRot(0,0,thetaX0) @ mr.RollPitchYawToRot(thetaZ,0,0) @ mr.RollPitchYawToRot(0,0,thetaX1))
         
         current_guess = [R1_angle, T1_angle, T2_angle, thetaX0, thetaZ, thetaX1]
 
@@ -108,6 +110,10 @@ class MotorController():
         ending_pos_six, success = mr.IKinSpace(self.space_list, self.M_rest, new_transf, current_guess, 0.01, 0.001)
 
         print(f"after IK, the angles are: {ending_pos_six}")
+        print(mr.FKinSpace(self.M_rest, self.space_list, ending_pos_six))
+        ending_pos_six[3] = pi_wrap(ending_pos_six[3])
+        ending_pos_six[5] = pi_wrap(ending_pos_six[5])
+        print(f"after wrapping, the angles are: {ending_pos_six}")
         print(mr.FKinSpace(self.M_rest, self.space_list, ending_pos_six))
         
         if not success:
@@ -122,6 +128,7 @@ class MotorController():
             speeds = [abs((start - end)/total_time) for start, end in zip(self.pos_six, ending_pos_six)]
             if max(speeds) > 1.1:
                 print(f"this move is too fast!: the speeds are {speeds}")
+                self.anglePublish(ending_pos_six, total_time*5, True)
                 return
             else:
                 print(f"this move is all good! speeds are {speeds}")
@@ -129,7 +136,6 @@ class MotorController():
                 # safety, change time to 5
                 self.anglePublish(ending_pos_six, total_time*3, True)
             
-
     # publish a move to a new transformation matrix
     def transfMatrixCartesianPublish(self, new_transf, total_time):
         if total_time < 0.5: total_points = 20
@@ -188,7 +194,7 @@ class MotorController():
         
     # publish a move to a new set of angles
     def anglePublish(self, final_pos_six, total_time, use_absolute):
-        sample_rate = 10
+        sample_rate = 20
         total_points = sample_rate*total_time
         gap_btwn_points = total_time/(total_points-1)
 

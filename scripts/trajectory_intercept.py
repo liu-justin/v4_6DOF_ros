@@ -151,8 +151,8 @@ try:
             if (contour_area/ellipse_area) < 0.5: continue
 
             # if depth/diameter relationship does not follow the trend in tests/realsense/depth_diameter_eq-polyfit, then continue
-            calculated_diameter = betas_depth_to_dia[0] + betas_depth_to_dia[1]*depth + betas_depth_to_dia[2]*(depth*depth)
-            if ((diameter-calculated_diameter)/calculated_diameter) > 0.45: continue
+            # calculated_diameter = betas_depth_to_dia[0] + betas_depth_to_dia[1]*depth + betas_depth_to_dia[2]*(depth*depth)
+            # if ((diameter-calculated_diameter)/calculated_diameter) > 0.45: continue
 
             # grabbing from original depth image, without the cleanup
             # if there was a way to grab from the cleaned array, I would do it
@@ -188,7 +188,8 @@ try:
                 reachable, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.42)
                 if reachable:
                     print(f"point: {intersection_point} time: {time_until_intersection} reachable")
-                    vel_norm = traj.getNormalRFromTime(time_until_intersection)
+                    # vel_norm = traj.getNormalRFromTime(time_until_intersection)
+                    vel_norm = np.identity(3)
                     intersection_transf = mr.RpToTrans(vel_norm, intersection_point)
                     mc.transfMatrixAnalyticalPublish(intersection_transf, time_until_intersection)
                     old_trajectories.append(traj)
