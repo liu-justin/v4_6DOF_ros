@@ -19,7 +19,7 @@ while True:
     angle_str = input("input 1 angles: ")
     angle = float(angle_str)
     # angles = [angle, angle, angle, angle, angle, angle]
-    angles = [0,0,0, angle, 0,0]
+    angles = [0,0,0, 0, angle,angle]
     print(angles)
     time_str = input("input the time: ")
     time = float(time_str)
