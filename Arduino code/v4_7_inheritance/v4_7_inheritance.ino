@@ -23,7 +23,7 @@ MotorStepper R1(17,16,-180, 180, radPerMinorStep, 4.0);
 
 // Arduino connect Rx-15 Tx-14
 HardwareSerial& odrive_serial = Serial3;
-MotorDifferential T3R3(odrive_serial, -90, 90, -180, 180, 0.005*2*PI, 3.95);
+MotorDifferential T3R3(odrive_serial, -90, 90, -180, 180, 0.02*2*PI, 3.95);
 
 MotorManager mm(&R1, &T1, &T2, &R2, &T3R3);
 

@@ -194,7 +194,7 @@ class MotorController():
         
     # publish a move to a new set of angles
     def anglePublish(self, final_pos_six, total_time, use_absolute):
-        sample_rate = 10
+        sample_rate = 120
         total_points = sample_rate*total_time
         gap_btwn_points = total_time/(total_points-1)
 
