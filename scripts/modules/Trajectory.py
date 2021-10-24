@@ -211,6 +211,11 @@ class Trajectory():
         # then find the cross product of the of the normal of the plane, and the velocity vector (the y)
         vec_y = -1*np.cross(vec_velocity, vec_normal)
 
+        # now trying to get the x-axis to bisect the current velocity vec and straight up, so the ball will bounce up
+        vec_x_up = np.array([0,1,0])
+        vec_x_bisect = (vec_x_up + vec_velocity)/np.linalg.norm(vec_x_up + vec_velocity)
+        vec_y_bisect = -1*np.cross(vec_velocity, vec_normal)
+
         return np.c_[vec_velocity, vec_y, vec_normal]
 
     # current position of the hand
