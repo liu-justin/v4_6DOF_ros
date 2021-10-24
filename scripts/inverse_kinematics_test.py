@@ -16,11 +16,11 @@ np.set_printoptions(precision=7, suppress=True)
 rospy.init_node('talker', anonymous=True)
 
 mc.anglePublish([0, -1*np.pi/2, 1*np.pi/2, 0*np.pi/2, -1*np.pi/2, 0*np.pi/2], 0.3, True)
-# if at_rest: mc.anglePublish([0, -2*np.pi/3, 2*np.pi/3, 0, -1*np.pi/2, 0], 0.3, True)
+print(mr.FKinSpace(mc.M_rest, mc.space_list, [0, -1*np.pi/2, 1*np.pi/2, 0*np.pi/2, -1*np.pi/2, 0*np.pi/2]))
 
 xyz = [0.4, 0.3, 0.09]
 # R = mr.RollPitchYawToRot(np.pi/8, -1*np.pi/7, np.pi/9)
-R = mr.RollPitchYawToRot(0,0,0)
+R = mr.RollPitchYawToRot(0,0,np.pi/4)
 transf = mr.RpToTrans(R, xyz)
 time = 1
 

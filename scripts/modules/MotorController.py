@@ -63,6 +63,7 @@ class MotorController():
         Uses an analytical approach to get first 3 angles to line up center of differential gears to point, 
         then use IK to finish up the rest of angles
         """
+        np.set_printoptions(precision=7, suppress=True)
         R_0n,p = mr.TransToRp(new_transf)
         R1_angle = -1*math.atan(p[2]/p[0])
 
@@ -87,7 +88,6 @@ class MotorController():
                 thetaZ = -1*math.acos(R_ee_n[0][0])
                 thetaX0 = -1*math.atan2(-1*R_ee_n[2][0],-1*R_ee_n[1][0])
                 thetaX1 = -1*math.atan2(-1*R_ee_n[0][2],1*R_ee_n[0][1])
-            
             else:
                 print("irreuglar")
                 thetaZ = np.pi
@@ -101,8 +101,6 @@ class MotorController():
         
         current_guess = [R1_angle, T1_angle, T2_angle, thetaX0, thetaZ, thetaX1]
 
-        # current_transf = mr.FKinBody(self.M_rest, self.body_list, current_guess)
-        # current_R, current_p = mr.TransToRp(current_transf)
         print(f"before IK, then angle are: {current_guess}")
         print(mr.FKinSpace(self.M_rest, self.space_list, current_guess))
 
@@ -113,12 +111,9 @@ class MotorController():
         print(mr.FKinSpace(self.M_rest, self.space_list, ending_pos_six))
         ending_pos_six[3] = pi_wrap(ending_pos_six[3])
         ending_pos_six[5] = pi_wrap(ending_pos_six[5])
-        print(f"after wrapping, the angles are: {ending_pos_six}")
-        print(mr.FKinSpace(self.M_rest, self.space_list, ending_pos_six))
         
         if not success:
-            print(f"failed IK")
-            
+            print(f"failed IK")    
         elif not all([current_angle > lower and current_angle < upper for current_angle, lower, upper in \
             zip(ending_pos_six, self.limit_list_lower, self.limit_list_upper)]):
             print(f"one of the angles is past the angle limits, which are displayed here: \n")
@@ -128,7 +123,7 @@ class MotorController():
             speeds = [abs((start - end)/total_time) for start, end in zip(self.pos_six, ending_pos_six)]
             if not all([speed < max_speed for speed,max_speed in zip(speeds, self.vel_limits)]):
                 print(f"this move is too fast!: the speeds are {speeds}")
-                self.anglePublish(ending_pos_six, total_time*2, True)
+                # self.anglePublish(ending_pos_six, total_time*2, True)
                 return
             else:
                 print(f"this move is all good! speeds are {speeds}")
@@ -161,7 +156,9 @@ class MotorController():
                 print(f"{self.limit_list_lower}{self.limit_list_upper}")
                 return
             else:
+                current_point_pos[0] *= -1
                 point_pos_list.append(current_point_pos)
+                current_point_pos[0] *= -1
                 previous_point_pos = current_point_pos
         
         a = input("Move slowly to the point")
@@ -200,9 +197,13 @@ class MotorController():
 
         starting_pos_six = self.pos_six if use_absolute else [0,0,0,0,0,0]
 
+        # COULDNT FIGURE OUT HOW TO REVERSE MOTOR DIRECTION USING URDF
+        final_pos_six[0] *= -1
+
         points_pos_list = mr.JointTrajectory(starting_pos_six, final_pos_six, total_time, total_points, 3)
         
         self.trajectoryPublish(points_pos_list, gap_btwn_points)
+        final_pos_six[0] *= -1
         self.updatePos(final_pos_six)
 
     def unpack_XML(self, xml):

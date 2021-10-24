@@ -15,7 +15,7 @@
     <child link="link1"/>
     <origin rpy="0.0 0.0 0.0" xyz="0.0 0.02463 0.0"/>
     <axis xyz="0 1 0"/>
-    <limit effort="1000.0" lower="-0.85" upper="0.85" velocity="1.1" />
+    <limit effort="1000.0" lower="-0.85" upper="0.85" velocity="1.66" />
 </joint>
 
 <!-- T1  rotated 90 degrees from R1-->
@@ -24,7 +24,7 @@
     <child link="link2"/>
     <origin rpy="1.570796325 0.0 0.0" xyz="0.0 0.155582 0.0"/>
     <axis xyz="0 0 1"/>
-    <limit effort="1000.0" lower="-3.14" upper="0.0" velocity="1.1" />
+    <limit effort="1000.0" lower="-3.14" upper="0.0" velocity="2.0" />
 </joint>
 
 <!-- T2 -->
