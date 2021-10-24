@@ -126,15 +126,15 @@ class MotorController():
             return
         else:
             speeds = [abs((start - end)/total_time) for start, end in zip(self.pos_six, ending_pos_six)]
-            if max(speeds) > 1.1:
+            if not all([speed < max_speed for speed,max_speed in zip(speeds, self.vel_limits)]):
                 print(f"this move is too fast!: the speeds are {speeds}")
-                self.anglePublish(ending_pos_six, total_time*5, True)
+                self.anglePublish(ending_pos_six, total_time*2, True)
                 return
             else:
                 print(f"this move is all good! speeds are {speeds}")
                 print(f"moving slowly to the intersection point")
                 # safety, change time to 5
-                self.anglePublish(ending_pos_six, total_time*3, True)
+                self.anglePublish(ending_pos_six, total_time, True)
             
     # publish a move to a new transformation matrix
     def transfMatrixCartesianPublish(self, new_transf, total_time):
@@ -215,6 +215,7 @@ class MotorController():
         self.space_list = np.array([0,0,0,0,0,0])
         self.limit_list_lower = []
         self.limit_list_upper = []
+        self.vel_limits = [0.0,0.0,0.0,0.0,0.0,0.0]
         # skips all joints that are type fixed (like the base link and ee_link)
         joint_list = [joint for joint in obj.robot.joint if joint["type"]!="fixed"]
 
@@ -256,6 +257,7 @@ class MotorController():
             upper_limit = float(joint.limit["upper"])
             self.limit_list_lower.insert(0,lower_limit)
             self.limit_list_upper.insert(0,upper_limit)
+            self.vel_limits.insert(0,float(joint.limit["velocity"]))
 
             R_subtracted, p_subtracted = mr.TransToRp(mr.TransInv(T_subtracted))
 
