@@ -188,6 +188,7 @@ class Trajectory():
     def getNormalRFromTime(self, time):
         # get a rotation matrix that is normal to the velocity vector of the ball
         # at the intersection point
+        print("in getNorm")
 
         # then find the vec of the velocity
         velocity = np.array([0,0,0])
@@ -214,9 +215,10 @@ class Trajectory():
         # now trying to get the x-axis to bisect the current velocity vec and straight up, so the ball will bounce up
         vec_x_up = np.array([0,1,0])
         vec_x_bisect = (vec_x_up + vec_velocity)/np.linalg.norm(vec_x_up + vec_velocity)
-        vec_y_bisect = -1*np.cross(vec_velocity, vec_normal)
+        vec_y_bisect = -1*np.cross(vec_x_bisect, vec_normal)
 
-        return np.c_[vec_velocity, vec_y, vec_normal]
+        # return np.c_[vec_velocity, vec_y, vec_normal]
+        return np.c_[vec_x_bisect, vec_y_bisect, vec_normal]
 
     # current position of the hand
     def findClosestPointToM(self, M_current):

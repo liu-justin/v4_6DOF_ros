@@ -89,7 +89,7 @@ class MotorController():
                 thetaX0 = -1*math.atan2(-1*R_ee_n[2][0],-1*R_ee_n[1][0])
                 thetaX1 = -1*math.atan2(-1*R_ee_n[0][2],1*R_ee_n[0][1])
             else:
-                print("irreuglar")
+                print("irregular")
                 thetaZ = np.pi
                 thetaX0 = -1*math.atan2(R_ee_n[2][1],R_ee_n[2][2])
                 thetaX1 = 0
@@ -99,7 +99,7 @@ class MotorController():
             thetaX0 = math.atan2(R_ee_n[2][1],R_ee_n[2][2])
             thetaX1 = 0
         
-        current_guess = [R1_angle, T1_angle, T2_angle, thetaX0, thetaZ, thetaX1]
+        current_guess = np.array([R1_angle, T1_angle, T2_angle, thetaX0, thetaZ, thetaX1])
 
         print(f"before IK, then angle are: {current_guess}")
         print(mr.FKinSpace(self.M_rest, self.space_list, current_guess))
@@ -107,28 +107,28 @@ class MotorController():
         # trying to align xaxis of end effector with inverse of velocity vector
         ending_pos_six, success = mr.IKinSpace(self.space_list, self.M_rest, new_transf, current_guess, 0.01, 0.001)
 
-        print(f"after IK, the angles are: {ending_pos_six}")
-        print(mr.FKinSpace(self.M_rest, self.space_list, ending_pos_six))
         ending_pos_six[3] = pi_wrap(ending_pos_six[3])
         ending_pos_six[5] = pi_wrap(ending_pos_six[5])
+        print(f"after IK and wrapping, the angles are: {ending_pos_six}")
+        print(mr.FKinSpace(self.M_rest, self.space_list, ending_pos_six))
         
         if not success:
             print(f"failed IK")    
+        # checking joint limits
         elif not all([current_angle > lower and current_angle < upper for current_angle, lower, upper in \
             zip(ending_pos_six, self.limit_list_lower, self.limit_list_upper)]):
             print(f"one of the angles is past the angle limits, which are displayed here: \n")
-            print(f"{self.limit_list_lower}\n{self.limit_list_upper}")
+            print(f"{self.limit_list_lower}\n{ending_pos_six}\n{self.limit_list_upper}")
             return
         else:
+            # checking speeds against max speeds
             speeds = [abs((start - end)/total_time) for start, end in zip(self.pos_six, ending_pos_six)]
             if not all([speed < max_speed for speed,max_speed in zip(speeds, self.vel_limits)]):
                 print(f"this move is too fast!: the speeds are {speeds}")
-                # self.anglePublish(ending_pos_six, total_time*2, True)
                 return
             else:
                 print(f"this move is all good! speeds are {speeds}")
-                print(f"moving slowly to the intersection point")
-                # safety, change time to 5
+                print(f"moving to the intersection point")
                 self.anglePublish(ending_pos_six, total_time, True)
             
     # publish a move to a new transformation matrix

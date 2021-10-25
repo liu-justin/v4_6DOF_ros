@@ -18,7 +18,7 @@ rospy.init_node('talker', anonymous=True)
 mc.anglePublish([0, -1*np.pi/2, 1*np.pi/2, 0*np.pi/2, -1*np.pi/2, 0*np.pi/2], 0.3, True)
 print(mr.FKinSpace(mc.M_rest, mc.space_list, [0, -1*np.pi/2, 1*np.pi/2, 0*np.pi/2, -1*np.pi/2, 0*np.pi/2]))
 
-xyz = [0.4, 0.3, 0.09]
+xyz = [0.129, 0.418, 0.322]
 # R = mr.RollPitchYawToRot(np.pi/8, -1*np.pi/7, np.pi/9)
 R = mr.RollPitchYawToRot(0,0,np.pi/4)
 transf = mr.RpToTrans(R, xyz)
