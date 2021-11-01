@@ -41,16 +41,17 @@ class Trajectory():
         self.betas_high["y"] = [self.points[0][1],0,-9.81]
         self.betas_high["z"] = [0,5,0]
 
-        self.__developed = False
+        # state 0 is not developed, state 1 is developed, state 2 is overdeveloped
+        self.__state = 0
         self.ttl = 5
 
     @property
-    def developed(self):
-        return self.__developed
+    def state(self):
+        return self.__state
     
-    @developed.setter
-    def developed(self, incoming_bool):
-        self.__developed = incoming_bool
+    @state.setter
+    def state(self, incoming_state):
+        self.__state = incoming_state
 
     def getCoordFromBetasTime(self, betas, time):
         return betas[0] + betas[1]*time + betas[2]*(time**2)
@@ -87,7 +88,8 @@ class Trajectory():
                 self.times.append(time_delta)
                 self.points.append(new_point)
 
-                if len(self.times) >= 4: self.developed = True
+                # set state to developed
+                if len(self.times) == 4: self.state = 1
 
                 # check thru all dimensions and choose the fit: leastsquares, R2
                 for dim in self.betas.keys():

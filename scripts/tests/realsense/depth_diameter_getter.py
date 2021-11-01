@@ -57,7 +57,6 @@ try:
             depth_cleaned = np.where((depth_cleaned <= 0), 0, depth_cleaned)
             thresh, depth_mask = cv2.threshold(depth_cleaned,1,255,cv2.THRESH_BINARY_INV)
             depth_background = cv2.inpaint(depth_cleaned, depth_mask, 3, cv2.INPAINT_TELEA)
-            np.save("depth_frame_background",depth_background)  
 
             cv2.namedWindow('New', cv2.WINDOW_AUTOSIZE)
             cv2.imshow('New', depth_background)

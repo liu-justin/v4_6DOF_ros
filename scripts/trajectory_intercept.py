@@ -15,8 +15,6 @@ from mpl_toolkits.mplot3d import Axes3D
 
 import v4_6dof.msg as msg
 
-import sys, os
-
 # Configure depth and color streams
 pipeline = rs.pipeline()
 config = rs.config()
@@ -48,7 +46,7 @@ transf_camera_to_base = transf_90_to_base @ transf_camera_to_90
 trajectories = []
 old_trajectories = []
 depth_background = np.array([])
-betas_depth_to_dia = np.load("/home/justin/catkin_ws/src/v4_6dof/scripts/constants/betas.npy")
+betas_depth_to_dia = np.load("/home/justin/catkin_ws/src/v4_6dof/scripts/constants/betas_baseball.npy")
 
 mc = MotorController()
 rospy.init_node('talker', anonymous=True)
@@ -152,8 +150,8 @@ try:
             if (contour_area/ellipse_area) < 0.5: continue
 
             # if depth/diameter relationship does not follow the trend in tests/realsense/depth_diameter_eq-polyfit, then continue
-            # calculated_diameter = betas_depth_to_dia[0] + betas_depth_to_dia[1]*depth + betas_depth_to_dia[2]*(depth*depth)
-            # if ((diameter-calculated_diameter)/calculated_diameter) > 0.45: continue
+            calculated_diameter = betas_depth_to_dia[0] + betas_depth_to_dia[1]*depth + betas_depth_to_dia[2]*(depth*depth)
+            if ((diameter-calculated_diameter)/calculated_diameter) > 0.45: continue
 
             # grabbing from original depth image, without the cleanup
             # if there was a way to grab from the cleaned array, I would do it
@@ -185,7 +183,7 @@ try:
         # move thru all registered trajectories
         for traj in trajectories:
             # if the trajectory is developed (5 points), perform a check to see if robot can move there
-            if (traj.developed): # 0.116114 - 0.278515 - 0.440916
+            if (traj.state == 1): # 0.116114 - 0.278515 - 0.440916
                 reachable, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.42)
                 if reachable:
                     print(f"point: {intersection_point} time: {time_until_intersection} reachable")
@@ -197,7 +195,7 @@ try:
                 else:
                     # print(f"trajectory failed sphere intersection, not reachable")
                     pass
-                trajectories.remove(traj)
+                traj.state = 2
 
             # if total time is longer than 2 seconds, kill the trajectory
             if (current_time - traj.init_time) >= 2:
