@@ -100,16 +100,17 @@ try:
 
             # removing weird edge cases
             if x*y*diameter <= 0: continue
-            if x < 20: continue
+            if x < 20 or diameter < 20: continue
             
             # checking perecentage of contour filled
             contour_area = cv2.contourArea(c) 
             ellipse_area = np.pi*(diameter/2)*(diameter/2)
             if (contour_area/ellipse_area) < 0.75: continue
             
-            cv2.circle(depth_canny_3d, (int(x),int(y)), 10, (0,0,255), 10)
-            cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(diameter/2), (0,255,0),10)
-            kept_contours.append(c)
+            cv2.circle(depth_canny_3d, (int(x),int(y)), 10, (0,0,255), 2)
+            cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(diameter/2), (0,255,0),2)
+            depths.append(depth_frame.get_distance(int(x),int(y)))
+            diameters.append(diameter*2)
             
         # Show images
         images = np.hstack((depth_canny_3d, depth_cleaned_3d))
@@ -118,32 +119,33 @@ try:
 
         key = cv2.waitKey(1)
 
-        if key & 0xFF == ord('g') or key == 27:
-            print("in g")
-            for c in kept_contours:
-                try:
-                    (x,y), radius = cv2.minEnclosingCircle(c)
-                    depth = depth_frame.get_distance(int(x),int(y))                  
-                except: continue
+        # if key & 0xFF == ord('g') or key == 27:
+        #     print("in g")
+        #     for c in contours:
+        #         try:
+        #             (x,y), radius = cv2.minEnclosingCircle(c)
+        #             depth = depth_frame.get_distance(int(x),int(y))                  
+        #         except: continue
+        #         if x*y*diameter <= 0: continue
+        #         if x < 20: continue
                 
-                # checking perecentage of contour filled
-                contour_area = cv2.contourArea(c) 
-                ellipse_area = np.pi*radius**2
-                if (contour_area/ellipse_area) < 0.4: continue
+        #         # checking perecentage of contour filled
+        #         contour_area = cv2.contourArea(c) 
+        #         ellipse_area = np.pi*radius**2
+        #         # if (contour_area/ellipse_area) < 0.4: continue
                 
-                cv2.drawContours(depth_cleaned_3d, c, 0, (0,255,0), 5)
-                cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(radius), (0,255,0),2)
+        #         cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(radius), (0,255,0),2)
 
-                cv2.namedWindow('Areyousure', cv2.WINDOW_AUTOSIZE)
-                cv2.imshow('Areyousure', depth_cleaned_3d)
-                key2 = cv2.waitKey(100000)
-                if (key2 & 0xFF == ord('y')):
-                    depths.append(depth_frame.get_distance(int(x),int(y)))
-                    diameters.append(radius*2)
-                    cv2.destroyWindow("Areyousure")
-                    break
+        #         cv2.namedWindow('Areyousure', cv2.WINDOW_AUTOSIZE)
+        #         cv2.imshow('Areyousure', depth_cleaned_3d)
+        #         key2 = cv2.waitKey(100000)
+        #         if (key2 & 0xFF == ord('y')):
+        #             depths.append(depth_frame.get_distance(int(x),int(y)))
+        #             diameters.append(radius*2)
+        #             cv2.destroyWindow("Areyousure")
+        #             break
 
-                cv2.destroyWindow("Areyousure")
+        #         cv2.destroyWindow("Areyousure")
             
         if key & 0xFF == ord('q') or key == 27:
             cv2.destroyAllWindows()
