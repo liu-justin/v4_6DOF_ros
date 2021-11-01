@@ -98,7 +98,8 @@ try:
     at_rest_str = input("is arm at rest position y/n?")
     at_rest = at_rest_str=="y"
     # # if at rest, go to cobra position
-    if at_rest: mc.anglePublish([0, -7*np.pi/12, 9*np.pi/12, 0, -7*np.pi/12, 0], 3, True)
+    # if at_rest: mc.anglePublish([0, -7*np.pi/12, 9*np.pi/12, 0, -7*np.pi/12, 0], 3, True)
+    if at_rest: mc.anglePublish([0, -1*np.pi/2, 9*np.pi/12, 0, -1*np.pi/2, 0], 3, True)
 
     # trying to find a ping pong ball now
     while True:
@@ -160,7 +161,7 @@ try:
             if (point[0]*point[1]*point[2] == 0): continue
 
             # transf matrix established at the top
-            point = transf_camera_to_base @ np.r_[point,1]
+            point = (transf_camera_to_base @ np.r_[point,1])[:-1]
 
             # go thru all trajectories and see if this point fits in the projected path
             added = False
@@ -188,8 +189,8 @@ try:
                 reachable, intersection_point, time_until_intersection = traj.checkSphereIntersection([0,0.180212,0], 0.42)
                 if reachable:
                     print(f"point: {intersection_point} time: {time_until_intersection} reachable")
-                    # vel_norm = traj.getNormalRFromTime(time_until_intersection)
-                    vel_norm = np.identity(3)
+                    vel_norm = traj.getNormalRFromTime(time_until_intersection)
+                    # vel_norm = np.identity(3)
                     intersection_transf = mr.RpToTrans(vel_norm, intersection_point)
                     mc.transfMatrixAnalyticalPublish(intersection_transf, time_until_intersection)
                     old_trajectories.append(traj)

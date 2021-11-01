@@ -87,7 +87,7 @@ class Trajectory():
                 self.times.append(time_delta)
                 self.points.append(new_point)
 
-                if len(self.times) >= 7: self.developed = True
+                if len(self.times) >= 4: self.developed = True
 
                 # check thru all dimensions and choose the fit: leastsquares, R2
                 for dim in self.betas.keys():
