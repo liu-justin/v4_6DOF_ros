@@ -32,7 +32,7 @@ depth_background = np.array([])
 depths = []
 diameters = []
 
-kept_contours = []
+betas_depth_to_dia = np.load("/home/justin/catkin_ws/src/v4_6dof/scripts/constants/betas_baseball.npy")
 
 try:
     while True:
@@ -99,12 +99,15 @@ try:
 
             # removing weird edge cases
             if x*y*diameter <= 0: continue
-            if x < 20 or diameter < 20: continue
+            if x < 20 or diameter < 5: continue
             
             # checking perecentage of contour filled
             contour_area = cv2.contourArea(c) 
             ellipse_area = np.pi*(diameter/2)*(diameter/2)
             if (contour_area/ellipse_area) < 0.75: continue
+
+            calculated_diameter = betas_depth_to_dia[0] + betas_depth_to_dia[1]*depth + betas_depth_to_dia[2]*(depth*depth)
+            if ((diameter-calculated_diameter)/calculated_diameter) > 0.45: continue
             
             cv2.circle(depth_canny_3d, (int(x),int(y)), 10, (0,0,255), 2)
             cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(diameter/2), (0,255,0),2)
