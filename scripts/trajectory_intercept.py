@@ -139,7 +139,7 @@ try:
                 
             # removing weird edge cases
             if x*y*diameter <= 0: continue
-            if x < 20: continue
+            if x < 20 or diameter < 5: continue
 
             # if contour area smaller than this number, it is most likely noise
             contour_area = cv2.contourArea(c)
@@ -151,7 +151,7 @@ try:
 
             # if depth/diameter relationship does not follow the trend in tests/realsense/depth_diameter_eq-polyfit, then continue
             calculated_diameter = betas_depth_to_dia[0] + betas_depth_to_dia[1]*depth + betas_depth_to_dia[2]*(depth*depth)
-            if ((diameter-calculated_diameter)/calculated_diameter) > 0.45: continue
+            if ((diameter-calculated_diameter)/calculated_diameter) > 0.75: continue
 
             # grabbing from original depth image, without the cleanup
             # if there was a way to grab from the cleaned array, I would do it
@@ -165,7 +165,10 @@ try:
             added = False
             for t in trajectories:
                 success = t.append(current_time, point)
-                if success: added = True
+                
+                if success:
+                    # print(f"{t.state} traj: {[p[0] for p in t.points]}")
+                    added = True
             
             # if the point was not in the projected path, then create a new trajectory
             if not added:
@@ -173,7 +176,7 @@ try:
 
             # paint circles onto canny and cleaned
             cv2.circle(depth_canny_3d, (int(x),int(y)), 3, (0,0,255), 1)
-            cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(diameter/2), (0,255,0),2)  
+            cv2.circle(depth_cleaned_3d, (int(x),int(y)), int(diameter/2), (0,0,255),3)  
 
         # show images
         images = np.hstack((depth_canny_3d, depth_cleaned_3d))
@@ -193,7 +196,7 @@ try:
                     mc.transfMatrixAnalyticalPublish(intersection_transf, time_until_intersection)
                     old_trajectories.append(traj)
                 else:
-                    # print(f"trajectory failed sphere intersection, not reachable")
+                    print(f"trajectory failed sphere intersection, not reachable")
                     pass
                 traj.state = 2
 

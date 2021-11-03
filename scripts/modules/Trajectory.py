@@ -13,7 +13,7 @@ def intToDim(num): # 0 -> "x"
 
 dims = ["x", "y", "z"]
 
-ERRORS = [0.04, 0.04, 0.04]
+ERRORS = [0.08, 0.08, 0.08]
 
 class Trajectory():
     def __init__(self, time, point):
@@ -89,7 +89,7 @@ class Trajectory():
                 self.points.append(new_point)
 
                 # set state to developed
-                if len(self.times) == 4: self.state = 1
+                if len(self.times) == 7: self.__state = 1
 
                 # check thru all dimensions and choose the fit: leastsquares, R2
                 for dim in self.betas.keys():
@@ -313,8 +313,8 @@ class Trajectory():
         a[0] +=  -1*(radius**2)
 
         # using Netwon Raphson, good estimate for first collision is last known time
-        # using a starting guess of 0 is close to a flat slope, which is really bad for NR
-        possible, collision_time, new_estimates = self.newtonRaphsonQuartic(a, self.times[-1], 0.001)
+        # using a starting guess of the latest time + 0.25, to get far enough away from zero slope area
+        possible, collision_time, new_estimates = self.newtonRaphsonQuartic(a, self.times[-1]+0.25, 0.001)
 
         # self.plotNewtonRaphson(collision_time, new_estimates, a)
         
